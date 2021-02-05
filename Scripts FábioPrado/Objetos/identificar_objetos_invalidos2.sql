@@ -1,0 +1,42 @@
+SET LINES 300 PAGESIZE 1000
+SELECT 
+	'ALTER ' || LOWER(DECODE(OBJECT_TYPE,'PACKAGE BODY',
+	'PACKAGE',OBJECT_TYPE)) || ' ' || OWNER || '.' || OBJECT_NAME || ' ' || DECODE (OBJECT_TYPE,'PACKAGE BODY','COMPILE BODY','COMPILE') || ';'
+FROM 
+	DBA_OBJECTS 
+WHERE 
+	STATUS <> 'VALID' 
+	AND OWNER='DBATJ'
+	--AND OBJECT_NAME='PR_SF_GRAVA_ARQ_PUBLICA_EDITAL'
+;
+/
+
+SELECT COUNT(*) FROM DBA_OBJECTS WHERE OWNER='TASY' AND STATUS <> 'VALID' and OBJECT_NAME not in ('org/jdom/xpath/JaxenXPath','/e987b714_JaxenXPathNSContext');
+
+SPOOL RECOMPILA.SQL
+SELECT 'ALTER ' || OBJECT_TYPE || ' ' || OWNER || '.' || OBJECT_NAME || ' COMPILE;' FROM ALL_OBJECTS WHERE STATUS = 'INVALID' AND OWNER = 'DBAMV' AND OBJECT_TYPE NOT IN ('PACKAGE BODY', 'MATERIALIZED VIEW') ;
+SPOOL OFF;
+
+
+
+select OBJECT_TYPE, STATUS, count(1) QTD 
+from dba_objects 
+where owner = 'DBAASS' AND STATUS = 'INVALID' 
+GROUP BY(OBJECT_TYPE, STATUS);
+
+
+
+spool /orastb01/upgrade_info.log
+@utlu112i.sql
+spool off;
+
+
+Sql > startup upgrade
+
+spool /orastb01/upgrade.log
+@catupgrd.sql
+spool off;
+
+
+
+EXEC UTL_RECOMP.RECOMP_SERIAL ('DBATJ');

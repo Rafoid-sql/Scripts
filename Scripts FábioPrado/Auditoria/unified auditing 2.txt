@@ -1,0 +1,35 @@
+--Para verificar se temos a diretiva padrão ORA_SECURECONFIG, basta consultar a view AUDIT_UNIFIED_POLICIES, como mostrado abaixo
+
+set pagesize 100
+column POLICY_NAME format a30
+column AUDIT_OPTION format a35
+select POLICY_NAME, AUDIT_OPTION  
+from AUDIT_UNIFIED_POLICIES 
+where policy_name= 'ORA_SECURECONFIG' order by 2;
+
+
+-- Para confirmar se essa diretiva está ativada para todo a banco de dados, basta consultar a view
+-- AUDIT_UNIFIED_ENABLED_POLICIES.
+
+select POLICY_NAME, ENABLED_OPT,  USER_NAME
+from  AUDIT_UNIFIED_ENABLED_POLICIES
+where policy_name = 'ORA_SECURECONFIG';
+
+
+-- teste marcelo
+
+set lines 200
+col UNIFIED_AUDIT_POLICIES for a40
+col SYSTEM_PRIVILEGE_USED for a35
+col DBUSERNAME for a20
+select UNIFIED_AUDIT_POLICIES, DBUSERNAME,
+SYSTEM_PRIVILEGE_USED, SQL_TEXT
+from unified_audit_trail 
+where DBUSERNAME='MARCELO' order by 2 desc;
+
+
+
+COL AUDIT_CONDITION FOR A15
+COL OBJECT_SCHEMA FOR A15
+COL OBJECT_NAME FOR A15
+SELECT * FROM AUDIT_UNIFIED_POLICIES where  policy_name =  'MARCELOTEMP' ORDER BY 2;

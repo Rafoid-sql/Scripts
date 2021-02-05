@@ -1,0 +1,20 @@
+exec DBMS_SCHEDULER.stop_JOB (job_name => 'DBAASS.J_SETA_FIM_RENEGOCIACAO');
+
+select * from dba_scheduler_running_jobs
+where job_name LIKE 'J_SETA_FIM%'
+ORDER BY 2
+
+
+
+SET HEADING OFF 
+set FEEDBACK OFF 
+set OFF PAGESIZE 0
+SET VERIFY OFF
+set lines 155
+spool /home/oracle/kill_jobs.sql
+SELECT 'exec DBMS_SCHEDULER.STOP_JOB (job_name => '||Chr(39)||owner||'.'||job_name||Chr(39)||');'
+FROM dba_scheduler_running_jobs;
+SET HEADING ON 
+set FEEDBACK ON
+SET VERIFY ON
+spool off

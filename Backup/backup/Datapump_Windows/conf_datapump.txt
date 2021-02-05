@@ -1,0 +1,422 @@
+###############################################################################
+# Autor        : Douglas Matheus de Souza
+# Data.........: 24/04/2017
+###############################################################################
+# Alterado por : Romulo Bendini Madalena
+# Data.........: 14/02/2018
+###############################################################################
+
+##########################################################
+#                                                        #
+# Configurações DEFAULT que se aplicam a todas as cargas #
+#                                                        #
+##########################################################
+
+[DEFAULT]
+  # Tipo de clonagem
+  # 0 - RMAN - From Online Backup (duplicate através de um backup / SCN)
+  # 1 - RMAN - From Mount Standby (duplicate através de um backup / SCN)
+  # 2 - RMAN - From Active Database (duplicate do active database)
+  # 3 - RMAN - From Active Standby (duplicate do active database para um standby)
+  # 4 - RMAN - From Backup Offline (duplicate de um backup offline localizado no disco)
+  # 5 - DATAPUMP
+  clonetype=5
+
+  # Nome da Empresa
+  nm_cliente=RUDOLPH USINADOS DE PRECISAO LTDA
+
+  # Diretorio onde os arquivos de Backup estaram disponibilizados para serem utilizados # na carga
+  # Este parâmetro é obrigatório em caso de cargas tipo 4 (Backup Offline) ou 5 (Datapump)
+  # Exemplo=/oraprd01/teste
+  DirBackupFile=
+
+  # Indica se deve remover os backups após o restoree
+  # -> 0 = Nao
+  # -> 1 = Sim
+  deleteBackup=1
+
+[/DEFAULT]
+
+#################################################
+#                                               #
+# Configurações específicas da carga NOME_CARGA #
+#                                               #
+#################################################
+
+[LOGICO_HOMOLOG]
+  #########################################
+  #                                       #
+  # Parâmetros de integração com o Farol  #
+  #                                       #
+  #########################################
+
+  # FAROL: Está integrado com o Farol? (0=Disable, 1=EnableAUX, 2=EnableTARGET).
+  # Para a integração esta completa, é necessáo que na console do Farol seja configurado o plug-in TK_CLONE_STATUS para este servidor.
+  farolenviaevento=1
+
+  # FAROL: Diretório HOME do FAROL, normalmente é usr/local/Teiko/Farol
+  # Caso não seja integrado, não é necessário informar.
+  farolhome=/usr/local/Teiko/Farol
+  FAROL_HOME=/usr/local/Teiko/Farol
+  # Diretório onde os arquivos de Backup estaram disponibilizados para serem utilizados
+  # na carga.
+  # Exemplo=/oraprd01/teste
+  #DirBackupFile=/orabackup/target/full
+
+  # FAROL: Etapas Monitoradas pelo Farol
+  # O Farol irá enviar um evento no fim da carga com o status geral e log da execução da carga
+  # Caso deseje monitorar um dos processos da carga altere a opção a baixo para [1] e configura um Item Monitorado na console do farol com o nome da etapa.
+  # Exemplo:
+  # [ID_STEP]
+  #      [0] 1  - credenciais_target.....: Valida dados de conexão com o target
+  # [/ID_STEP]
+  #
+  [ID_STEP]
+         [0] 1  - credenciais_target.....: Valida credenciais de acesso ao banco
+         [0] 2  - credenciais_aux..................: Valida credenciais de acesso ao banco auxiliar
+         [0] 3  - create_spfile...............: Valida e cria spFile do banco Target
+         [0] 6  - inicia_duplicate............: Valida se servidor auxiliar tem capacidade de armazenamento para receber clone
+         [0] 8  - criar_backup................: Cria backup do banco de produção(Target)
+         [0] 9  - copiar_backup...............: Transferir backup de dados do Target para o auxiliary
+         [0] 10 - carregar_parametros.........: Carregar parametros no arquivo de inicialização
+         [0] 11 - db_aux_nomount..............: Iniciar o DB auxiliar em NOMOUNT.
+         [0] 12 - valida_mapeamento...........: Validar mapeamento dos Data Base Files.
+         [0] 14 - valida_estrutura_fisica.....: Valida se os diretórios que foram informados nos parâmetros e no mapeamento existem.
+         [0] 15 - valida_password_file........: Verifica se arquivo de password existe, caso não exista será criado
+         [0] 16 - valida_pre_pos_exec.........: Verifica se arquivos de scripts de pré e pós execução existem
+         [0] 18 - remove_data_files...........: Remove Data Files do Banco Auxiliar
+         [0] 19 - create_spfile_aux...........: Valida e cria spFile do banco Aux
+         [0] 20 - inicia_aux_mount............: Inicia o banco aux em mount
+         [0] 21 - credenciais_catalogo........: Valida credenciais de acesso ao banco catálogo
+         [0] 22 - credenciais_auxiliary.......: Valida credenciais de acesso ao banco auxiliar em uma carga RMAN
+         [0] 23 - datapump_validate_conn......: Valida credenciais de acesso ao banco auxiliar em uma carga datapump
+         [0] 24 - datapump_validate_packages..: Verifica se todas a packages específicas do CloneDB existem no banco de dados
+         [0] 25 - datapump_verifica_dir_existe: Verifica se todos os diretórios necessários existem na DBA_DIRECTORIES
+         [0] 26 - datapump_export_data........: Faz a exportação do banco de dados target usando datapump
+         [0] 27 - datapump_read_ctl...........: Faz a leitura do arquivo de controle (.ctl) com a informações do backup datapump
+         [0] 28 - datapump_validate_version...: Verifica se as versões dos datapumps de exportação e importação são compatíveis
+         [0] 29 - datapump_valida_dbid........: Valida os DBID dos bancos target e auxiliary em uma carga datapump
+         [0] 30 - datapump_valida_expdb_status: Valida o status do backup gerado pelo datapump
+         [0] 31 - datapump_verifica_tbs_existe: Verifica se todas as tablespaces necessárias para a importação do dump existem
+         [0] 32 - datapump_verifica_temp_tbs..: Valida as tablespaces temporárias
+         [0] 33 - datapump_verifica_owners....: Verifica se todos os owners a serem importados existem no .ctl
+         [0] 34 - datapump_verifica_area......: Verifica se existe área suficiente para importação dos dados
+         [0] 35 - datapump_copy_dumps.........: Copia os arquivos de dump do target para o auxiliar
+         [0] 36 - datapump_valida_dumps.......: Valida a integridade dos arquivos de dump gerados
+         [0] 37 - datapump_import_data........: Faz a importação do dump no banco de dados auxiliar
+  [/ID_STEP]
+
+  #########################################################################
+  #                                                                       #
+  # RMAN / Datapump: Parâmetros comuns aos tipos de carga RMAN e Datapump #
+  #                                                                       #
+  #########################################################################
+
+  # Tipo de backup (0 = Existente e 1 = novo)
+  dataBackupType=0
+
+  # Banco de dados auxiliar é RAC (Faz parte de um Cluster)
+  # 0 = Não
+  # 1 = Sim
+  auxisrac=0
+
+  # 1=local  -> Quando o ambiente TARGET e AUXILIAR ficam hospedado no mesmo servidor
+  # 2=remoto -> Quando o ambiente TARGET e AUXILIAR ficam hospedado EM DIFERENTES servidores
+  cloneexec=2
+
+  # Indica se deve considerar os mount points remotos para cálculo da área disponível para os datafiles
+  # -> 0 = Não deve considerar os mount points remotos
+  # -> 1 = Deve considerar os mount points remotos
+  useRemoteFileSystems=0
+
+  #-----------------------------------------
+  #- Dados para conexão com o banco target -
+  #-----------------------------------------
+
+  # TARGET: Nome do Serviçdo Banco dados origem (Target Database).
+  targetServiceName=orcl
+
+  # TARGET: Hostname/IP do servidor de origem.
+  targetHostName=oracle.rudolph.com.br
+
+  # TARGET: Porta de conexão com o LISTENER que atende o servidor de origem.
+  targetPort=1521
+
+  # TARGET: Usuário SYSDBA (deverá ter privilégios de sysdba).
+  targetUser=teikobkp
+
+  # TARGET: Senha do usuário SYSDBA
+  targetPassword=bkpokiet
+
+  #-------------------------------------------
+  #- Dados para conexão com o banco auxiliar -
+  #-------------------------------------------
+
+  # AUXILIAR: Nome do Serviçdo Banco de Dados destino (Auxiliar Database).
+  auxServiceName=homolog
+
+  # AUXILIAR: Hostname/IP do servidor de destino.
+  auxHostName=orastb.rudolph.com.br
+
+  # AUXILIAR: Porta de conexão com o LISTENER que atende o servidor de destino.
+  auxPort=1521
+
+  # AUXILIAR: Usuário SYSDBA (deverá ter privilégios de sysdba).
+  auxUser=teikobkp
+
+  # AUXILIAR: Senha do usuario SYSDBA.
+  auxPassword=bkpokiet
+
+  # AUXILIAR: DataBase name.
+  auxDataBaseName=homolog
+
+  #-----------------------------
+  #- Parâmetros de tablespaces -
+  #-----------------------------
+
+  # Este parâmetro permite que possa ser definido uma lista de tablespaces que deve ser ignoradas durante o processo de clonagem.
+  # Tablespaces de sistemas não podem ser ignoradas.
+  # Exemplo: Tablespaces SYSTEM, SYSAUX, TEMP, UNDOTBS, etc...(Consulte Documentação Oracle RMAN - Skip Tablespaces) para maiores informações.
+  # Sintaxe: NOME_TABLESPACE_1, NOME_TABLESPACE_2, etc...
+  skipTablespaces=
+
+  #-------------------------------
+  #- Agenda de execução da carga -
+  #-------------------------------
+
+  # Sintaxe do Crontab: * * * * *
+  # Sendo: Minuto, Hora, Dia do Mês, Mês, Dia da Semana
+  # Dias: 1 à 7 (Domingo à Sábado)
+  #     1=Domingo
+  #     2=Segunda
+  #     3=Terça
+  #     4=Quarta
+  #     5=Quinta
+  #     6=Sexta
+  #     7=Sábado
+  [AGENDA]
+      CRONTAB=00 20 * * 7
+  [/AGENDA]
+
+  #-------------------------------
+  # Script de pré e pós execução -
+  #-------------------------------
+  #
+  # Scripts de sql ou SO que são chamados antes ou depois de uma etapa
+  #
+  # Onde:
+  #   [SCRIPT_STEP_[ID_STEP]]
+  #           TYPE= [0/1]
+  #          [EXECUTA_QUANDO_CLONE_ERROR][ACAO_QUANDO_ERRO_NO_SCRIPT] Script a ser executado (com path completo).
+  #   [/SCRIPT_STEP_[ID_STEP]]
+  #
+  # Nota:
+  #   TYPE = 0 - Pre-exec
+  #        = 1 - Pós-exec
+  #
+  #   EXECUTA_QUANDO_CLONE_ERROR = 0 -> Não executa o script quando houver erro na execução do step do CloneDB
+  #                                                                1 -> Executa o script mesmo quando houver erro na execução do step do CloneDB
+  #
+  #   ACAO_QUANDO_ERRO_NO_SCRIPT = 0 -> Segue o processo se erro no script.
+  #                                              = 1 -> Para  o processo se erro no script.
+  #
+  #  Sufixos aceitos:
+  #   -> .sh  = Script shell Unix.
+  #   -> .bat = Script Windows.
+  #   -> .sql = Script de banco de dados SQL.
+  #
+  #     Caso não existam scripts de pre/pos execução, a seção [SCRIPT_STEP_[ID_STEP]] pode ser apagada ou comentada com #
+  #
+  [SCRIPT_STEP_38]
+        type=1
+        [1][0]dirscript=/usr/local/Teiko/Clone/pos/pos_carga_hml.sql
+  [/SCRIPT_STEP_38]
+
+  [SCRIPT_STEP_34]
+        type=0
+        [1][0]dirscript=/usr/local/Teiko/Clone/pos/deleta.sh
+  [/SCRIPT_STEP_34]
+
+
+
+  ########################################################
+  #                                                      #
+  # RMAN: Parâmetro específicos para cargas do tipo RMAN #
+  #                                                      #
+  ########################################################
+
+  # Código scn que será utilizado para duplicar o banco caso seja um backup existente
+  # untilscn=6809443
+
+  # Data definada para realizar duplicação, no formato yyyy-MM-dd HH:mm:ss
+  # Exemplo: 2014-02-11 09:02:42
+  # untiltimedaterestore=
+
+  # Percentual de compressão do backup conforme o tamanho do banco
+  backupsizepercent=100
+
+  # Disabilita ARCHIVELOG no servidor AUX
+  aux_disable_archivelog_mode=1
+
+  # Utilizado na ativação do dataguard
+  # dg_open_mode serve pra indicar como abrir o banco, se é em READ ONLY ou READ WRITE
+  # READ ONLY = 1
+  # READ WRITE = 2
+  # o standby, no caso
+  dg_open_mode=1
+
+  # Indicao o lag máximo de sincronização do StandBy para que o CloneDB ative o database de StandBy
+  # Valor em segundos
+  # standByLag=10, indica que quando tempo de sincronização for menor ou igual a 10 segundos, o CloneDB pode ativar o StandBy
+  standByLag=0
+
+  #--------------------------------------------
+  # Dados para conexão com o catálogo do RMAN -
+  #--------------------------------------------
+
+  # CATALOG RMAN: Replicação irá utilizar catalog na replicação? (0 = não| 1 = sim).
+  usedCatalog=0
+
+  # CATALOG RMAN: Nome do Serviçpara conexãao catalogo do RMAN.
+  # Caso não use catalog, não é necessário configurar.
+  catalogServiceName=
+
+  # CATALOG RMAN: Usuário dono do catalogo do RMAN. (Deverá ter privilégio de sysdba).
+  # Caso não use catalog, não é necessário configurar.
+  catalogUser=
+
+  # CATALOG RMAN: Senha do usuario dono do catalogo do RMAN.
+  # Caso não use catalog, não é necessário configurar.
+  catalogPassword=
+
+  # CATALOG RMAN: Hostname/IP do servidor de origem.
+  # Caso não use catalog, não é necessário configurar.
+  catalogHostName=
+
+  # CATALOG RMAN: Porta de conexão com servidor de origem
+  # Caso não use catalog, não é necessário configurar.
+  catalogPort=
+
+  #-------------------------------------
+  # Mapeamento dos datafile e logfiles -
+  #-------------------------------------
+
+  # O mapeamento de estrutura, serve para permitir a duplicação do ambiente TARGET no AUXILIAR mesmo quando a
+  # estrutura física de diretórios é diferente.
+  # Exemplo: Se no TARGET os arquivos de dados encontram-se no diretório /u01/oradata/orcl e no AUXILIAR os dados devam ir para
+  #          o diretório /orateste01/oradata/clonedb.
+  # Define mapeamento dos datafiles, log Files e controlFiles
+  # Dentro da estrutura [MAPDATAFILE], inserir mapeamento dos arquivos de dados e dos arquivos de log usando o prefixo abaixo:
+  #   [D] para datafiles e controlfile;
+  #   [L] para arquivos de log.
+  #   [D]'+DGDATA/origsgl10asm/datafile/'='/oraprd01/app/oracle/oradata/DestSGL1/'
+  #   [D]'+DGDATA/'='/oraprd01/app/oracle/oradata/DestSGL1/'
+  #   [D]'+DGTESTE/origsgl10asm/'='/oraprd01/app/oracle/oradata/DestSGL1/'
+
+  #[MAPDATAFILE]
+  #   [L]'+DGDATA/origsgl11asm/'='/oraprd01/app/oracle/oradata/DestSGL11FLS/'
+  #[/MAPDATAFILE]
+
+  # Mapeamento dinâco: Iráapear dinamicamente para os diretós da lista os datafiles que nãforam mapeados pelo mapeamento fixo
+  # respeitando o percentual limite de uso.
+  #[MAPDINAMICO]
+    #'/orades01/oradata/orcl11g/':90
+  #[/MAPDINAMICO]
+
+  #Exemplo:
+  #[MAPREDOLOG]
+    #[NUMERO_DO_GRUPO][TAMANHO_DOS_ARQUIVOS_KB]=diretorio/arquivo1,diretorio/arquivo2,diretorio/arquivoN
+    #[1][1024]=/duplogs/redo01a.log,/duplogs/redo01b.log
+    #[2][2048]=/duplogs/redo02a.log
+  #[/MAPREDOLOG]
+
+  [MAPREDOLOG]
+
+  [/MAPREDOLOG]
+
+  #----------------------------
+  # Parâmetros gerais do RMAN -
+  #----------------------------
+
+  # Tipo do formato do backup
+  # (0 = Disco | 1 = Fita)
+  backupformat=0
+
+  # Quantidade de canais alocados no duplicate
+  execparalelochannel=1
+
+  # Parametros de alocacao de canal
+  # Usado somente em caso de FITA
+  # Não é necessário o uso de aspas '
+  # Exemplo : paramchannel=ENV=(OB2BARTYPE=Oracle8,OB2APPNAME=urbano,OB2BARLIST=Backup_Oracle_Online_Diario_New)
+  paramchannel=
+
+  # Media Management Parameters
+  # Usado somente em caso de FITA
+  # Valor será utilizado no comando duplicate
+  # (Opcional)
+  # Exemplo: sendcommand=send device type 'sbt_tape' 'OB2BARHOSTNAME=hostname';
+  sendcommand=
+
+  #----------------------------------------------------
+  # Controle de parâmetros dos banco de dados - PFILE -
+  #----------------------------------------------------
+
+  # Define parametros que serão inseridos ou excluídos do arquivo de inicialização do pfile
+  # Dentro da estrutura padrão[LISTPFILEPARAMETERS] os parametros deverão ser inseridos com os prefixos [I] = inclusão [E] = exclusão
+  # Exemplo: [I]*.audit_file_dest='C:\oracle\oradata\orcl\stb\adump\'
+  [LISTPFILEPARAMETERS]
+  [/LISTPFILEPARAMETERS]
+
+  #################################################################
+  #                                                               #
+  # Datapump: Parâmetros específicos para cargas do tipo Datapump #
+  #                                                               #
+  #################################################################
+
+  # Nome do banco de dados que foi gerado o arquivo .ctl a ser carregado
+  datapumpCtlDBName=orcl
+
+  # Tag do backup a ser importado usando o datapump (FULL | NOME_OWNER)
+  datapumpCtlBackupTag=FULL
+
+  # Nome do diretório cadastrado na DBA_DIRECTORIES que possui os arquivos de dump e o .ctl a ser usado no import do dump
+  datapumpDirectoryNameAux=DATA_PUMP_TK
+
+  # Nome do diretório cadastrado na DBA_DIRECTORIES a ser usado no export de um dump no ambiente target, caso seja uma carga de um backup novo
+  datapumpDirectoryNameTarget=DATA_PUMP_TK
+
+  datapumpDirectoryPathTarget=/orabackup/orcl/datapump/files/
+
+  # Nome do owner a ser carregado pelo datapump, no caso de datapumpBackupType=FULL. Caso queira carregar todos os owners, basta deixar este parâmetro vazio
+  # Se datapumpBackupType=OWNER, este parâmetro será ignorado e sempre será importado o owner referente ao backup
+  datapumpOwnersImport=QSCORP,DIATIVA,SENIOR,CUSTOS,SIRIO_PLAN
+
+  # Indica se pode criar tablespaces que não existirem no ambiente auxiliar (true | false)
+  datapumpAutoCreateTbs=false
+
+  # Indica o mapeamento entre as tablespaces no ambiente target e auxiliar. O formato para mapeamento é TBS_TARGET_1:TBS_AUX_1,TBS_TARGET_2:TBS_AUX_2,TBS_TARGET_N:TBS_AUX_N
+  datapumpRemapTbs=
+
+  # Indica o mapeamento entre os owners no ambiente target e auxiliar. O formato para mapeamento é OWNER_TARGET_1:OWNER_AUX_1,OWNER_TARGET_2:OWNER_AUX_2,OWNER_TARGET_N:OWNER_AUX_N
+  datapumpRemapOwner=
+
+  # Indica qual local para criação dos datafiles caso a opção datapumpAutoCreateTbs=true
+  datapumpDatafilesPaths=
+
+  # Clausula exclude a ser usada no impdp. Este valor deve ser informado literalmente como seria na linha de comando do impdp
+  # Exemplo de exclusão da tabela TABELA_1 do impdp:
+  #   datapumpImpdpExclude=TABLE:"= 'TABELA_1'"
+  datapumpImpdpExclude=JOB,REFRESH_GROUP
+
+  datapumpKillSessionsMinutesWait=60
+
+
+  # Indica quais erros ORA- devem ser ignorados caso ocorram durante o processo de carga.
+  # Caso os erros informados abaixo ocorram durante a carga, os mesmos serãignorados
+  # Ex: ORA-00001,ORA-00002
+  # No exemplo acima, irágnorar os erros ORA-00001 e ORA-00002 ocorridos durante o impdp
+  datapumpImpdpErrorsIgnore=ORA-39082,ORA-39083,ORA-04052,ORA-00604,ORA-02019
+
+
+[/LOGICO_HOMOLOG]

@@ -1,0 +1,54 @@
+
+--shared pool
+
+SELECT shared_pool_size_for_estimate, 
+shared_pool_size_factor, 
+estd_lc_time_saved 
+FROM v$shared_pool_advice; 
+
+
+select shared_pool_size_for_estimate as estimate_size,
+shared_pool_size_factor as factor,
+estd_lc_time_saved as time_saved, estd_lc_load_time as load_time
+from v$shared_pool_advice;
+
+
+--pga
+SELECT ROUND (pga_target_for_estimate / 1024/1024) target_mb,
+        Estd_pga_cache_hit_percentage cache_hit_perc,
+        Estd_overalloc_count
+ FROM v$pga_target_advice; 
+ 
+ 
+column c1     heading 'Target(M)'
+column c2     heading 'Estimated|Cache Hit %'
+column c3     heading 'Estimated|Over-Alloc.'
+ 
+SELECT
+   ROUND(pga_target_for_estimate /(1024*1024)) c1,
+   estd_pga_cache_hit_percentage         c2,
+   estd_overalloc_count                  c3
+FROM
+   v$pga_target_advice;
+   
+   
+   --db cache_hit_perc
+   
+
+col size_est   format 999,999,999,999 heading 'Cache Size (m)'
+col buf_est    format 999,999,999     heading 'Buffers'
+col estd_rf    format 999.90          heading 'Estd Phys|Read Factor'
+column estd_pr format 999,999,999     heading 'Estd Phys| Reads'
+SELECT 
+   size_for_estimate size_est, 
+   buffers_for_estimate buf_est,
+   estd_physical_read_factor est_rf, 
+   estd_physical_reads est_pr
+ FROM V$DB_CACHE_ADVICE
+ WHERE name = 'DEFAULT'
+   AND block_size = (SELECT value FROM V$PARAMETER 
+                     WHERE name = 'db_block_size')
+   AND advice_status = 'ON';
+SPOOL OFF
+SET PAGES 22
+TTITLE OFF

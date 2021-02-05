@@ -1,0 +1,40 @@
+create user TEIKOBKP identified by bkpokiet default tablespace "USERS" quota unlimited on "USERS";
+
+grant dba to TEIKOBKP;
+grant select on v_$instance to TEIKOBKP;
+grant select on v_$database to TEIKOBKP;
+grant select on gv_$instance to TEIKOBKP;
+grant select on dba_objects to TEIKOBKP;
+grant create session, create table, create procedure, exp_full_database, imp_full_database to TEIKOBKP; 
+grant select on DBA_DATA_FILES to TEIKOBKP;
+grant select on DBA_FREE_SPACE to TEIKOBKP;
+grant select on DBA_SEGMENTS to TEIKOBKP;
+grant select on DBA_TABLESPACES to TEIKOBKP;
+grant select on DBA_TEMP_FILES to TEIKOBKP;
+grant select on V_$TEMP_SPACE_HEADER to TEIKOBKP;
+grant select on dba_users to TEIKOBKP;
+grant read,write on directory DATAPUMP to TEIKOBKP;
+
+col DIRECTORY_PATH form a90;
+select * from dba_directories where DIRECTORY_NAME like '%DATA_PUMP%';
+
+grant read,write on directory DATA_PUMP to TEIKOBKP;
+
+create or replace directory PHILIPS_DATA_PUMP_DIR as '/u01/datapump/';
+
+grant read,write on directory PHILIPS_DATA_PUMP_DIR to TASY, TASY_VERSAO;
+
+create or replace directory PHILIPS_DATA_PUMP_DIR as 'C:\backup\atualizacao';
+
+create or replace directory DATA_PUMP as '/orabackup/fluig/datapump/files/';
+
+col OBJECT_NAME form a50;
+select OBJECT_NAME, CREATED, LAST_DDL_TIME from user_objects;
+
+select owner, OBJECT_NAME, CREATED, LAST_DDL_TIME, OBJECT_TYPE from dba_objects where owner= 'TEIKOBKP' AND OBJECT_NAME like '%PUMP%';
+
+ 
+select 'GRANT '||privilege||' ON DIRECTORY '||table_schema||'.'||table_name||' TO '|| grantee || ';'
+from all_tab_privs 
+where table_name in (select directory_name from dba_directories)
+AND table_name ='PHILIPS_DATA_PUMP_DIR';

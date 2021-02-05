@@ -1,0 +1,6 @@
+run{
+backup as compressed backupset full database tag 'bkp_full_dados' format '/u01/orabkp/nocdb/database-%T_%I_%d_%s.bkp';
+backup current controlfile tag 'bkp_cold_controlfile' format '/u01/orabkp/nocdb/control_bkp-%T_%I_%d_%s.bkp';
+backup as compressed backupset spfile tag 'bkp_spfile' format '/u01/orabkp/nocdb/spfile_bkp-%T_%I_%d_%s.bkp';
+backup as compressed backupset archivelog all delete all input tag 'arc_bkp' format '/u01/orabkp/nocdb/arc_bkp-%T_%I_%d_%s.bkp';
+}

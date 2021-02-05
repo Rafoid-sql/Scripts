@@ -1,0 +1,113 @@
+create user teikobkp identified by bkpokiet default tablespace farol;
+
+grant connect, resource, dba to teikobkp;
+
+grant execute on sys.dbms_defer_import_internal to teikobkp;
+
+grant execute on sys.dbms_export_extension to teikobkp;
+
+
+grant flashback on SYS.KU$_USER_MAPPING_VIEW TO teikobkp;
+grant flashback on ORDDATA.ORDDCM_DOCS to teikobkp;
+grant flashback on SYS.FGA_LOG$FOR_EXPORT to teikobkp;
+grant flashback on SYSTEM.SCHEDULER_JOB_ARGS to teikobkp;
+grant flashback on SYSTEM.SCHEDULER_PROGRAM_ARGS to teikobkp;
+grant flashback on SYS.AUDTAB$TBS$FOR_EXPORT to teikobkp;
+grant flashback on SYS.DBA_SENSITIVE_DATA to teikobkp;
+grant flashback on SYS.DBA_TSDP_POLICY_PROTECTION to teikobkp;
+grant flashback on SYS.NACL$_ACE_EXP to teikobkp;
+grant flashback on SYS.NACL$_HOST_EXP to teikobkp;
+grant flashback on SYS.NACL$_WALLET_EXP to teikobkp;
+grant flashback on WMSYS.WM$EXP_MAP to teikobkp;
+
+create table teikobkp.tk_bkp_owner(
+CODOWN number(4) not null,
+NOMOWN varchar2(50));
+
+create table teikobkp.tk_bkp_exclui_tabela(
+OWNER varchar2(100),
+TABELA varchar2(200));
+
+INSERT INTO teikobkp.tk_bkp_exclui_tabela select owner,table_name from dba_tables where owner in ('FAROL','TEIKOBKP','TEIKOADM');
+
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (1,'SYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (2,'SYSTEM');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (3,'PUBLIC');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (4,'TSMSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (5,'OUTLN');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (6,'SYSMAN');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (7,'ORDSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (8,'MDSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (9,'CTXSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (10,'ORDPLUGINS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (11,'LBACSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (12,'XDB');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (13,'SI_INFORMTN_SCHEMA');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (14,'DIP');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (15,'DBSNMP');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (16,'EXFSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (17,'WMSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (18,'ORACLE_OCM');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (19,'ANONYMOUS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (20,'XS$NULL');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (21,'APPQOSSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (22,'DMSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (23,'OWBSYS_AUDIT');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (24,'OLAPSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (25,'OWBSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (26,'QUICKSTB');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (27,'GSMADMIN_INTERNAL');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (28,'OJVMSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (29,'ORDDATA');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (30,'AUDSYS');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (31,'APEX_040200');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (32,'SCOTT');
+insert into teikobkp.tk_bkp_owner (codown, nomown) values (33,'APEX_030200');
+
+update teikobkp.tk_bkp_owner set nomown='SYS' where codown=1;
+update teikobkp.tk_bkp_owner set nomown='SYSTEM' where codown=2;
+update teikobkp.tk_bkp_owner set nomown='PUBLIC' where codown=3;
+update teikobkp.tk_bkp_owner set nomown='TSMSYS' where codown=4;
+
+00 00 * * * sh /orabackup/rman/script/BackupRmanFull.sh tasy >> /dev/null
+00 02-23 * * * sh /orabackup/rman/script/BackupRmanArch.sh tasy >> /dev/null
+00 22 * * * sh /orabackup/dbprod/datapump/script/BackupExpDp.sh dbprod full 1 S >> /dev/null
+
+create or replace directory DATA_PUMP as '/u03/backup/PRD2132/logico/files';
+
+grant read, write on directory DATA_PUMP to teikobkp;
+
+chown oracle:dba /orabackup
+
+chmod -R 772 /orabackup
+
+sqlplus teikobkp/bkpokiet 
+
+INSERT INTO teikobkp.tk_bkp_exclui_tabela
+SELECT owner,
+  table_name
+FROM dba_tables
+WHERE table_name LIKE 'W\_%' ESCAPE '\'
+AND owner LIKE 'TASY%'
+AND table_name NOT IN
+  (SELECT TABELA FROM teikobkp.tk_bkp_exclui_tabela WHERE owner LIKE 'TASY%');
+  
+select * from teikobkp.tk_bkp_exclui_tabela WHERE TABELA LIKE 'W\_%' ESCAPE '\' AND owner LIKE 'TASY%';
+select count(*) from teikobkp.tk_bkp_exclui_tabela WHERE NOT TABELA LIKE 'W\_%' ESCAPE '\' AND OWNER='TASY';
+SELECT count(*) FROM dba_tables WHERE table_name LIKE 'W\_%' ESCAPE '\' AND owner LIKE 'TASY%';
+
+select TABELA from teikobkp.tk_bkp_exclui_tabela WHERE NOT TABELA LIKE 'W\_%' ESCAPE '\' AND OWNER='TASY';
+
+"TASY"."W_VERSAO_TABELA_ITEM"
+"TASY"."W_TEMP_FABIO"
+"TASY"."W_TEMP_RODRIGOBARTH"
+  
+INSERT INTO teikobkp.tk_bkp_exclui_tabela
+SELECT owner,
+  table_name
+FROM dba_tables
+WHERE owner LIKE 'TEIKOADM%'
+AND table_name NOT IN
+  (SELECT tabela FROM teikobkp.tk_bkp_exclui_tabela WHERE owner LIKE 'TEIKOADM%');
+  
+  

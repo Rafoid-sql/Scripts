@@ -1,0 +1,9 @@
+ [SCRIPT_STEP_1]
+       type=0
+      [0][0]dirscript=/usr/local/Teiko/Clone/script/altera_cron.sh
+ [/SCRIPT_STEP_1]
+
+  [SCRIPT_STEP_6]
+       type=1
+      [1][0]dirscript=/usr/local/Teiko/Clone/script/retorna_cron.sh
+  [/SCRIPT_STEP_6]

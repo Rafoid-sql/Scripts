@@ -1,0 +1,10 @@
+SELECT x.ksppinm "Parameter",
+       Y.ksppstvl "Session Value",
+       Z.ksppstvl "Instance Value"
+FROM   x$ksppi X,
+       x$ksppcv Y,
+       x$ksppsv Z
+WHERE  x.indx = Y.indx
+AND    x.indx = z.indx
+AND    x.ksppinm LIKE '/_optimizer_force%' escape '/'
+order by x.ksppinm;

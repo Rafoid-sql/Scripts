@@ -1,0 +1,27 @@
+SELECT    'alter database rename file '''
+       || name
+       || ''' to ''/u04/oradata/'
+       || (SELECT name FROM v$database)
+       || '/'
+       || SUBSTR (name, INSTR (name, '/', -1) + 1)
+       || ''';'
+          cmd
+  FROM v$datafile
+UNION ALL
+SELECT    'alter database rename file '''
+       || name
+       || ''' to ''/u04/oradata/'
+       || (SELECT name FROM v$database)
+       || '/'
+       || SUBSTR (name, INSTR (name, '/', -1) + 1)
+       || ''';'
+  FROM v$tempfile
+UNION ALL
+SELECT    'alter database rename file '''
+       || member
+       || ''' to ''/u04/oradata/'
+       || (SELECT name FROM v$database)
+       || '/'
+       || SUBSTR (member, INSTR (member, '/', -1) + 1)
+       || ''';'
+  FROM v$logfile;

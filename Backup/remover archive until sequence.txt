@@ -1,0 +1,38 @@
+#! /bin/sh
+
+. ~/.profile
+
+##===================================================================##
+## Removendo archives DBSGUDG                                        ##
+##===================================================================##
+
+FILE_ULT_SEQ_DBSGUDG="/oracle/app/product/11.2.0/admin/scripts/standby/ult_seq_dbsgudg.out"
+
+ORACLE_SID=dbsgudg
+
+DB_STBY=$(sqlplus -S "/ as sysdba"  <<EOF
+          set pagesize 0 feedback off verify off heading off echo off;
+          select database_role from v\$database;
+          exit;
+EOF
+)
+
+if [ "$DB_STBY" = "PHYSICAL STANDBY" ]
+then
+  SEQUENCE=$(sqlplus -S "/ as sysdba"  <<EOF
+            set pagesize 0 feedback off verify off heading off echo off;
+            select max(sequence#) - 100 from v\$log_history;
+            exit;
+  EOF
+  )
+
+  echo $SEQUENCE > $FILE_ULT_SEQ_DBSGUDG
+
+  SEQ_COMP=`cat ${FILE_ULT_SEQ_DBSGUDG} | grep -v SQL | grep -v [a-z] | grep -v [A-Z]`
+
+rman target / <<EOF
+delete noprompt archivelog until sequence ${SEQ_COMP};
+exit
+EOF
+
+fi

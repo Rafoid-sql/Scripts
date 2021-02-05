@@ -1,0 +1,137 @@
+sqlplus teikobkp/bkpokiet@dbtst @drop_constraints.sql &
+sqlplus teikobkp/bkpokiet@dbtst @drop_constraint.sql &
+sqlplus teikobkp/bkpokiet@dbtst @drop_tables.sql &
+sqlplus teikobkp/bkpokiet@dbtst @drop_function.sql &
+sqlplus teikobkp/bkpokiet@dbtst @drop_procedure.sql &
+sqlplus teikobkp/bkpokiet@dbtst @drop_library.sql &
+sqlplus teikobkp/bkpokiet@dbtst @drop_mat_view.sql &
+sqlplus teikobkp/bkpokiet@dbtst @drop_package.sql &
+sqlplus teikobkp/bkpokiet@dbtst @drop_sequence.sql &
+sqlplus teikobkp/bkpokiet@dbtst @drop_view.sql &
+sqlplus teikobkp/bkpokiet@dbtst @drop_SYNONYM.sql&
+
+#### Salve o conteúdo abaixo como sql.sql e execute o arquivo.
+--Drop constraints
+set pagesize 2000
+spool drop_constraint.sql
+select 'alter table '||owner||'.'||table_name||' drop constraint '||constraint_name||';' from all_constraints where owner='VETORH';
+spool off
+
+--Drop tables
+set pagesize 2000
+spool drop_tables.sql
+select 'drop table '||owner||'.'||object_name||' cascade constraint;' from dba_objects where object_type='TABLE' and owner='VETORH';
+spool off
+
+--Dropa objetos
+set pagesize 2000
+spool drop_function.sql
+select
+'drop '||object_type||' '||owner||'.'||object_name||';'
+from dba_objects
+where object_type in ('FUNCTION')
+and owner in ('VETORH')
+order by owner,object_type,object_name;
+/
+spool off
+
+set pagesize 2000
+spool drop_procedure.sql
+select
+'drop '||object_type||' '||owner||'.'||object_name||';'
+from dba_objects
+where object_type in ('PROCEDURE')
+and owner in ('VETORH')
+order by owner,object_type,object_name;
+/
+spool off
+
+set pagesize 2000
+spool drop_library.sql
+select
+'drop '||object_type||' '||owner||'.'||object_name||';'
+from dba_objects
+where object_type in ('LIBRARY')
+and owner in ('VETORH')
+order by owner,object_type,object_name;
+/
+spool off
+
+set pagesize 2000
+spool drop_mat_view.sql
+select
+'drop '||object_type||' '||owner||'.'||object_name||';'
+from dba_objects
+where object_type in ('MATERIALIZED VIEW')
+and owner in ('VETORH')
+order by owner,object_type,object_name;
+/
+spool off
+
+set pagesize 2000
+spool drop_package.sql
+select
+'drop '||object_type||' '||owner||'.'||object_name||';'
+from dba_objects
+where object_type in ('PACKAGE')
+and owner in ('VETORH')
+order by owner,object_type,object_name;
+/
+spool off
+
+set pagesize 2000
+spool drop_sequence.sql
+select
+'drop '||object_type||' '||owner||'.'||object_name||';'
+from dba_objects
+where object_type in ('SEQUENCE')
+and owner in ('VETORH')
+order by owner,object_type,object_name;
+/
+spool off
+
+set pagesize 2000
+spool drop_view.sql
+select
+'drop '||object_type||' '||owner||'.'||object_name||';'
+from dba_objects
+where object_type in ('VIEW')
+and owner in ('VETORH')
+order by owner,object_type,object_name;
+/
+spool off
+
+set pagesize 2000
+spool drop_SYNONYM.sql
+select
+'drop '||object_type||' '||owner||'.'||object_name||';'
+from dba_objects
+where object_type in ('SYNONYM')
+and owner in ('VETORH')
+order by owner,object_type,object_name;
+/
+spool off
+
+set pagesize 2000
+spool drop_SYNONYM.sql
+select
+'drop '||object_type||' '||owner||'.'||object_name||';'
+from dba_objects
+where object_type in ('SYNONYM')
+and owner in ('VETORH')
+order by owner,object_type,object_name;
+/
+spool off
+
+--Dropa objetos
+set pagesize 2000
+spool drop_objects.sql
+select
+'drop '||object_type||' '||owner||'.'||object_name||';'
+from dba_objects
+where object_type in ('FUNCTION','LIBRARY','MATERIALIZED VIEW',
+'PACKAGE','PROCEDURE','SEQUENCE','VIEW','SYNONYM','TYPE','JAVA CLASS','JAVA SOURCE')
+and owner in ('VETORH')
+order by owner,object_type,object_name;
+/
+spool off

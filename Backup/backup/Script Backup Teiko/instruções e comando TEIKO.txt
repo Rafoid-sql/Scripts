@@ -1,0 +1,38 @@
+ 278  echo '***************************************************************'>/home/oracle/.assinatura_teiko
+  279  echo '* Teiko                                                       *'>>/home/oracle/.assinatura_teiko
+  280  echo '* Ajustado de acordo com o documento de padrões Teiko v1.0    *'>>/home/oracle/.assinatura_teiko
+  281  echo '* Ajuste realizado por: Carlos Alexandre da Silva             *'>>/home/oracle/.assinatura_teiko
+  282  echo '* Data do ajuste: 26/02/2019                                  *'>>/home/oracle/.assinatura_teiko
+  283  echo '* Requisição: WFLBV-401530                                    *'>>/home/oracle/.assinatura_teiko
+  284  echo '*                        ####                                 *'>>/home/oracle/.assinatura_teiko
+  285  echo '*                       #    #                                *'>>/home/oracle/.assinatura_teiko
+  286  echo '*                      #      #                               *'>>/home/oracle/.assinatura_teiko
+  287  echo '*                      ########                               *'>>/home/oracle/.assinatura_teiko
+  288  echo '*                      #      #                               *'>>/home/oracle/.assinatura_teiko
+  289  echo '***************************************************************'>>/home/oracle/.assinatura_teiko
+  290  echo 'cat .assinatura_teiko'>>/home/oracle/.bash_profile
+
+
+export ORACLE_SID=HOM
+passwd file=orapwHOM password=Passw0rd
+orapwd file=orapwHOM password=Passw0rd
+
+
+srvctl add database -db HOM -diskgroup "DG_DATA" -policy AUTOMATIC -oraclehome /u01/app/oracle/product/12.1.0/dbhome_1
+srvctl status database -db HOM
+srvctl start database -db HOM
+
+
+lsnrctl reload
+lsnrctl status
+tnsping PROD
+tnsping HOM
+
+ srvctl config database
+ 
+ cat /etc/security/limits.conf
+
+
+srvctl config database -d PROD
+srvctl start database -d prod
+

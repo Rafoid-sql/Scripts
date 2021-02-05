@@ -1,0 +1,35 @@
+## Diario Datapump FULL - Adicionado por AMM Tecnologia em 21/10/2019
+#01 20 * * *  /home/oracle/scripts/bin/producao_full_expdp.sh
+#01 22 * * *  /home/oracle/scripts/bin/portal_full_expdp.sh
+#01 23 * * *  /home/oracle/scripts/bin/solus_full_expdp.sh
+
+# Diario RMAN FULL - Adicionado por AMM Tecnologia em 25/08/2018
+#01 22 * * *  /home/oracle/scripts/bin/prd_bkpFULLRMAN.sh
+#01 04 * * *  /home/oracle/scripts/bin/solus_bkpFULLRMAN.sh
+#01 05 * * *  /home/oracle/scripts/bin/producao_bkpFULLRMAN.sh
+#01 06 * * *  /home/oracle/scripts/bin/portal_bkpFULLRMAN.sh
+
+# Diario CROSSCHECK - Adicionado por AMM Tecnologia em 25/08/2018
+#01 21 * * * /home/oracle/scripts/bin/prd_rman_crosscheck.sh
+#30 01 * * * /home/oracle/scripts/bin/solus_rman_crosscheck.sh
+#30 02 * * * /home/oracle/scripts/bin/producao_rman_crosscheck.sh
+#30 03 * * * /home/oracle/scripts/bin/portal_rman_crosscheck.sh
+
+# Relatorio Diario
+#04 09 * * *  /home/oracle/scripts/bin/bom_dia_AEBEL_prd.sh
+#05 09 * * *  /home/oracle/scripts/bin/bom_dia_AEBEL_producao.sh
+#06 09 * * *  /home/oracle/scripts/bin/bom_dia_AEBEL_portal.sh
+#07 09 * * *  /home/oracle/scripts/bin/bom_dia_AEBEL_solus.sh
+
+
+## GERA SCRIPTS PARA TRANSFERENCIA DE ARCHIVES PARA O BACKUP VIA TSM ###########
+#*/05 * * * *  sh /home/oracle/scripts/bin/prd_executa_gera_scripts.sh
+#*/08 * * * *  sh /home/oracle/scripts/bin/portal_executa_gera_scripts.sh
+#*/10 * * * *  sh /home/oracle/scripts/bin/producao_executa_gera_scripts.sh
+#*/12 * * * *  sh /home/oracle/scripts/bin/solus_executa_gera_scripts.sh
+
+## TRANSFERE ARCHIVES DO ASM PARA FILESYSTEM ###################################
+#*/06 * * * *  sh /home/oracle/scripts/bin/prd_executa_scripts.sh
+#*/09 * * * *  sh /home/oracle/scripts/bin/portal_executa_scripts.sh
+#*/11 * * * *  sh /home/oracle/scripts/bin/producao_executa_scripts.sh
+#*/13 * * * *  sh /home/oracle/scripts/bin/solus_executa_scripts.sh

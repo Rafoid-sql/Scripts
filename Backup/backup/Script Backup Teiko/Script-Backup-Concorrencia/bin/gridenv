@@ -1,0 +1,40 @@
+# .bash_profile
+
+# Oracle Settings
+TMP=/tmp; export TMP
+TMPDIR=$TMP; export TMPDIR
+
+ORACLE_HOSTNAME=dboraprod; export ORACLE_HOSTNAME
+ORACLE_BASE=/u01/app/oracle; export ORACLE_BASE
+ORACLE_HOME=/u01/app/oracle/product/grid/; export ORACLE_HOME
+ORACLE_SID=+ASM; export ORACLE_SID
+ORACLE_TERM=xterm; export ORACLE_TERM
+PATH=/usr/sbin:$PATH; export PATH
+PATH=$ORACLE_HOME/bin:$PATH; export PATH
+export PATH=$ORACLE_HOME/bin:/bin:/usr/local/bin:/usr/ccs/bin:/usr/bin:/etc/:/usr/sbin:/usr/ucb:$HOME/bin:/usr/bin/X11:/sbin:/usr/bin/java:$ORACLE_HOME/OPatch
+
+export NLS_LANG="BRAZILIAN PORTUGUESE_BRAZIL.WE8ISO8859P1"
+
+LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib; export LD_LIBRARY_PATH
+CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib; export CLASSPATH
+
+if [ $USER = "oracle" ]; then
+  if [ $SHELL = "/bin/ksh" ]; then
+    ulimit -p 16384
+    ulimit -n 65536
+  else
+    ulimit -u 16384 -n 65536
+  fi
+fi
+
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/bin
+
+export PATH

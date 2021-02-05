@@ -1,0 +1,8 @@
+create user LB2BKP identified by alsk1029QWE#;
+grant DBA to LB2BKP;
+grant EXP_FULL_DATABASE to LB2BKP;
+grant IMP_FULL_DATABASE to LB2BKP;
+grant CONNECT to LB2BKP;
+grant RESOURCE to LB2BKP;
+grant UNLIMITED TABLESPACE to LB2BKP;
+grant CREATE SESSION to LB2BKP;

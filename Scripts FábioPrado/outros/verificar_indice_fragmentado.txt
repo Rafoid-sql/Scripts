@@ -1,0 +1,8 @@
+ANALYZE INDEX DBAASS.PK_ATENDIMENTO_ENVOLVIDO VALIDATE STRUCTURE;
+
+SELECT name, height,lf_rows,lf_blks,del_lf_rows FROM INDEX_STATS;
+
+ SELECT name, height, lf_rows, del_lf_rows,(del_lf_rows/lf_rows)*100 as ratio
+FROM INDEX_STATS;
+
+http://olivertconsultoria.blogspot.com.br/2011/10/como-determinar-se-um-indice-precisa.html

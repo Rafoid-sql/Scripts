@@ -1,0 +1,49 @@
+SELECT 'ALTER TABLE ' 
+    || t.owner 
+    || '.' 
+    || t.table_name 
+    || ' MOVE LOB (' 
+    || column_name  
+    || ') STORE AS (TABLESPACE ACADEMICO_BLOB);'  
+    FROM dba_lobs l, dba_tables t
+    where l.owner = t.owner
+        and l.table_name = t.table_name
+    and l.segment_name in 
+        (select segment_name  
+          from dba_segments
+          where segment_type = 'LOBSEGMENT'
+            AND TABLESPACE_NAME != 'ACADEMICO_BLOB' 
+            and l.owner in ('DBAASS','POS_EAD'))
+        ORDER BY t.owner, t.table_name;
+		
+		
+		
+
+
+
+-- #############################################
+-- #  Mover tabelas e dá um rebuild no indice  #
+-- #############################################
+
+ALTER TABLE nome_da_tabela MOVE TABLESPACE nome_do_novo_tablespace
+
+select 'ALTER TABLE '  
+        || OWNER
+    ||'.'
+    ||TABLE_NAME
+    ||' MOVE TABLESPACE ACADEMICO_OLIMPO;'
+     from 
+       DBA_TABLES 
+   where owner in ('DBAASS')
+       AND TABLESPACE_NAME NOT IN ('OLIMPOINTEGRA','ACADEMICO_OLIMPO') 
+       AND TABLE_NAME LIKE 'OLI_%'
+	   
+	   
+select 'ALTER INDEX '
+        ||OWNER
+    ||'.'
+    ||INDEX_NAME
+    ||' REBUILD;'
+from dba_indexes where
+owner in ('DBAASS','POS_EAD')
+AND STATUS != 'VALID';

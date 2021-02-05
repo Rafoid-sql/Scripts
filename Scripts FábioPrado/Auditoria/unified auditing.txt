@@ -1,0 +1,84 @@
+##### compilando kernel para habilitar o unified auditing
+
+make -f ins_rdbms.mk uniaud_on ioracle
+
+
+##### vamos conferir se a alteração realmente surtiu efeito e habilitou a Unified Auditing:
+
+col parameter for a30
+col value for a10
+select parameter, value from v$option where parameter='Unified Auditing';
+
+PARAMETER                      VALUE
+------------------------------ ----------
+Unified Auditing               TRUE
+ 
+
+##### Pure Mode. Vamos agora verificar algumas políticas existentes:
+
+col policy_name for a50
+select distinct policy_name from sys.audit_unified_policies order by 1;
+
+ 
+
+##### As seguintes opções de auditoria se fazem valer através da política ORA_SECURECONFIG:
+
+col POLICY_NAME format A40
+col AUDIT_OPTION format A40
+set PAGES 100
+select POLICY_NAME, AUDIT_OPTION
+	  from   AUDIT_UNIFIED_POLICIES
+     where  policy_name =  '&policy_name'  order by 2;
+	 
+	 
+##### Para conferir as políticas já habilitadas vamos executar a seguinte query:
+
+col user_name for a20
+SELECT * FROM SYS.AUDIT_UNIFIED_ENABLED_POLICIES;
+
+##### Por padrão os registros de auditoria são armazenados no schema AUDSYS que tem seus segmentos na tablespace SYSAUX:
+
+col owner for a25
+select distinct owner, tablespace_name from dba_segments where owner='AUDSYS';
+
+Vamos consultar o que já temos de informações até o momento consultando somente as primeiras 5 linhas:
+
+	set pages 200 lin 200
+	col object_name for a30
+	col DBUSERNAME for a13
+	col action_name for a35
+	col object_schema for a10
+	col OS_USERNAME for a15
+	col AUDIT_OPTION for a20
+	col OBJECT_NAME for a20
+	col sql_text for a70
+	col EVENT_TIMESTAMP for a30
+	select OS_USERNAME, DBUSERNAME, ACTION_NAME, OBJECT_SCHEMA,
+	OBJECT_NAME, EVENT_TIMESTAMP, AUDIT_OPTION 
+	from unified_audit_trail 
+	order by EVENT_TIMESTAMP 
+	fetch first 5 rows only;
+	
+	
+##### Volte a sessão do SYS e consulte a UNIFIED_AUDIT_TRAIL para saber se a auditoria surtiu efeito.
+
+set lines 200
+col UNIFIED_AUDIT_POLICIES for a40
+col SYSTEM_PRIVILEGE_USED for a35
+col DBUSERNAME for a20
+col ACTION_NAME for a40
+select UNIFIED_AUDIT_POLICIES, DBUSERNAME, ACTION_NAME,
+SYSTEM_PRIVILEGE_USED,
+to_char(EVENT_TIMESTAMP,'DD-MON-YYYY HH24:MI') "DATE"
+from unified_audit_trail order by 5 desc;
+
+-- teste marcelo
+
+set lines 200
+col UNIFIED_AUDIT_POLICIES for a40
+col SYSTEM_PRIVILEGE_USED for a35
+col DBUSERNAME for a20
+select UNIFIED_AUDIT_POLICIES, DBUSERNAME,
+SYSTEM_PRIVILEGE_USED, SQL_TEXT
+from unified_audit_trail 
+where DBUSERNAME='MARCELO' order by 2 desc;

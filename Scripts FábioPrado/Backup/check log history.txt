@@ -1,0 +1,5 @@
+select MAX(SEQUENCE#) from v$log_history where RESETLOGS_CHANGE#=(select max(distinct RESETLOGS_CHANGE#) from V$ARCHIVED_LOG);
+
+select distinct RESETLOGS_CHANGE# from V$ARCHIVED_LOG;
+
+select max(sequence#) from v$log_history;
