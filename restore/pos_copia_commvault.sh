@@ -123,11 +123,11 @@ VERIFICA_ARCHIVE()
 		OUT_ARC=$(VERIFICA_OUTPUT)
 		if [[ ${OUT_ARC} =~ "t" ]];
 		then
+			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Recovery em execucao..." >> ${LOG} 2>&1
 			OUT_ARC=$(VERIFICA_OUTPUT)
 			while [[ ${OUT_ARC} =~ "t" ]];
 			do
 				OUT_ARC=$(VERIFICA_OUTPUT)
-				echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Recovery em execucao..." >> ${LOG} 2>&1
 				sleep ${SLP}m >> ${LOG} 2>&1
 			done
 			if [[ ${OUT_ARC} =~ "f" ]];
