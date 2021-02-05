@@ -1,0 +1,8 @@
+docker ps
+
+docker stop mod_gearman_worker
+
+docker start mod_gearman_worker
+
+
+ps -ef | grep nrpe

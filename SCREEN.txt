@@ -1,0 +1,7 @@
+screen -S <nome>: cria
+screen -r <nome>: recupera
+screen -x <nome>: força recuperação
+screen -ls: lista
+
+CTRL+a+d: sair
+CTRL+d: deslogar

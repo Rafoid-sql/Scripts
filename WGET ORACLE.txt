@@ -1,0 +1,6 @@
+
+# ORACLE 11g:
+wget --http-user=rafael.oliveira@lb2.com.br --http-password=alsk1029QWE# "https://updates.oracle.com/Orion/Download/process_form/p13390677_112040_Linux-x86-64_1of7.zip?file_id=64312806&aru=16716375&userid=o-rafael.oliveira@lb2.com.br&email=rafael.oliveira@lb2.com.br&patch_password=&patch_file=p13390677_112040_Linux-x86-64_1of7.zip" -O p13390677_112040_Linux-x86-64_1of7.zip --no-check-certificate
+
+
+wget --http-user=rafael.oliveira@lb2.com.br --http-password=alsk1029QWE# "https://updates.oracle.com/Orion/Download/process_form/p13390677_112040_Linux-x86-64_2of7.zip?file_id=64312807&aru=16716375&userid=o-rafael.oliveira@lb2.com.br&email=rafael.oliveira@lb2.com.br&patch_password=&patch_file=p13390677_112040_Linux-x86-64_2of7.zip" -O p13390677_112040_Linux-x86-64_2of7.zip --no-check-certificate
