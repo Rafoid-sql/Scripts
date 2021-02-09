@@ -96,92 +96,92 @@ FN_MATRICULA()
 FN_CRIA()
 	{
 		case ${EMERGENCIA} in
-		N)
-			echo -e "\n## COLE O LINK DO CHAMADO ${ARQUIVO} A SER EXECUTADO ##\n"
-			while read WGET_ADDR
-			do
-				wget -S -o "${WGET_USER}".tmp --no-check-certificate --http-user="${WGET_USER}" --ask-password --spider "${WGET_ADDR}" \
-				&& echo -e "\n## REVISAO ##"; \
-				sed -nr 's/^  ETag:([^.]*).*/\1/p' ${WGET_USER}.tmp \
-				| awk -F// '{$NF=""} 1' \
-				| sed 's/.*"//'
-			break;
-			done
-			if [[ `grep -F "ETag" ${WGET_USER}.tmp` ]];
-			then
-				echo -e "\n## A REVISAO DO ARQUIVO ESTA CORRETA [S/N]? ##"
-				while read WGET_SVN
+			N)
+				echo -e "\n## COLE O LINK DO CHAMADO ${ARQUIVO} A SER EXECUTADO ##\n"
+				while read WGET_ADDR
 				do
-					case ${WGET_SVN} in
-						SIM|sim|S|s)
-							echo -e ""
-							wget -q -S -O "${WGET_FILE}" -o "${WGET_USER}".tmp --no-check-certificate --http-user="${WGET_USER}" --ask-password "${WGET_ADDR}"
-							if [[ ${VAR_ARQ} = "1" ]] && [[ `grep -F "ETag" ${WGET_USER}.tmp` ]];
-							then
-								if [[ ! -f "${CHAMADO}.sql" ]];
-								then
-									echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql NAO FOI CRIADO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-									exit 1;
-								else
-									if [[ -s ${CHAMADO}.sql ]];
-									then
-										echo -e "\n## ARQUIVO ${CHAMADO}.sql CRIADO ##"
-										rm -f ${WGET_USER}.tmp
-									else
-										echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql ESTA VAZIO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-										exit 1;
-									fi
-								fi
-							else
-								echo -e "${RED}\n## !! NAO FOI POSSIVEL OBTER OS DADOS DO ARQUIVO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-								exit;
-							fi
-							break;
-							;;
-						NAO|nao|N|n)
-							echo -e "${RED}\n## !! EXECUCAO CANCELADA !! ##\n${NOCOLOR}"
-							rm -f ${WGET_USER}.tmp
-							exit 1;
-							;;
-						*)
-							echo -e "${GREEN}\n## !! DIGITE [S]IM OU [N]AO !! ##${NOCOLOR}"
-							;;
-					esac
+					wget -S -o "${WGET_USER}".tmp --no-check-certificate --http-user="${WGET_USER}" --ask-password --spider "${WGET_ADDR}" \
+					&& echo -e "\n## REVISAO ##"; \
+					sed -nr 's/^  ETag:([^.]*).*/\1/p' ${WGET_USER}.tmp \
+					| awk -F// '{$NF=""} 1' \
+					| sed 's/.*"//'
 				break;
 				done
-			else
-				echo -e "${RED}\n## !! NAO FOI POSSIVEL OBTER OS DADOS DO ARQUIVO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-				exit 1;
-			fi
-			;;
-		S)
-			echo -e "\n## COLE O SCRIPT DO CHAMADO ${CHAMADO} A SER EXECUTADO ##\n"
-			FN_PAUSA "## [ENTER] PARA CRIAR O ARQUIVO ${CHAMADO}.sql ##"
-			if [[ ${VAR_ARQ} = "1" ]];
-			then
-				vi ${CHAMADO}.sql
-				if [[ ! -f "${CHAMADO}.sql" ]];
+				if [[ `grep -F "ETag" ${WGET_USER}.tmp` ]];
 				then
-					echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql NAO FOI CRIADO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-					exit 1;
+					echo -e "\n## A REVISAO DO ARQUIVO ESTA CORRETA [S/N]? ##"
+					while read WGET_SVN
+					do
+						case ${WGET_SVN} in
+							SIM|sim|S|s)
+								echo -e ""
+								wget -q -S -O "${WGET_FILE}" -o "${WGET_USER}".tmp --no-check-certificate --http-user="${WGET_USER}" --ask-password "${WGET_ADDR}"
+								if [[ ${VAR_ARQ} = "1" ]] && [[ `grep -F "ETag" ${WGET_USER}.tmp` ]];
+								then
+									if [[ ! -f "${CHAMADO}.sql" ]];
+									then
+										echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql NAO FOI CRIADO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+										exit 1;
+									else
+										if [[ -s ${CHAMADO}.sql ]];
+										then
+											echo -e "\n## ARQUIVO ${CHAMADO}.sql CRIADO ##"
+											rm -f ${WGET_USER}.tmp
+										else
+											echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql ESTA VAZIO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+											exit 1;
+										fi
+									fi
+								else
+									echo -e "${RED}\n## !! NAO FOI POSSIVEL OBTER OS DADOS DO ARQUIVO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+									exit;
+								fi
+								break;
+								;;
+							NAO|nao|N|n)
+								echo -e "${RED}\n## !! EXECUCAO CANCELADA !! ##\n${NOCOLOR}"
+								rm -f ${WGET_USER}.tmp
+								exit 1;
+								;;
+							*)
+								echo -e "${GREEN}\n## !! DIGITE [S]IM OU [N]AO !! ##${NOCOLOR}"
+								;;
+						esac
+					break;
+					done
 				else
-					if [[ -s ${CHAMADO}.sql ]];
-					then
-						echo -e "\n## ARQUIVO ${CHAMADO}.sql CRIADO ##"
-					else
-						echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql ESTA VAZIO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-						exit 1;
-					fi
+					echo -e "${RED}\n## !! NAO FOI POSSIVEL OBTER OS DADOS DO ARQUIVO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+					exit 1;
 				fi
-			else
-				exit;
-			fi
-			;;
-		*)
-			echo -e "${RED}\n## !! VALOR DA VARIAVEL "EMERGENCIA" ESTA INCORRETO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-			exit 1;
-			;;
-	esac
+				;;
+			S)
+				echo -e "\n## COLE O SCRIPT DO CHAMADO ${CHAMADO} A SER EXECUTADO ##\n"
+				FN_PAUSA "## [ENTER] PARA CRIAR O ARQUIVO ${CHAMADO}.sql ##"
+				if [[ ${VAR_ARQ} = "1" ]];
+				then
+					vi ${CHAMADO}.sql
+					if [[ ! -f "${CHAMADO}.sql" ]];
+					then
+						echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql NAO FOI CRIADO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+						exit 1;
+					else
+						if [[ -s ${CHAMADO}.sql ]];
+						then
+							echo -e "\n## ARQUIVO ${CHAMADO}.sql CRIADO ##"
+						else
+							echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql ESTA VAZIO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+							exit 1;
+						fi
+					fi
+				else
+					exit;
+				fi
+				;;
+			*)
+				echo -e "${RED}\n## !! VALOR DA VARIAVEL "EMERGENCIA" ESTA INCORRETO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+				exit 1;
+				;;
+		esac
 	}
 #==========================================================================================================
 #========= INSERE O SELECT NO ARQUIVO .SQL
