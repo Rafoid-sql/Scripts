@@ -38,3 +38,13 @@ WHERE status = 'INVALID'
 and owner in ('DBATJ','THEMIS2G','RUPE')
 ORDER BY owner, object_type, object_name;
 
+
+
+========================================================================================
+
+### Consulta Transaçoes IDLE ###
+select count(*), state from pg_stat_activity where datname='pje' group by state;
+
+### Encerra sessoes idle ###
+
+select pg_terminate_backend(pid) from pg_stat_activity where state = 'idle in transaction'  and datname = 'pje';
