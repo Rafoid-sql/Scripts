@@ -38,8 +38,6 @@ WHERE status = 'INVALID'
 and owner in ('DBATJ','THEMIS2G','RUPE')
 ORDER BY owner, object_type, object_name;
 
-
-
 ========================================================================================
 
 ### Consulta Transaçoes IDLE ###
