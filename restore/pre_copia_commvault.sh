@@ -88,7 +88,7 @@ COPIA_ARQUIVO()
 VERIFICA_PROCESSO()
 	{
 		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Verificando processos utilizando arquivos do diretorio ${PG_SQL}:" >> ${LOG} 2>&1
-		fuser –mk ${PG_SQL}/* >> ${LOG} 2>&1
+		fuser –mak ${PG_SQL} >> ${LOG} 2>&1
 		if [[ ${?} =~ "does not exist" ]];
 		then
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Nao existiam processos." >> ${LOG} 2>&1
