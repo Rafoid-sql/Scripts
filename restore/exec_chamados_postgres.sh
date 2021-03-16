@@ -2,7 +2,7 @@
 #!/bin/sh
 #==========================================================================================================
 #  Autor: Rafael Oliveira
-# Resumo: Execucao automatizada de scripts nas bases PJE e PJERECURSAL
+# Resumo: Execucao automatizada de scripts nas bases POSTGRES
 #==========================================================================================================
 
 #VARIAVEL EXECUCAO
