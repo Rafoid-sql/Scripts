@@ -22,10 +22,10 @@ SCRIPT POSTGRES:
 ========================================================================================
 
 ## PJE ##
-sh SQL/exec_chamados_postgres.sh MDT1015157 PJE P0102637
+sh SQL/exec_chamados_postgres.sh MDT1015195 PJE P0102637
 
 ## RECURSAL ##
-sh SQL/exec_chamados_postgres.sh MDT1015085 PJERECURSAL P0102637
+sh SQL/exec_chamados_postgres.sh MDT1015097 PJERECURSAL P0102637
 
 
 ========================================================================================
