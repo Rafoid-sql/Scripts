@@ -1,0 +1,37 @@
+========================================================================================
+INFO TJMG:
+========================================================================================
+
+## SENHAS ##
+C:\CODAD\Banco de dados\Documentacoes\Usuarios e senha do banco.docx
+1100tjmg
+
+## MATRIZ ##
+DBATJ / MANUTTJ
+
+123
+db
+osc
+06mm
+
+do0bs6cmm
+
+
+========================================================================================
+SCRIPT POSTGRES: 
+========================================================================================
+
+## PJE ##
+sh SQL/exec_chamados_postgres.sh MDT1015157 PJE P0102637
+
+## RECURSAL ##
+sh SQL/exec_chamados_postgres.sh MDT1015085 PJERECURSAL P0102637
+
+
+========================================================================================
+MENSAGENS:
+========================================================================================
+
+## RS APLICADA ##
+Aplicado em produção pela MDT1015004.
+Arquivo removido da pasta CODAD e sql removido do SUP.
