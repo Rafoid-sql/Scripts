@@ -28,7 +28,7 @@ COPIA_CONTROLFILE()
 	{
 		echo -e "[`date +%Y-%m-%d_%H:%M:%S`] Criando backup dos controlfiles:" >> ${LOG} 2>&1
 		for CTL in $(find /ora*/oradata/P/ -name control*.ctl);
-			cp "${CTL}" "${CTL}".bkp  >> ${LOG} 2>&1
+			cp "${CTL}" "${CTL}".bkp >> ${LOG} 2>&1
 		done
 		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Backup criado." >> ${LOG} 2>&1
 		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1

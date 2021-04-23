@@ -2,11 +2,11 @@
 #!/bin/sh
 #==========================================================================================================
 #  Autor: Rafael Oliveira
-# Resumo: Execucao automatizada de scripts nas bases POSTGRES
+# Resumo: Execucao automatizada de scripts nas bases PJE e PJERECURSAL
 #==========================================================================================================
 
 #VARIAVEL EXECUCAO
-EMERGENCIA="N"  #[S|N]
+EMERGENCIA="N" #[S|N]
 
 #VARIAVEIS SCRIPT
 CHAMADO=`echo ${1} | tr "a-z" "A-Z"`
@@ -100,59 +100,96 @@ FN_CRIA()
 				echo -e "\n## COLE O LINK DO CHAMADO ${ARQUIVO} A SER EXECUTADO ##\n"
 				while read WGET_ADDR
 				do
-					wget -S -o "${WGET_USER}".tmp --no-check-certificate --http-user="${WGET_USER}" --ask-password --spider "${WGET_ADDR}" \
-					&& echo -e "\n## REVISAO ##"; \
-					sed -nr 's/^  ETag:([^.]*).*/\1/p' ${WGET_USER}.tmp \
-					| awk -F// '{$NF=""} 1' \
-					| sed 's/.*"//'
+					case `echo $WGET_ADDR | sed 's/^.*http:\/\///' | sed 's/.intra.*//'` in
+						nexus)
+							echo -e ""
+							wget -q -S -O "${WGET_FILE}" -o "${WGET_USER}".tmp --no-check-certificate "${WGET_ADDR}"
+							if [[ ${VAR_ARQ} = "1" ]];
+							then
+								if [[ ! -f "${CHAMADO}.sql" ]];
+								then
+									echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql NAO FOI CRIADO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+									exit 1;
+								else
+									if [[ -s ${CHAMADO}.sql ]];
+									then
+										echo -e "\n## ARQUIVO ${CHAMADO}.sql CRIADO ##"
+										rm -f ${WGET_USER}.tmp
+									else
+										echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql ESTA VAZIO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+										exit 1;
+									fi
+								fi
+							else
+								echo -e "${RED}\n## !! NAO FOI POSSIVEL OBTER OS DADOS DO ARQUIVO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+								exit;
+							fi
+							break;
+							;;
+						gitlab)
+							echo -e ""
+							echo -e "${RED}\n## !! EM CONSTRUCAO !! ##\n${NOCOLOR}"
+							# USAR COMO BASE O CÓDIGO DO SVN, ABAIXO
+							rm -f ${WGET_USER}.tmp
+							exit 1;
+							;;
+						svn)
+							wget -S -o "${WGET_USER}".tmp --no-check-certificate --http-user="${WGET_USER}" --ask-password --spider "${WGET_ADDR}" \
+							&& echo -e "\n## REVISAO SVN ##"; \
+							sed -nr 's/^  ETag:([^.]*).*/\1/p' ${WGET_USER}.tmp \
+							| awk -F// '{$NF=""} 1' \
+							| sed 's/.*"//'	
+							if [[ `grep -F "ETag" ${WGET_USER}.tmp` ]];
+							then
+								echo -e "\n## A REVISAO DO ARQUIVO SVN ESTA CORRETA [S/N]? ##"
+								while read WGET_SVN
+								do
+									case ${WGET_SVN} in
+										SIM|sim|S|s)
+											echo -e ""
+											wget -q -S -O "${WGET_FILE}" -o "${WGET_USER}".tmp --no-check-certificate --http-user="${WGET_USER}" --ask-password "${WGET_ADDR}"
+											if [[ ${VAR_ARQ} = "1" ]] && [[ `grep -F "ETag" ${WGET_USER}.tmp` ]];
+											then
+												if [[ ! -f "${CHAMADO}.sql" ]];
+												then
+													echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql NAO FOI CRIADO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+													exit 1;
+												else
+													if [[ -s ${CHAMADO}.sql ]];
+													then
+														echo -e "\n## ARQUIVO ${CHAMADO}.sql CRIADO ##"
+														rm -f ${WGET_USER}.tmp
+													else
+														echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql ESTA VAZIO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+														exit 1;
+													fi
+												fi
+											else
+												echo -e "${RED}\n## !! NAO FOI POSSIVEL OBTER OS DADOS DO ARQUIVO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+												exit;
+											fi
+											break;
+											;;
+										NAO|nao|N|n)
+											echo -e "${RED}\n## !! EXECUCAO CANCELADA !! ##\n${NOCOLOR}"
+											rm -f ${WGET_USER}.tmp
+											rm -f ${CHAMADO}.sql
+											exit 1;
+											;;
+										*)
+											echo -e "${GREEN}\n## !! DIGITE [S]IM OU [N]AO !! ##${NOCOLOR}"
+											;;
+									esac
+								break;
+								done
+							else
+								echo -e "${RED}\n## !! NAO FOI POSSIVEL OBTER OS DADOS DO ARQUIVO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
+								exit 1;
+							fi
+							;;
+					esac
 				break;
 				done
-				if [[ `grep -F "ETag" ${WGET_USER}.tmp` ]];
-				then
-					echo -e "\n## A REVISAO DO ARQUIVO ESTA CORRETA [S/N]? ##"
-					while read WGET_SVN
-					do
-						case ${WGET_SVN} in
-							SIM|sim|S|s)
-								echo -e ""
-								wget -q -S -O "${WGET_FILE}" -o "${WGET_USER}".tmp --no-check-certificate --http-user="${WGET_USER}" --ask-password "${WGET_ADDR}"
-								if [[ ${VAR_ARQ} = "1" ]] && [[ `grep -F "ETag" ${WGET_USER}.tmp` ]];
-								then
-									if [[ ! -f "${CHAMADO}.sql" ]];
-									then
-										echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql NAO FOI CRIADO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-										exit 1;
-									else
-										if [[ -s ${CHAMADO}.sql ]];
-										then
-											echo -e "\n## ARQUIVO ${CHAMADO}.sql CRIADO ##"
-											rm -f ${WGET_USER}.tmp
-										else
-											echo -e "${RED}\n## !! ARQUIVO ${CHAMADO}.sql ESTA VAZIO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-											exit 1;
-										fi
-									fi
-								else
-									echo -e "${RED}\n## !! NAO FOI POSSIVEL OBTER OS DADOS DO ARQUIVO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-									exit;
-								fi
-								break;
-								;;
-							NAO|nao|N|n)
-								echo -e "${RED}\n## !! EXECUCAO CANCELADA !! ##\n${NOCOLOR}"
-								rm -f ${WGET_USER}.tmp
-								exit 1;
-								;;
-							*)
-								echo -e "${GREEN}\n## !! DIGITE [S]IM OU [N]AO !! ##${NOCOLOR}"
-								;;
-						esac
-					break;
-					done
-				else
-					echo -e "${RED}\n## !! NAO FOI POSSIVEL OBTER OS DADOS DO ARQUIVO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
-					exit 1;
-				fi
 				;;
 			S)
 				echo -e "\n## COLE O SCRIPT DO CHAMADO ${CHAMADO} A SER EXECUTADO ##\n"
@@ -189,13 +226,13 @@ FN_CRIA()
 FN_INSERE()
 	{
 		sed -i '1i select '\''BANCO: '\''||current_database() " ";' ${CHAMADO}.sql
-		if [[ `grep -q "${STRING}" "${CHAMADO}.sql"` != "0" ]]; 
+		if [[ `grep -q "${STRING}" "${CHAMADO}.sql"` != "0" ]];
 		then
 			echo -e "\n## COMANDO SELECT INSERIDO EM ${CHAMADO}.sql ##"
 		else
 			echo -e "${RED}\n## !! COMANDO SELECT NAO INSERIDO. FAVOR VERIFICAR !! ##\n${NOCOLOR}"
 			exit;
-		fi	
+		fi
 	}
 #==========================================================================================================
 #========= ADICIONA DADOS AO ARQUIVO .LOG
@@ -228,9 +265,9 @@ FN_CONVERTE()
 #========= CHECA ERROS
 #==========================================================================================================
 FN_CHECAGEM()
-        {
-                grep --line-buffered -wi 'ERROR\|ERR\|could not connect to server' ${CHAMADO}.log
-        }
+	{
+		grep --line-buffered -wi 'ERROR\|ERR\|could not connect to server' ${CHAMADO}.log
+	}
 #==========================================================================================================
 #========= CONVERTE DATA
 #==========================================================================================================
@@ -256,13 +293,13 @@ FN_PAUSA()
 #==========================================================================================================
 FN_EXECUTA()
 	{
-		echo -e "\n## DESEJA EXECUTAR ${CHAMADO}.sql [S/N]? ##"
+		echo -e "\n## DESEJA EXECUTAR ${CHAMADO}.sql NO BANCO ${BANCO} [S/N]? ##"
 		while read EXC
 		do
 			case ${EXC} in
 				SIM|S|sim|s)
 					echo -e ""
-					FN_PAUSA "## [ENTER] PARA EXECUTAR ${CHAMADO}.sql ##"
+					FN_PAUSA "## [ENTER] PARA EXECUTAR ${CHAMADO}.sql NO BANCO ${BANCO} ##"
 					INICIO=`date +"%Y/%m/%d %H:%M:%S"`
 					psql -v ON_ERROR_STOP=on -U postgres -p 5432 -w -d ${BD} < ${CHAMADO}.sql >> ${CHAMADO}.log 2>&1
 					FIM=`date +"%Y/%m/%d %H:%M:%S"`
@@ -299,6 +336,7 @@ FN_EXECUTA()
 					;;
 				NAO|N|nao|n)
 					echo -e "${RED}\n## !! EXECUCAO CANCELADA !! ##\n${NOCOLOR}"
+					rm -f ${CHAMADO}.sql
 					exit 1;
 					;;
 				*)
@@ -345,6 +383,7 @@ else
 					;;
 				NAO|N|nao|n)
 					echo -e "${RED}\n## !! EXECUCAO CANCELADA !! ##\n${NOCOLOR}"
+					rm -f ${CHAMADO}.sql
 					exit 1;
 					;;
 				*)

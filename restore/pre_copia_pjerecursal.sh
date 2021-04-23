@@ -2,29 +2,31 @@
 #!/bin/sh
 #===========================================================================================================
 #  Autor: Rafael Oliveira
-# Resumo: Realiza Pre Copia Banco PJE-SUP
+# Resumo: Realiza Pre Copia no Banco PJE-SUP
 #===========================================================================================================
 
 HNAME=`hostname -s | sed 's/-//g'`
 SCP_BASE=/backup
 SCP_DIR=/${SCP_BASE}/pre-pos_restore_pje
+SCP_LOG=${SCP_DIR}/log
 PG_SQLBIN=/usr/edb/as11/bin
 PG_SQL=/pgsql2/pje_PRD_11
 PG_CONF=${SCP_BASE}/conf_sup/conf
 PG_LOG=${PG_SQL}/pg_wal
 PG_BKP=${SCP_DIR}/arquivos
+KILL_PROCS=`fuser –mk /pgsql2/`
 PG_H_REC=`ls -t ${PG_BKP}/pg_hba_*.conf | head -n 1`
 PG_P_REC=`ls -t ${PG_BKP}/postgresql_*.conf | head -n 1`
 ARC_DIR=${SCP_BASE}/bart/${HNAME}
 ARC_W=${ARC_DIR}/archived_wals
 ARC_WO=${ARC_DIR}/archived_wals_old
-LOCK_PRE=${SCP_DIR}/pre_copia.lock
-LOCK_POS=${SCP_DIR}/pos_copia.lock
+LOCK_COMM=${SCP_LOG}/commvault.lock
+LOCK_PRE=${SCP_LOG}/pre_copia.lock
+LOCK_POS=${SCP_LOG}/pos_copia.lock
 DATA=`date +%d%m%Y`
-SLP='15'
+SLP='1'
 DESTINO=`hostname -i`
-COUNT='1'
-LOG=${SCP_DIR}/log/${DATA}_PRE_COPIA_PJE-SUP.log
+LOG=${SCP_LOG}/${DATA}_PRECOPIA_PJE-SUP.log
 
 #===========================================================================================================
 #========= DESLIGA O BANCO DE DADOS
@@ -36,13 +38,14 @@ DESLIGA_BANCO()
 		if [[ ${STP} =~ "pg_ctl: server is running" ]];
 		then
 			${PG_SQLBIN}/pg_ctl -D ${PG_SQL} stop -m immediate >> ${LOG} 2>&1
+			sleep 2m;
 			STP=$(DB_STATUS)
 			if [[ ${STP} = "pg_ctl: no server running" ]];
 			then
 				echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Banco desligado com sucesso." >> ${LOG} 2>&1
 				echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
 			else
-				echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Problema no desligamento do banco." >> ${LOG} 2>&1
+				echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Verificar o status do banco." >> ${LOG} 2>&1
 				echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
 				rm -f ${LOCK_PRE} >> ${LOG} 2>&1
 				exit 1;
@@ -51,14 +54,18 @@ DESLIGA_BANCO()
 		then
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Banco ja se encontra desligado." >> ${LOG} 2>&1
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
-		elif [[ ${STP} =~ "not a database cluster directory" ]];
+		elif [[ ${STP} =~ " is not a database cluster directory" ]];
 		then
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Operacao de pre copia ja executada." >> ${LOG} 2>&1
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
 			rm -f ${LOCK_PRE} >> ${LOG} 2>&1
-			exit 1;
+		elif [[ ${STP} =~ "directory "/pgsql2/pje_PRD_11" does not exist" ]]
+		then
+			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Operacao de pre copia ja executada." >> ${LOG} 2>&1
+			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
+			rm -f ${LOCK_PRE} >> ${LOG} 2>&1
 		else
-			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Problema no desligamento do banco." >> ${LOG} 2>&1
+			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Verificar o status do banco." >> ${LOG} 2>&1
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
 			rm -f ${LOCK_PRE} >> ${LOG} 2>&1
 			exit 1;
@@ -79,7 +86,7 @@ COPIA_ARQUIVO()
 		else
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Arquivos nao existem." >> ${LOG} 2>&1
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
-			exit 1;
+			rm -f ${LOCK_PRE} >> ${LOG} 2>&1
 		fi
 	}
 #===========================================================================================================
@@ -87,16 +94,10 @@ COPIA_ARQUIVO()
 #===========================================================================================================
 VERIFICA_PROCESSO()
 	{
-		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Verificando processos utilizando arquivos do diretorio ${PG_SQL}:" >> ${LOG} 2>&1
-		fuser –mak ${PG_SQL} >> ${LOG} 2>&1
-		if [[ ${?} =~ "does not exist" ]];
-		then
-			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Nao existiam processos." >> ${LOG} 2>&1
-			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
-		else
-			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Processos removidos." >> ${LOG} 2>&1
-			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
-		fi
+		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Verificando processos utilizando arquivos do diretorio /pgsql2/:" >> ${LOG} 2>&1
+		echo "${KILL_PROCS}" >> ${LOG} 2>&1
+		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Processos removidos." >> ${LOG} 2>&1
+		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
 	}
 #===========================================================================================================
 #========= REMOVE O CONTEUDO DO DIRETORIO /PGSQL2
@@ -105,13 +106,15 @@ REMOVE_CONTEUDO()
 	{
 		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Removendo o conteudo do diretorio ${PG_SQL}:" >> ${LOG} 2>&1
 		rm -rf ${PG_SQL}/* >> ${LOG} 2>&1
-		if [[ -z "$(ls -A ${PG_SQL}/)" ]];
+		rm -f ${PG_SQL}/.*.conf.sw* >> ${LOG} 2>&1
+		if [[ -z "$(ls -A /pgsql2/pje_PRD_11/)" ]];
 		then
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Conteudo removido." >> ${LOG} 2>&1
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
 		else
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Falha na remocao." >> ${LOG} 2>&1
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
+			rm -f ${LOCK_PRE} >> ${LOG} 2>&1
 			exit 1;
 		fi
 	}
@@ -165,6 +168,16 @@ DB_STATUS()
 		${PG_SQLBIN}/pg_ctl -D ${PG_SQL} status
 	}
 #===========================================================================================================
+#========= LIMPA LOGS ANTIGOS
+#===========================================================================================================
+REMOVE_LOG()
+	{
+		echo -e "[`date +%Y-%m-%d_%H:%M:%S`] Removendo logs antigos:" >> ${LOG} 2>&1
+		find ${SCP_LOG}/ -name '*_PRECOPIA_PJE-SUP.log' -mtime +30 -print -exec rm -f {} \; >> ${LOG} 2>&1
+		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Logs removidos." >> ${LOG} 2>&1
+		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] ==============================================" >> ${LOG} 2>&1
+	}
+#===========================================================================================================
 #========= EFETUA A EXECUCAO DOS MODULOS
 #===========================================================================================================	
 EXECUTA_SCRIPT()
@@ -178,6 +191,7 @@ EXECUTA_SCRIPT()
 		REMOVE_CONTEUDO
 		MOVE_WALS
 		RECRIA_WALS
+		REMOVE_LOG
 		echo -e "============================================================================================" >> ${LOG} 2>&1
 		echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Fim do processo de Pre Copia" >> ${LOG} 2>&1
 		echo -e "============================================================================================" >> ${LOG} 2>&1
@@ -192,7 +206,7 @@ case ${HNAME} in
 		echo -e "Hostname: ${HOSTNAME} | (`hostname -i`)" >> ${LOG} 2>&1
 		echo -e "============================================================================================" >> ${LOG} 2>&1
 		echo -e >> ${LOG} 2>&1
-		if [[ -e ${LOCK_PRE} ]] || [[ -e ${LOCK_POS} ]];
+		if [[ -e ${LOCK_PRE} ]] || [[ -e ${LOCK_COMM} ]] || [[ -e ${LOCK_POS} ]];
 		then
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Arquivo de controle encontrado." >> ${LOG} 2>&1
 			echo -e "[`date +"%Y-%m-%d %H:%M:%S"`] Execucao abortada." >> ${LOG} 2>&1
