@@ -22,10 +22,10 @@ SCRIPT POSTGRES:
 ========================================================================================
 
 ## PJE ##
-sh SQL/exec_chamados_postgres.sh MDT1015376 PJE P0102637
+sh SQL/exec_chamados_postgres.sh MDT1015634 PJE P0102637
 
 ## RECURSAL ##
-sh SQL/exec_chamados_postgres.sh MDT1015330 PJERECURSAL P0102637
+sh SQL/exec_chamados_postgres.sh MDT1015633 PJERECURSAL P0102637
 
 
 ========================================================================================
@@ -35,3 +35,8 @@ MENSAGENS:
 ## RS APLICADA ##
 Aplicado em produção pela MDT1015004.
 Arquivo removido da pasta CODAD e sql removido do SUP.
+
+
+
+
+Favor abrir uma requisição para reset de senha, e informar os dados necessários (nome, nome da mãe, CPC, data de nascimento e matrícula).
