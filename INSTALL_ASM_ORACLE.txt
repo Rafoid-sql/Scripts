@@ -268,7 +268,7 @@ cd /u01/database
 ./runInstaller -silent -showProgress -ignoreSysPrereqs -ignorePrereq -responseFile /u01/db_install.rsp
 
 cd /u01
-dbca -silent -showProgress -ignoreSysPrereqs -ignorePrereq -responseFile /u01/dbca.rsp
+dbca -silent -responseFile /u01/dbca.rsp
 
 
 
