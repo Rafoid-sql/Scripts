@@ -114,9 +114,135 @@ cd /u01/grid
 ./runcluvfy.sh stage -pre crsinst -n dboracleasm
 
 ################################################
+## CRIAR O RESPONSE FILE (user grid)
+cd /u01/
+vi grid_install.rsp
+(MANTER TODAS AS SESSÕES NO ARQUIVO E SOMENTE PREENCHER AS SESSÕES ABAIXO)
+
+SECTION A - BASIC:
+ORACLE_HOSTNAME=dboracleasm
+INVENTORY_LOCATION=/u01/app/oraInventory
+SELECTED_LANGUAGES=en
+oracle.install.option=HA_CONFIG
+ORACLE_BASE=/u01/app/grid
+ORACLE_HOME=/u01/app/11.2.0/grid
+
+SECTION B - GROUPS:
+oracle.install.asm.OSDBA=asmdba
+oracle.install.asm.OSOPER=asmoper
+oracle.install.asm.OSASM=asmadmin
+
+SECTION G - ASM:
+oracle.install.asm.SYSASMPassword=<senha>
+oracle.install.asm.diskGroup.name=CRS
+oracle.install.asm.diskGroup.redundancy=NORMAL
+oracle.install.asm.diskGroup.AUSize=1
+oracle.install.asm.diskGroup.disks=/dev/oracleasm/disks/CRSDISK1,/dev/oracleasm/disks/CRSDISK2
+oracle.install.asm.diskGroup.diskDiscoveryString=/dev/oracleasm/disks/*
+oracle.install.asm.monitorPassword=<senha>
+
+################################################
 ## EXECUTAR INSTALAÇÃO (user grid)
 cd /u01/grid
-./runInstaller -silent -showProgress -ignoreSysPrereqs -ignorePrereq -responseFile /u01/grid_install.rsp 
+./runInstaller -silent -showProgress -ignoreSysPrereqs -ignorePrereq -responseFile /u01/grid_install.rsp
+(NÃO EXECUTAR OS SCRIPTS DE ROOT ANTES DE APLICAR O PATCH)
+
+################################################
+## ATUALIZAR OPATCH (user grid)
+
+cd $ORACLE_HOME
+mv OPatch/ old_OPatch
+unzip -d $ORACLE_HOME p6880880_112000_Linux-x86-64.zip
+
+################################################
+## APLICAR PATCH 18370031 (user grid)
+cd $ORACLE_HOME/OPatch/
+ ./opatch napply -local /u01/18370031/
+
+1. /u01/app/oraInventory/orainstRoot.sh
+2. /u01/app/11.2.0/grid/root.sh
+
+################################################
+## CRIAR ARQUIVO DE SENHAS (user grid)
+cd /u01
+vi cfgrsp.properties
+oracle.assistants.asm|S_ASMPASSWORD=<senha>
+oracle.assistants.asm|S_ASMMONITORPASSWORD=<senha>
+
+################################################
+## EXECUTAR CONFIGURAÇÃO (user grid)
+/u01/app/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/u01/cfgrsp.properties
+
+################################################
+## CRIAR RESPONSE FILE (user oracle)
+cd /u01/
+vi db_install.rsp
+
+# NECESSÁRIO:
+oracle.install.option=INSTALL_DB_SWONLY
+ORACLE_HOSTNAME=dboracleasm
+UNIX_GROUP_NAME=oinstall
+INVENTORY_LOCATION=/u01/app/oraInventory
+SELECTED_LANGUAGES=en
+ORACLE_HOME=/u01/app/oracle/product/11.2.0/db_1
+ORACLE_BASE=/u01/app/oracle
+oracle.install.db.InstallEdition=EE
+oracle.install.db.EEOptionsSelection=true
+oracle.install.db.optionalComponents=oracle.oraolap:11.2.0.4.0,oracle.rdbms.partitioning:11.2.0.4.0,oracle.rdbms.dm:11.2.0.4.0,oracle.rdbms.rat:11.2.0.4.0
+oracle.install.db.DBA_GROUP=dba
+oracle.install.db.OPER_GROUP=oper
+SECURITY_UPDATES_VIA_MYORACLESUPPORT=false
+DECLINE_SECURITY_UPDATES=true
+
+# OPCIONAL:
+oracle.install.db.CLUSTER_NODES=
+oracle.install.db.isRACOneInstall=
+oracle.install.db.racOneServiceName=
+oracle.install.db.config.starterdb.type=
+oracle.install.db.config.starterdb.globalDBName=
+oracle.install.db.config.starterdb.SID=
+oracle.install.db.config.starterdb.characterSet=AL32UTF8
+oracle.install.db.config.starterdb.memoryOption=true
+oracle.install.db.config.starterdb.memoryLimit=
+oracle.install.db.config.starterdb.installExampleSchemas=false
+oracle.install.db.config.starterdb.enableSecuritySettings=true
+oracle.install.db.config.starterdb.password.ALL=
+oracle.install.db.config.starterdb.password.SYS=
+oracle.install.db.config.starterdb.password.SYSTEM=
+oracle.install.db.config.starterdb.password.SYSMAN=
+oracle.install.db.config.starterdb.password.DBSNMP=
+oracle.install.db.config.starterdb.control=DB_CONTROL
+oracle.install.db.config.starterdb.gridcontrol.gridControlServiceURL=
+oracle.install.db.config.starterdb.automatedBackup.enable=false
+oracle.install.db.config.starterdb.automatedBackup.osuid=
+oracle.install.db.config.starterdb.automatedBackup.ospwd=
+oracle.install.db.config.starterdb.storageType=
+oracle.install.db.config.starterdb.fileSystemStorage.dataLocation=
+oracle.install.db.config.starterdb.fileSystemStorage.recoveryLocation=
+oracle.install.db.config.asm.diskGroup=
+oracle.install.db.config.asm.ASMSNMPPassword=
+MYORACLESUPPORT_USERNAME=
+MYORACLESUPPORT_PASSWORD=
+PROXY_HOST=
+PROXY_PORT=
+PROXY_USER=
+PROXY_PWD=
+PROXY_REALM=
+COLLECTOR_SUPPORTHUB_URL=
+oracle.installer.autoupdates.option=
+oracle.installer.autoupdates.downloadUpdatesLoc=
+AUTOUPDATES_MYORACLESUPPORT_USERNAME=
+AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
+
+################################################
+## EXECUTAR INSTALAÇÃO (user oracle)
+
+cd /u01/database
+./runInstaller -silent -showProgress -ignoreSysPrereqs -ignorePrereq -responseFile /u01/db_install.rsp
+
+
+
+
 
 
 
