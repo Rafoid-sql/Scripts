@@ -1,0 +1,54 @@
+
+#####################################################
+## VARIAVEIS ORACLE
+#####################################################
+
+export ORACLE_SID=DBPRD
+export ORACLE_UNQNAME=DBPRD
+export JAVA_HOME=/usr/local/java
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=$ORACLE_BASE/product/11.2.0/db_1
+export ORACLE_TERM=xterm
+export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
+export TNS_ADMIN=$ORACLE_HOME/network/admin
+export ORA_NLS11=$ORACLE_HOME/nls/data
+export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$ORACLE_HOME/oracm/lib:/lib:/usr/lib:/usr/local/lib
+export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$ORACLE_HOME/network/jlib
+export THREADS_FLAG=native
+export TEMP=/tmp
+export TMPDIR=/tmp
+
+umask 022
+
+alias orbase='cd $ORACLE_BASE'
+alias orhome='cd $ORACLE_HOME'
+alias ortns='cd $ORACLE_HOME/network/admin'
+alias orenvo='env | grep ORACLE'
+
+
+#####################################################
+## VARIAVEIS GRID
+#####################################################
+
+export ORACLE_SID=+ASM
+export JAVA_HOME=/usr/local/java
+export ORACLE_BASE=/u01/app/grid
+export ORACLE_HOME=/u01/app/11.2.0/grid
+export ORACLE_TERM=xterm
+export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
+export TNS_ADMIN=$ORACLE_HOME/network/admin
+export ORA_NLS11=$ORACLE_HOME/nls/data
+export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$ORACLE_HOME/oracm/lib:/lib:/usr/lib:/usr/local/lib
+export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$ORACLE_HOME/network/jlib
+export THREADS_FLAG=native
+export TEMP=/tmp
+export TMPDIR=/tmp
+
+umask 022
+
+alias grbase='cd $ORACLE_BASE'
+alias grhome='cd $ORACLE_HOME'
+alias grtns='cd $ORACLE_HOME/network/admin'
+alias grenvo='env | grep ORACLE'
