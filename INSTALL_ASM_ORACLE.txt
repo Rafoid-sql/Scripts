@@ -106,7 +106,7 @@ y
 oracleasm-discover
 
 ################################################
-## EXECUTAR VERIFICACAO (user grid)
+## EXECUTAR VERIFICAÇÃO (user grid)
 cd /u01/grid/sshsetup
 ./sshUserSetup.sh -user grid -hosts "dboracleasm" -noPromptPassphrase
 
@@ -114,9 +114,9 @@ cd /u01/grid
 ./runcluvfy.sh stage -pre crsinst -n dboracleasm
 
 ################################################
-## EXECUTAR INSTALACAO (user grid)
-cd /u01
-./runInstaller -silent -showProgress -ignoreSysPrereqs -ignorePrereq -responseFile /u01/grid/grid_install.rsp 
+## EXECUTAR INSTALAÇÃO (user grid)
+cd /u01/grid
+./runInstaller -silent -showProgress -ignoreSysPrereqs -ignorePrereq -responseFile /u01/grid_install.rsp 
 
 
 
