@@ -1,5 +1,7 @@
 
+#####################################################
 ## VARIAVEIS ORACLE
+#####################################################
 
 export ORACLE_SID=DBPRD
 export ORACLE_UNQNAME=DBPRD
@@ -25,8 +27,9 @@ alias ortns='cd $ORACLE_HOME/network/admin'
 alias orenvo='env | grep ORACLE'
 
 
-
+#####################################################
 ## VARIAVEIS GRID
+#####################################################
 
 export ORACLE_SID=+ASM
 export JAVA_HOME=/usr/local/java
@@ -45,7 +48,7 @@ export TMPDIR=/tmp
 
 umask 022
 
-alias gdbase='cd $ORACLE_BASE'
-alias gdhome='cd $ORACLE_HOME'
-alias gdtns='cd $ORACLE_HOME/network/admin'
-alias gdenvo='env | grep ORACLE'
+alias grbase='cd $ORACLE_BASE'
+alias grhome='cd $ORACLE_HOME'
+alias grtns='cd $ORACLE_HOME/network/admin'
+alias grenvo='env | grep ORACLE'
