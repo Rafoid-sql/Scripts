@@ -174,9 +174,8 @@ oracle.assistants.asm|S_ASMMONITORPASSWORD=<senha>
 /u01/app/11.2.0/grid/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/u01/cfgrsp.properties
 
 ################################################
-## CRIAR RESPONSE FILES (user oracle)
+## CRIAR RESPONSE FILE (user oracle)
 cd /u01
-
 vi db_install.rsp
 
 # NECESSÁRIO:
@@ -235,7 +234,15 @@ oracle.installer.autoupdates.downloadUpdatesLoc=
 AUTOUPDATES_MYORACLESUPPORT_USERNAME=
 AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
 
+################################################
+## EXECUTAR INSTALAÇÃO (user oracle)
 
+cd /u01/database
+./runInstaller -silent -showProgress -ignoreSysPrereqs -ignorePrereq -responseFile /u01/db_install.rsp
+
+################################################
+## CRIAR RESPONSE FILE (user oracle)
+cd /u01
 vi dbca.rsp
 
 [GENERAL]
@@ -263,14 +270,5 @@ AUTOMATICMEMORYMANAGEMENT = "TRUE"
 
 ################################################
 ## EXECUTAR INSTALAÇÃO (user oracle)
-
-cd /u01/database
-./runInstaller -silent -showProgress -ignoreSysPrereqs -ignorePrereq -responseFile /u01/db_install.rsp
-
 cd /u01
 dbca -silent -responseFile /u01/dbca.rsp
-
-
-
-
-
