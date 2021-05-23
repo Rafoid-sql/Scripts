@@ -236,7 +236,6 @@ AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
 
 ################################################
 ## EXECUTAR INSTALAÇÃO (user oracle)
-
 cd /u01/database
 ./runInstaller -silent -showProgress -ignoreSysPrereqs -ignorePrereq -responseFile /u01/db_install.rsp
 
