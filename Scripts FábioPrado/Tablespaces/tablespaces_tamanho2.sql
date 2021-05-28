@@ -1,22 +1,27 @@
-set linesize 100
+set linesize 300
 set pagesize 300
 set long 1
-select 
+COL "TABLESPACE" FOR A40
+COL "QTDE" FOR 9999
+COL "TOTAL_GB" FOR 999999999999
+COL "USADO_GB" FOR 999999999999
+COL "% USADO" FOR A10
+select
 	decode (grouping(tablespace_name),1, 'xTOTAL DATAFILES',tablespace_name) "TABLESPACE",
     count(*) "QTDE",
 	sum(maxbytes/1048576) "TOTAL_GB",
 	sum(bytes/1048576) "USADO_GB",
 	to_char(((sum(bytes/1048576))*100/(sum(maxbytes/1048576))),'999.99') ||'%' as "% USADO"
-from dba_data_files 
+from dba_data_files
 group by rollup(tablespace_name)
 union all
-select 
+select
 	decode (grouping(tablespace_name),1, 'xTOTAL TEMPFILES',tablespace_name) "TABLESPACE",
     count(*) "QTDE",
 	sum(maxbytes/1048576) "TOTAL_GB",
 	sum(bytes/1048576) "USADO_GB",
 	to_char(((sum(bytes/1048576))*100/(sum(maxbytes/1048576))),'999.99') ||'%' as "% USADO"
-from dba_temp_files 
+from dba_temp_files
 group by rollup(tablespace_name)
 order by 1 ASC;
 
@@ -44,54 +49,54 @@ WHERE
    --AND DF.TABLESPACE_NAME = 'RUN_DATA'
    --AND FS.TABLESPACE_NAME = 'RUN_DATA'
    order by 1;
-   
-   
-   
+
+
+
 
 -- tamanho total do BD
-SELECT      d.tablespace_name 											   "Name",            
-            SUM(((a.bytes - DECODE(f.bytes, NULL, 0, f.bytes)) / 1048576)) "TOTAL_UTILIZADO (MB)"            
+SELECT      d.tablespace_name 											   "Name",
+            SUM(((a.bytes - DECODE(f.bytes, NULL, 0, f.bytes)) / 1048576)) "TOTAL_UTILIZADO (MB)"
 FROM        sys.dba_tablespaces d,
-            sys.sm$ts_avail a, 
+            sys.sm$ts_avail a,
             sys.sm$ts_free f
-WHERE       d.tablespace_name = a.tablespace_name 
+WHERE       d.tablespace_name = a.tablespace_name
 AND         f.tablespace_name (+) = d.tablespace_name
 GROUP BY    ROLLUP(d.tablespace_name);
-   
+
 
 --
 -- Temporary Tablespace Sort Usage.
 --
- 
+
 SET PAUSE ON
 SET PAUSE 'Press Return to Continue'
 SET PAGESIZE 60
 SET LINESIZE 300
- 
-SELECT 
-   A.tablespace_name tablespace, 
+
+SELECT
+   A.tablespace_name tablespace,
    D.mb_total,
    SUM (A.used_blocks * D.block_size) / 1024 / 1024 mb_used,
    D.mb_total - SUM (A.used_blocks * D.block_size) / 1024 / 1024 mb_free
-FROM 
+FROM
    v$sort_segment A,
 (
-SELECT 
-   B.name, 
-   C.block_size, 
+SELECT
+   B.name,
+   C.block_size,
    SUM (C.bytes) / 1024 / 1024 mb_total
-FROM 
-   v$tablespace B, 
+FROM
+   v$tablespace B,
    v$tempfile C
-WHERE 
+WHERE
    B.ts#= C.ts#
-GROUP BY 
-   B.name, 
+GROUP BY
+   B.name,
    C.block_size
 ) D
-WHERE 
+WHERE
    A.tablespace_name = D.name
-GROUP by 
-   A.tablespace_name, 
+GROUP by
+   A.tablespace_name,
    D.mb_total
 /
