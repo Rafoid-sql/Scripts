@@ -12,7 +12,8 @@ export ORACLE_TERM=xterm
 export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
 export TNS_ADMIN=$ORACLE_HOME/network/admin
 export ORA_NLS11=$ORACLE_HOME/nls/data
-export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin
+export ALERT=/u01/app/u01/app/oracle/diag/rdbms/dbprd/DBPRD/trace/alert_DBPRD.log
+export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin:$ORACLE_HOME/OPatch:$HOME/bin
 export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$ORACLE_HOME/oracm/lib:/lib:/usr/lib:/usr/local/lib:$ORACLE_HOME
 export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$ORACLE_HOME/network/jlib
 export THREADS_FLAG=native
@@ -23,10 +24,9 @@ umask 022
 
 alias orbase='cd $ORACLE_BASE'
 alias orhome='cd $ORACLE_HOME'
-alias ortns='cd $ORACLE_HOME/network/admin'
+alias ortns='cd $TNS_ADMIN'
 alias orenvo='env | grep ORACLE'
-alias oralert='find $ORACLE_BASE -name alert_$ORACLE_SID.log'
-alias oralertout='find / -type f -name alert_$ORACLE_SID.log -print0 2>&1 | grep -v "Permission denied"'
+alias oralert='less $ALERT'
 
 alias or<sid>='export ORACLE_SID=<sid>'
 
@@ -43,7 +43,8 @@ export ORACLE_TERM=xterm
 export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
 export TNS_ADMIN=$ORACLE_HOME/network/admin
 export ORA_NLS11=$ORACLE_HOME/nls/data
-export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin
+export ALERT=/u01/app/u01/app/oracle/diag/rdbms/dbprd/DBPRD/trace/alert_DBPRD.log
+export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin:$ORACLE_HOME/OPatch:$HOME/bin
 export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$ORACLE_HOME/oracm/lib:/lib:/usr/lib:/usr/local/lib:$ORACLE_HOME
 export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$ORACLE_HOME/network/jlib
 export THREADS_FLAG=native
@@ -54,10 +55,9 @@ umask 022
 
 alias grbase='cd $ORACLE_BASE'
 alias grhome='cd $ORACLE_HOME'
-alias grtns='cd $ORACLE_HOME/network/admin'
+alias grtns='cd $TNS_ADMIN'
 alias grenvo='env | grep ORACLE'
-alias gralert='find $ORACLE_BASE -name alert_$ORACLE_SID.log'
-alias gralertout='find / -type f -name alert_$ORACLE_SID.log -print0 2>&1 | grep -v "Permission denied"'
+alias gralert='less $ALERT'
 
 alias gr<sid>='export ORACLE_SID=<sid>'
 
@@ -73,7 +73,8 @@ export ORACLE_TERM=xterm
 export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
 export TNS_ADMIN=$ORACLE_HOME/network/admin
 export ORA_NLS11=$ORACLE_HOME/nls/data
-export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin
+export ALERT=/u01/app/u01/app/oracle/diag/rdbms/dbprd/DBPRD/trace/alert_DBPRD.log
+export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin:$ORACLE_HOME/OPatch:$HOME/bin
 export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$ORACLE_HOME/oracm/lib:/lib:/usr/lib:/usr/local/lib:$ORACLE_HOME
 export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$ORACLE_HOME/network/jlib
 export THREADS_FLAG=native
@@ -84,9 +85,8 @@ umask 022
 
 alias clbase='cd $ORACLE_BASE'
 alias clhome='cd $ORACLE_HOME'
-alias cltns='cd $ORACLE_HOME/network/admin'
+alias cltns='cd $TNS_ADMIN'
 alias clenvo='env | grep ORACLE'
-alias clalert='find $ORACLE_BASE -name alert_$ORACLE_SID.log'
-alias clalertout='find / -type f -name alert_$ORACLE_SID.log -print0 2>&1 | grep -v "Permission denied"'
+alias clalert='less $ALERT'
 
 alias cl<sid>='export ORACLE_SID=<sid>'
