@@ -10,38 +10,47 @@ export HISTCONTROL=ignorespace
 export HISTCONTROL=ignoredups
 
 # Oracle Settings
-export TMP=/tmp
-export TMPDIR=$TMP
+export ORACLE_SID=viasoft
 export ORACLE_HOSTNAME=dbora
 export ORACLE_UNQNAME=viasoft
+export JAVA_HOME=/usr/local/java
 export ORACLE_BASE=/u01/app/oracle
 export ORACLE_HOME=$ORACLE_BASE/product/11.2.0/db_1
-export ORACLE_SID=viasoft
+export AGENT_HOME=/u01/oraagt/agent13c/agent_13.4.0.0.0
 export ORACLE_TERM=xterm
-export PATH=/usr/sbin:$PATH
-export PATH=$ORACLE_HOME/bin:$PATH
-export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
-export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib
+export TNS_ADMIN=$ORACLE_HOME/network/admin
+export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
+export ORA_NLS11=$ORACLE_HOME/nls/data
+export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$ORACLE_HOME/oracm/lib:/lib:/usr/lib:/usr/local/lib:$ORACLE_HOME
+export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$ORACLE_HOME/network/jlib
+export THREADS_FLAG=native
+export TMP=/tmp
+export TMPDIR=$TMP
 
-## INSTANCIAS APLICADAS ##
+umask 022
 
-#AGROBRASIL
-#AGRODANIELI
-#BOMPEL
-#COASUL
-#HNSL
-#HOSPITAL DO CORAÇÃO
-#IDEALAGRO
-#INDIANAAGRI
-#INFASA
-#MOINHO
-#NINFA
-#POLICLÍNICA
-#RUDEGON
-#SEMPREVIDA
-#SPECIALITE
-#TERRA CEREAIS
-#VILELA
+# Aliases
+alias orbase='cd $ORACLE_BASE'
+alias orhome='cd $ORACLE_HOME'
+alias oragent='cd $AGENT_HOME'
+alias ortns='cd $ORACLE_HOME/network/admin'
+alias orenvo='env | grep ORACLE'
+alias oralert='find $ORACLE_BASE -name alert_$ORACLE_SID.log'
+alias oralertout='find / -type f -name alert_$ORACLE_SID.log -print0 2>&1 | grep -v "Permission denied"'
+
+alias or<sid>='export ORACLE_SID=<sid>'
+
+
+
+
+
+
+
+
+
+
+
 
 ## ESQUEMA DE CORES ##
 
