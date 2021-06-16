@@ -16,6 +16,7 @@ export ORACLE_UNQNAME=viasoft
 export JAVA_HOME=/usr/local/java
 export ORACLE_BASE=/u01/app/oracle
 export ORACLE_HOME=$ORACLE_BASE/product/11.2.0/db_1
+export AGENT_HOME=/u01/oraagt/agent13c/agent_13.4.0.0.0
 export ORACLE_TERM=xterm
 export TNS_ADMIN=$ORACLE_HOME/network/admin
 export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
@@ -29,11 +30,16 @@ export TMPDIR=$TMP
 
 umask 022
 
+# Aliases
 alias orbase='cd $ORACLE_BASE'
 alias orhome='cd $ORACLE_HOME'
+alias oragent='cd $AGENT_HOME'
 alias ortns='cd $ORACLE_HOME/network/admin'
 alias orenvo='env | grep ORACLE'
-alias oralert='find $ORACLE_BASE -name alert_$ORACLE_SID -exec less {} \;'
+alias oralert='find $ORACLE_BASE -name alert_$ORACLE_SID.log'
+alias oralertout='find / -type f -name alert_$ORACLE_SID.log -print0 2>&1 | grep -v "Permission denied"'
+
+alias or<sid>='export ORACLE_SID=<sid>'
 
 
 

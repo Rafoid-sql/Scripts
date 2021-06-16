@@ -25,6 +25,10 @@ alias orbase='cd $ORACLE_BASE'
 alias orhome='cd $ORACLE_HOME'
 alias ortns='cd $ORACLE_HOME/network/admin'
 alias orenvo='env | grep ORACLE'
+alias oralert='find $ORACLE_BASE -name alert_$ORACLE_SID.log'
+alias oralertout='find / -type f -name alert_$ORACLE_SID.log -print0 2>&1 | grep -v "Permission denied"'
+
+alias or<sid>='export ORACLE_SID=<sid>'
 
 
 #####################################################
@@ -52,6 +56,10 @@ alias grbase='cd $ORACLE_BASE'
 alias grhome='cd $ORACLE_HOME'
 alias grtns='cd $ORACLE_HOME/network/admin'
 alias grenvo='env | grep ORACLE'
+alias gralert='find $ORACLE_BASE -name alert_$ORACLE_SID.log'
+alias gralertout='find / -type f -name alert_$ORACLE_SID.log -print0 2>&1 | grep -v "Permission denied"'
+
+alias gr<sid>='export ORACLE_SID=<sid>'
 
 
 #####################################################
@@ -78,3 +86,7 @@ alias clbase='cd $ORACLE_BASE'
 alias clhome='cd $ORACLE_HOME'
 alias cltns='cd $ORACLE_HOME/network/admin'
 alias clenvo='env | grep ORACLE'
+alias clalert='find $ORACLE_BASE -name alert_$ORACLE_SID.log'
+alias clalertout='find / -type f -name alert_$ORACLE_SID.log -print0 2>&1 | grep -v "Permission denied"'
+
+alias cl<sid>='export ORACLE_SID=<sid>'
