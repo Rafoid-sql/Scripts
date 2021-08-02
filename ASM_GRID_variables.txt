@@ -13,7 +13,7 @@ export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
 export TNS_ADMIN=$ORACLE_HOME/network/admin
 export ORA_NLS11=$ORACLE_HOME/nls/data
 export ALERT=/u01/app/u01/app/oracle/diag/rdbms/dbprd/DBPRD/trace/alert_DBPRD.log
-export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin:$ORACLE_HOME/OPatch:$HOME/bin
+export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin:$ORACLE_HOME/OPatch:$HOME/bin:/usr/ccs/bin
 export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$ORACLE_HOME/oracm/lib:/lib:/usr/lib:/usr/local/lib:$ORACLE_HOME
 export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$ORACLE_HOME/network/jlib
 export THREADS_FLAG=native
@@ -44,7 +44,7 @@ export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
 export TNS_ADMIN=$ORACLE_HOME/network/admin
 export ORA_NLS11=$ORACLE_HOME/nls/data
 export ALERT=/u01/app/u01/app/oracle/diag/rdbms/dbprd/DBPRD/trace/alert_DBPRD.log
-export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin:$ORACLE_HOME/OPatch:$HOME/bin
+export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin:$ORACLE_HOME/OPatch:$HOME/bin:/usr/ccs/bin
 export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$ORACLE_HOME/oracm/lib:/lib:/usr/lib:/usr/local/lib:$ORACLE_HOME
 export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$ORACLE_HOME/network/jlib
 export THREADS_FLAG=native
@@ -74,7 +74,7 @@ export NLS_DATE_FORMAT="DD-MON-YYYY HH24:MI:SS"
 export TNS_ADMIN=$ORACLE_HOME/network/admin
 export ORA_NLS11=$ORACLE_HOME/nls/data
 export ALERT=/u01/app/u01/app/oracle/diag/rdbms/dbprd/DBPRD/trace/alert_DBPRD.log
-export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin:$ORACLE_HOME/OPatch:$HOME/bin
+export PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/.local/bin:$HOME/bin:$ORACLE_HOME/bin:/usr/bin:/bin:/usr/bin/X11:/usr/local/bin:/u01/app/common/oracle/bin:$ORACLE_HOME/OPatch:$HOME/bin:/usr/ccs/bin
 export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$ORACLE_HOME/oracm/lib:/lib:/usr/lib:/usr/local/lib:$ORACLE_HOME
 export CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$ORACLE_HOME/network/jlib
 export THREADS_FLAG=native
@@ -90,3 +90,24 @@ alias clenvo='env | grep ORACLE'
 alias clalert='less $ALERT'
 
 alias cl<sid>='export ORACLE_SID=<sid>'
+
+
+#####################################################
+## VARIAVEIS ROOT
+#####################################################
+
+GRID_HOME=/u01/app/11.2.0/grid
+
+
+#####################################################
+## VARIAVEIS OEM
+#####################################################
+
+OMS_HOME=$ORACLE_BASE/middleware
+AGENT_HOME=...
+
+alias embase='cd $ORACLE_BASE'
+alias emhome='cd $OMS_HOME'
+alias emtns='cd $TNS_ADMIN'
+alias emenvo='env | grep ORACLE'
+alias clalert='less $ALERT'
