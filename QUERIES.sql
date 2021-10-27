@@ -7,6 +7,10 @@ SELECT USERNAME,ACCOUNT_STATUS,EXPIRY_DATE
 FROM DBA_USERS
 WHERE ACCOUNT_STATUS NOT IN ('OPEN', 'EXPIRED & LOCKED');
 
+
+--Find Alertlog:
+select value from v$diag_info where name like '%Trace%';
+
 --Retrieve oracle password:
 SET LINES 300
 SET PAGESIZE 1000
