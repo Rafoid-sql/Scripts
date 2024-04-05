@@ -1,0 +1,110 @@
+# Version - 1.0 CAchary 05/01/2013 - New
+# Version - 1.1 CAchary 03/12/2017 - Added /bin in PATH for Linux
+# Version - 1.2 CAchary 8/2/2017   - updated PS1 and added 2 new alias
+# Version - 1.3 CAchary 4/11/2018  - Added oraenv call
+
+
+export PATH=/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin:/bin:/usr/local/bin:/opt/quest/bin:/opt/VRTS/bin:$PATH:.
+
+if [ -s "$MAIL" ]           # This is at Shell startup.  In normal
+then echo "$MAILMSG"        # operation, the Shell checks
+fi                          # periodically.
+
+# Oracle User Settings
+export EDITOR=vi
+set -o vi
+stty erase ^?
+umask 022
+alias rm='rm -i'
+alias sqlp='sqlplus /'
+alias netb_log="cd /usr/openv/netbackup/logs/user_ops/dbext/logs"
+alias l='ls -ltroga'
+alias c=clear
+
+export ORACLE_SID=popt3
+export PS1="`hostname`:\$ORACLE_SID:\$PWD>"
+
+title(){
+# Display Hostname on Terminal Window
+[ $# -ne 0 ] && export TITLE=$* || {
+export TITLE=$(hostname)
+}
+echo "\033]0;$TITLE\007"
+}
+
+# Set platform specific Variables
+case `uname` in
+  AIX)
+        export AIXTHREAD_SCOPE=S
+        alias bdf='df -Im'
+        title
+        ;;
+  HP-UX)
+        title
+        ;;
+  Linux)
+        ;;
+  SunOS)
+       title
+        ;;
+esac
+
+# Display DB Instances Running
+echo "***********************************"
+echo "Databases Running On This Server .."
+echo "***********************************"
+ps -ef|grep pmon_|grep -v grep|awk -F_ '{print $3}'
+
+if [ -f /usr/local/bin/oraenv ]
+then
+    export ORAENV_ASK=NO; . /usr/local/bin/oraenv > /dev/null; unset ORAENV_ASK
+fi
+
+# Custom Variables
+if [ -f $HOME/.profile_custom ]; then
+     . $HOME/.profile_custom
+fi
+
+==================================================================================================================================
+
+
+
+PATH=/usr/bin:/etc:/usr/sbin:/usr/ucb:$HOME/bin:/usr/bin/X11:/sbin:.:/opt/quest/bin:/opt/quest/sbin
+export PATH
+if [ -s "$MAIL" ]           # This is at Shell startup.  In normal
+then echo "$MAILMSG"        # operation, the Shell checks
+fi                          # periodically.
+#! /bin/ksh
+umask 022
+export EDITOR=vi
+set -o vi
+alias ll='ls -la'
+alias bdf='df -m'
+alias sss='sqlplus "/ as sysdba"'
+#PATH=/usr/local/bin:/orasw/static/oradba/bin:/orasw/pmqc/app/oracle/product/11.2.0.3/db/bin:/usr/bin:/etc:/usr/sbin:/usr/local/bin:/usr/ucb:$HOME/bin:/usr/bin/X11:/sbin:.
+PATH=/usr/local/bin:/orasw/static/oradba/bin:/orasw/pmqc/app/oracle/product/11.2.0.4/db/bin:/usr/bin:/etc:/usr/sbin:/usr/local/bin:/usr/ucb:$HOME/bin:/usr/bin/X11:/sbin:.
+# Set the user prompt
+export host=`hostname`
+export user=`whoami`
+export PS1="[${user}@${host}":'${PWD}] \$ '
+# Oracle specific env vars
+export TEMP=/tmp
+export TMP=/tmp
+export TMPDIR=/tmp
+export ORACLE_SID=pmqc
+#export ORACLE_HOME=/orasw/pmqc/app/oracle/product/11.2.0.3/db
+export ORACLE_HOME=/orasw/pmqc/app/oracle/product/11.2.0.4/db
+##Warning ####################################
+# Please don't set environmental variables for a Particular Oracle instance here. Use . oraenv  - Madhu Kangara
+# ############################################
+clear
+export PS1="`hostname`:`whoami`:\$ORACLE_SID:\$PWD: "
+echo "********************************"
+echo "Databases Running on This box .."
+echo "********************************"
+ps -ef|grep smon |grep ora_ |awk '{print $NF}'|cut -c10-100
+stty erase ^H
+echo "********************************"
+echo "Listener Running on This box .."
+echo "********************************"
+ps -ef|grep tns |grep LISTENER_|awk '{print $10}'

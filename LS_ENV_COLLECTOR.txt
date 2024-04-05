@@ -1,0 +1,20 @@
+## VERIFICAR SE O ENV COLLECTOR TA RODANDO:
+
+PROD:plsab073:oracle:[/home/oracle]:TCCOP101:
+$ ps -ef | grep env
+  oracle  5833508  7865208   0 11:14:05  pts/0  0:00 grep env
+
+=======================================================================================================================================
+## SE NÃO TIVER RODANDO VERIFICAR O LOCAL DO ARQUIVO:
+
+PROD:plsab073:oracle:[/home/oracle]:TCCOP101:
+$ crontab -l | grep env
+0 2 * * * /oracle/dbtools/datapoint/dashboard/scripts/datapoint_oracle_env_collector.sh > /dev/null 2>&1
+
+=======================================================================================================================================
+#EXECUTAR O ENV COLLECTOR COM -F PARA FORÇAR A EXECUÇÃO:
+
+PROD:plsab073:oracle:[/home/oracle]:TCCOP101:
+$ /oracle/dbtools/datapoint//dashboard/scripts/datapoint_oracle_env_collector.sh -f
+
+nohup /oracle/dbtools/datapoint//dashboard/scripts/datapoint_oracle_env_collector.sh -f > /dev/null 2>&1 &

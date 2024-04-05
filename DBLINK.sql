@@ -1,10 +1,15 @@
+-- RUN BEFORE ANY OTHER QUERY:
+ALTER SESSION SET NLS_DATE_FORMAT='DD-MON-YYYY HH24:MI:SS';
 SET LINES 300
-COL DB_LINK FORMAT A10
+SET PAGESIZE 1000
+SET LONG 10000
+SET UNDERLINE =
+=========================================================================================================================================
+COL DB_LINK FORMAT A30
 COL USERNAME FORMAT A20
 COL HOST FORMAT A30
-SELECT DB_LINK,USERNAME,HOST FROM DBA_DB_LINKS;
-
-
+SELECT * FROM DBA_DB_LINKS;
+=========================================================================================================================================
 SET LINESIZE 500
 SET PAGESIZE 1000
 COL DB_LINK FOR A40

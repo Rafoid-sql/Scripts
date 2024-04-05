@@ -13,13 +13,8 @@ COL name FOR A40
 COL storage_size FOR '9,999,990.00'
 COL scn FOR '99999999999999999999999999'
 
-SELECT
-  name
-  , guarantee_flashback_database
-  , storage_size /1024 /1024 AS storage_size_mb
-  , TO_CHAR(time, 'dd/mm/yyyy hh24:mi:ss') AS time
-  , scn
-FROM v$restore_point;
+SELECT NAME, GUARANTEE_FLASHBACK_DATABASE, STORAGE_SIZE /1024 /1024 AS STORAGE_SIZE_MB, TO_CHAR(TIME, 'DD/MM/YYYY HH24:MI:SS') AS TIME, SCN
+FROM V$RESTORE_POINT;
 
 -- Desligar o banco de dados:
 
