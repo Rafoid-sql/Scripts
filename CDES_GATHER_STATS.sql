@@ -36,7 +36,8 @@ SELECT * FROM DBA_TAB_MODIFICATIONS WHERE TABLE_NAME IN (
 'PRODUCT_CODE',
 'PRODUCT_CODE_REF',
 'CUSTOMER_DATA_STAGING'
-);
+)
+AND TABLE_OWNER='CDE';
 =========================================================================================================================================
 SELECT OWNER, TABLE_NAME, LAST_ANALYZED, STALE_STATS as "STALE" FROM DBA_TAB_STATISTICS WHERE TABLE_NAME IN (
 'STG_BAN_EVENTS',
