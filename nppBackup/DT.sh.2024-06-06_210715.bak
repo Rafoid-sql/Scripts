@@ -1,0 +1,424 @@
+#set -x
+#!/bin/bash
+
+#==========================================================================================================
+#  Author: Rafael Oliveira
+# Summary: Automated execution for the Data Transfer process
+#==========================================================================================================
+
+#==========================================================================================================
+#========= VARIABLES
+#==========================================================================================================
+
+DT_CDRMSC=`date -d "1 days ago" +%b%d`
+DT_OTHERS=`date -d "2 days ago" +%b%d`
+YR_CDRMSC=`date -d "1 days ago" +%Y%m`
+YR_OTHERS=`date -d "2 days ago" +%Y%m`
+FD_CDRMSC=`date -d "1 days ago" +%Y%m%d`
+FD_OTHERS=`date -d "2 days ago" +%Y%m%d`
+
+
+#==========================================================================================================
+#========= DELETE PARFILES
+#==========================================================================================================
+
+#====================================================
+# SOURCE: TTCDRMSC
+#====================================================
+DEL_LOC_PAR()
+	{
+		rm -f /home/oracle/parfile/*.par
+	}
+
+#====================================================
+# DESTINATION: TTDWH004
+#====================================================
+DEL_REM_FPAR()
+	{
+		ssh oracle@172.20.10.20 'rm -f /home/oracle/parfile/*.par'
+	}
+
+
+#==========================================================================================================
+#========= CDRMSC FUNCTION
+#==========================================================================================================
+
+#====================================================
+# EXPDP
+#====================================================
+FN_EXP_CDRMSC_ST()
+	{
+		cat <<-EOF >> /home/oracle/scripts/exp_st_cdrmsc_import.par
+		directory=DATA_DUMPS
+		dumpfile=ST_CDRMSC_IMPORT_${DT_CDRMSC}_%u.dmp
+		logfile=ST_CDRMSC_IMPORT_${DT_CDRMSC}.log
+		parallel=5
+		exclude=statistics
+		exclude=INDEX
+		#reuse_dumpfiles=YES
+		tables=CDRMSC.ST_CDRMSC_IMPORT:PART_${FD_CDRMSC}
+		EOF
+	}
+
+#====================================================
+# IMPDP
+#====================================================
+FN_IMP_CDRMSC_ST()
+	{
+
+	}
+
+
+#==========================================================================================================
+#========= CDRUSSDMSC FUNCTION
+#==========================================================================================================
+
+#====================================================
+# EXPDP
+#====================================================
+FN_EXP_CDRUSSDMSC_ST()
+	{
+
+	}
+
+FN_EXP_CDRUSSDMSC_AT()
+	{
+		cat <<-EOF >> /home/oracle/scripts/exp_at_cdrussd_loaded.par
+		directory=DATA_DUMPS
+		dumpfile=AT_CDRUSSD_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=AT_CDRUSSD_LOADED_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics,INDEX
+		reuse_dumpfiles=Y
+		tables=CDRMSC.AT_CDRUSSDMSC_LOADED
+		query=CDRMSC.AT_CDRUSSDMSC_LOADED:"where date_call ='${FD_OTHERS}'"
+		EOF
+	}
+
+
+#====================================================
+# IMPDP
+#====================================================
+FN_IMP_CDRUSSDMSC()
+{
+		cat <<-EOF >> /home/oracle/scripts/exp_st_cdrussd_import.par
+		directory=DATA_DUMPS
+		dumpfile=ST_CDRUSSD_IMPORT_${DT_OTHERS}_%u.dmp
+		logfile=ST_CDRUSSD_IMPORT_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics
+		reuse_dumpfiles=Y
+		tables=CDRMSC.ST_CDRUSSDMSC_IMPORT:PART_${FD_OTHERS}
+		EOF
+}
+
+
+#==========================================================================================================
+#========= PSL BONUS ADJUSTMENTS FUNCTION
+#==========================================================================================================
+
+#====================================================
+# EXPDP
+#====================================================
+FN_EXP_PSL_BON_ADJ_ST()
+	{
+		cat <<-EOF >> /home/oracle/scripts/exp_st_cdrpsl_impbonus_adj.par
+		directory=DATA_DUMPS
+		dumpfile=ST_CDRPSL_IMPADJT_${DT_OTHERS}_%u.dmp
+		logfile=ST_CDRPSL_IMPADJT_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics
+		reuse_dumpfiles=YES
+		tables=CDRPSL.ST_CDRPSL_IMPORT_BONUSADJT:PART_${FD_OTHERS}
+		EOF
+	}
+
+FN_EXP_PSL_BON_ADJ_AT()
+	{
+		cat <<-EOF >> /home/oracle/scripts/exp_at_cdrpsl_bon_adjt.par
+		directory=DATA_DUMPS
+		dumpfile=AT_CDRPSL_BONADJT_${DT_OTHERS}_%u.dmp
+		logfile=AT_CDRPSL_BONADJT_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics
+		reuse_dumpfiles=YES
+		tables=CDRPSL.AT_CDRPSL_LOADED_BONUSADJT
+		query=CDRPSL.AT_CDRPSL_LOADED_BONUSADJT:"where date_call ='${FD_OTHERS}'"
+		EOF
+	}
+
+
+#====================================================
+# IMPDP
+#====================================================
+FN_IMP_PSL_BON_ADJ()
+	{
+
+	}
+
+
+#==========================================================================================================
+#========= LTE ROAMERS FUNCTION
+#==========================================================================================================
+
+#====================================================
+# EXPDP
+#====================================================
+FN_EXP_LTER_ST()
+	{
+		cat <<-EOF >> /home/oracle/scripts/exp_st_lte_roam_loaded.par
+		directory=DATA_DUMPS
+		dumpfile=ST_LTE_ROAMERS_IMPORT_${DT_OTHERS}_%u.dmp
+		logfile=ST_LTE_ROAMERS_IMPORT_${DT_OTHERS}.log
+		parallel=5
+		exclude=statistics
+		exclude=INDEX
+		#reuse_dumpfiles=YES
+		tables=ROAMBROKER.ST_LTE_ROAMERS_IMPORT:PART_${YR_OTHERS}
+		query=ROAMBROKER.ST_LTE_ROAMERS_IMPORT:"where date_code ='${FD_OTHERS}'"
+		EOF
+	}
+
+FN_EXP_LTER_AT()
+	{
+		cat <<-EOF >> /home/oracle/scripts/exp_at_lte_roam_loaded.par
+		directory=DATA_DUMPS
+		dumpfile=AT_LTE_ROAMERS_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=AT_LTE_ROAMERS_LOADED_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics,INDEX
+		reuse_dumpfiles=Y
+		tables=ROAMBROKER.AT_LTE_ROAMERS_LOADED
+		query=CDRMSC.AT_CDRUSSDMSC_LOADED:"where date_call ='${FD_OTHERS}'"
+		EOF
+	}
+
+#====================================================
+# IMPDP
+#====================================================
+FN_IMP_LTER()
+	{
+
+	}
+
+
+#==========================================================================================================
+#========= RB GPRS FUNCTION
+#==========================================================================================================
+
+#====================================================
+# EXPDP
+#====================================================
+FN_EXP_RBGPRS_ST()
+	{
+
+	}
+
+FN_EXP_RBGPRS_AT()
+	{
+		cat <<-EOF >> /home/oracle/scripts/exp_at_rbgprs_loaded.par
+		directory=DATA_DUMPS
+		dumpfile=AT_RBGPRS_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=AT_RBGPRS_LOADED_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics,INDEX
+		reuse_dumpfiles=Y
+		tables=ROAMBROKER.AT_RBGPRS_LOADED
+		query=ROAMBROKER.AT_RBGPRS_LOADED:"where date_call ='${FD_OTHERS}'"
+		EOF
+	}
+
+#====================================================
+# IMPDP
+#====================================================
+FN_IMP_RBGPRS()
+	{
+
+	}
+
+
+#==========================================================================================================
+#========= RB VOICE FUNCTION
+#==========================================================================================================
+
+#====================================================
+# EXPDP
+#====================================================
+FN_EXP_RBVOICE_ST()
+	{
+
+	}
+
+FN_EXP_RBVOICE_AT()
+	{
+		cat <<-EOF >> /home/oracle/scripts/exp_at_rbvoice_loaded.par
+		directory=DATA_DUMPS
+		dumpfile=AT_RBVOICE_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=AT_RBVOICE_LOADED_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics,INDEX
+		reuse_dumpfiles=Y
+		tables=ROAMBROKER.AT_RBVOICE_LOADED
+		query=ROAMBROKER.AT_RBVOICE_LOADED:"where date_call ='${FD_OTHERS}'"
+		EOF
+	}
+
+#====================================================
+# IMPDP
+#====================================================
+FN_IMP_RBVOICE_ST()
+	{
+
+	}
+	
+FN_IMP_RBVOICE_AT()
+	{
+
+	}
+
+#==========================================================================================================
+#========= COPY DUMP FILES
+#==========================================================================================================
+DMP_COPY()
+	{
+
+	}
+
+
+#==========================================================================================================
+#========= DELETE DUMP FILES
+#==========================================================================================================
+
+#====================================================
+# SOURCE: TTCDRMSC
+#====================================================
+DEL_LOC_FILES()
+	{
+		rm -f /home/oracle/ST_*.dmp 
+		rm -f /home/oracle/AT_*.dmp
+	}
+
+#====================================================
+# DESTINATION: TTDWH004
+#====================================================
+DEL_REM_FILES()
+	{
+		ssh oracle@172.20.10.20 'rm -f /archive1/fumps3/ST_*.dmp'
+		ssh oracle@172.20.10.20 'rm -f /archive1/fumps3/AT_*.dmp'
+	}
+
+
+#==========================================================================================================
+#========= MOVE LOG FILES FROM
+#==========================================================================================================
+
+#====================================================
+# SOURCE: TTCDRMSC
+#====================================================
+MOVE_LOC_LOGS()
+	{
+		mv /home/oracle/ST_*.log logs/
+		mv /home/oracle/AT_*.log logs/
+	}
+
+#====================================================
+# DESTINATION: TTDWH004
+#====================================================
+MOVE_REM_LOGS()
+	{
+		ssh oracle@172.20.10.20 'mv /home/oracle/ST_*.log logs/'
+		ssh oracle@172.20.10.20 'mv /home/oracle/AT_*.log logs/'
+	}
+
+
+#==========================================================================================================
+#========= FUNCTION WRAP
+#==========================================================================================================
+
+#====================================================
+# DELETE PARFILES
+#====================================================
+DEL_PAR()
+	{
+		DEL_LOC_PAR
+		DEL_REM_PAR
+	}
+
+#====================================================
+# EXPDP
+#====================================================
+EXPORT_ST()
+	{
+		FN_EXP_CDRMSC_ST
+		FN_EXP_CDRUSSDMSC_ST
+		FN_EXP_PSL_BON_ADJ_ST
+		FN_EXP_LTER_ST
+		FN_IMP_RBGPRS_ST
+		FN_EXP_RBVOICE_ST
+	}
+
+EXPORT_AT()
+	{
+		FN_EXP_CDRUSSDMSC_AT
+		FN_EXP_PSL_BON_ADJ_AT
+		FN_EXP_LTER_AT
+		FN_IMP_RBGPRS_AT
+		FN_EXP_RBVOICE_AT
+	}
+
+#====================================================
+# IMPDP
+#====================================================
+IMPORT_ST()
+	{
+		FN_IMP_CDRMSC_ST
+		FN_IMP_CDRUSSDMSC_ST
+		FN_IMP_PSL_BON_ADJ_ST
+		FN_IMP_LTER_ST
+		FN_IMP_RBGPRS_ST
+		FN_IMP_RBVOICE_ST
+	}
+
+IMPORT_AT()
+	{
+		FN_IMP_CDRUSSDMSC_AT
+		FN_IMP_PSL_BON_ADJ_AT
+		FN_IMP_LTER_AT
+		FN_IMP_RBGPRS_AT
+		FN_IMP_RBVOICE_AT
+	}
+
+#====================================================
+# DELETE DUMPS
+#====================================================
+DEL_FILES()
+	{
+		DEL_LOC_FILES
+		DEL_REM_FILES
+	}
+
+#====================================================
+# MOVE LOGS
+#====================================================
+MOVE_LOGS()
+	{
+		MOVE_LOC_LOGS
+		MOVE_REM_LOGS
+	}
+
+
+#==========================================================================================================
+#========= EXECUTION CONTROL
+#==========================================================================================================
+
+#DEL_PAR
+
+EXPORT_ST
+EXPORT_AT
+
+#IMPORT_ST
+#IMPORT_AT
+
+#DEL_FILES
+
+#MOVE_LOGS

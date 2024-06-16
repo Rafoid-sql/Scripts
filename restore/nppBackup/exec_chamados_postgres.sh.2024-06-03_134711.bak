@@ -31,26 +31,6 @@ BLUE="\033[1;34m"
 GREEN="\033[1;32m"
 NOCOLOR="\033[0m"
 
-if [[ "$3" <  "$2" ]];
-then
-        MNT_FN=$((${MNT_IN} + 1))
-        echo "${MNT_IN}"
-        echo "${MNT_FN}"
-        echo "${MONTHS[${MNT_IN}]}"
-        echo "${MONTHS[${MNT_FN}]}"
-        echo "${IN_DT_CDRMSC}"
-        echo "${FN_DT_CDRMSC}"
-else
-        MNT_FN=${MNT_IN}
-        echo "${MNT_IN}"
-        echo "${MNT_FN}"
-        echo "${MONTHS[${MNT_IN}]}"
-        echo "${MONTHS[${MNT_FN}]}"
-        echo "${IN_DT_CDRMSC}"
-        echo "${FN_DT_CDRMSC}"
-fi
-
-
 #==========================================================================================================
 #========= VERIFICA SE ARQUIVO EXISTE
 #==========================================================================================================

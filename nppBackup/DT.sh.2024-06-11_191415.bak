@@ -1,0 +1,546 @@
+#set -x
+#!/bin/bash
+
+#==========================================================================================================
+#  Author: Rafael Oliveira
+# Summary: Automated execution for the Data Transfer process
+#==========================================================================================================
+
+#==========================================================================================================
+#========= VARIABLES
+#==========================================================================================================
+
+# DATE
+DT_CDRMSC=`date -d "1 days ago" +%b%d`
+DT_OTHERS=`date -d "2 days ago" +%b%d`
+YR_CDRMSC=`date -d "1 days ago" +%Y%m`
+YR_OTHERS=`date -d "2 days ago" +%Y%m`
+FD_CDRMSC=`date -d "1 days ago" +%Y%m%d`
+FD_OTHERS=`date -d "2 days ago" +%Y%m%d`
+
+# PARFILE
+PAR_FOLDER_LOC='/home/oracle/scripts'
+PAR_FOLDER_REM='/archive1/dumps3/scripts'
+
+# DUMP
+DMP_FOLDER_LOC='/home/oracle'
+DMP_FOLDER_REM='/archive1/dumps3'
+
+# LOGS
+PAR_FOLDER_LOC='/home/oracle'
+PAR_FOLDER_REM='/archive1/dumps3'
+
+
+#==========================================================================================================
+#========= CDRMSC FUNCTION
+#==========================================================================================================
+
+# EXPDP
+FN_EXP_CDRMSC_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_st_cdrmsc_import.par
+		directory=DATA_DUMPS
+		dumpfile=ST_CDRMSC_IMPORT_${DT_CDRMSC}_%u.dmp
+		logfile=ST_CDRMSC_IMPORT_${DT_CDRMSC}.log
+		parallel=5
+		exclude=statistics
+		exclude=INDEX
+		#reuse_dumpfiles=YES
+		tables=CDRMSC.ST_CDRMSC_IMPORT:PART_${FD_CDRMSC}
+		EOF
+	}
+
+# IMPDP
+FN_IMP_CDRMSC_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_cdrmsc.par
+		tables=CDRMSC.ST_CDRMSC_IMPORT:PART_${FD_CDRMSC}
+		content=data_only
+		table_exists_action=append
+		parallel=5
+		dumpfile=ST_CDRMSC_IMPORT_${DT_CDRMSC}_%u.dmp
+		logfile=IMP_ST_CDRMSC_IMPORT_${DT_CDRMSC}.log
+		directory=ARCHIVE1_DUMPS
+		EOF
+	}
+
+
+#==========================================================================================================
+#========= CDRUSSDMSC FUNCTION
+#==========================================================================================================
+
+# EXPDP
+FN_EXP_CDRUSSDMSC_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_st_cdrussd_import.par
+		directory=DATA_DUMPS
+		dumpfile=ST_CDRUSSD_IMPORT_${DT_OTHERS}_%u.dmp
+		logfile=ST_CDRUSSD_IMPORT_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics
+		reuse_dumpfiles=Y
+		tables=CDRMSC.ST_CDRUSSDMSC_IMPORT:PART_${FD_OTHERS}
+		EOF
+	}
+
+FN_EXP_CDRUSSDMSC_AT()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_at_cdrussd_loaded.par
+		directory=DATA_DUMPS
+		dumpfile=AT_CDRUSSD_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=AT_CDRUSSD_LOADED_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics,INDEX
+		reuse_dumpfiles=Y
+		tables=CDRMSC.AT_CDRUSSDMSC_LOADED
+		query=CDRMSC.AT_CDRUSSDMSC_LOADED:"where date_call ='${FD_OTHERS}'"
+		EOF
+	}
+
+
+# IMPDP
+FN_IMP_CDRUSSDMSC_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_st_cdrussd_import.par
+		tables=CDRMSC.ST_CDRUSSDMSC_IMPORT
+		content=data_only
+		table_exists_action=append
+		parallel=5
+		dumpfile=ST_CDRUSSD_IMPORT_${DT_OTHERS}_%u.dmp
+		logfile=IMP_ST_CDRUSSD_IMPORT_${DT_OTHERS}.log
+		directory=ARCHIVE1_DUMPS		
+		EOF
+	}
+
+FN_IMP_CDRUSSDMSC_AT()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_at_cdrussd_loaded.par
+		tables=CDRMSC.AT_CDRUSSDMSC_LOADED
+		content=data_only
+		table_exists_action=append
+		parallel=5
+		dumpfile=AT_CDRUSSD_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=IMP_AT_CDRUSSD_LOADED_${DT_OTHERS}.log
+		directory=ARCHIVE1_DUMPS		
+		EOF
+	}
+
+
+#==========================================================================================================
+#========= PSL BONUS ADJUSTMENTS FUNCTION
+#==========================================================================================================
+
+# EXPDP
+FN_EXP_PSL_BON_ADJ_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_st_cdrpsl_impbonus_adj.par
+		directory=DATA_DUMPS
+		dumpfile=ST_CDRPSL_IMPADJT_${DT_OTHERS}_%u.dmp
+		logfile=ST_CDRPSL_IMPADJT_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics
+		reuse_dumpfiles=YES
+		tables=CDRPSL.ST_CDRPSL_IMPORT_BONUSADJT:PART_${FD_OTHERS}
+		EOF
+	}
+
+FN_EXP_PSL_BON_ADJ_AT()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_at_cdrpsl_bon_adjt.par
+		directory=DATA_DUMPS
+		dumpfile=AT_CDRPSL_BONADJT_${DT_OTHERS}_%u.dmp
+		logfile=AT_CDRPSL_BONADJT_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics
+		reuse_dumpfiles=YES
+		tables=CDRPSL.AT_CDRPSL_LOADED_BONUSADJT
+		query=CDRPSL.AT_CDRPSL_LOADED_BONUSADJT:"where date_call ='${FD_OTHERS}'"
+		EOF
+	}
+
+
+# IMPDP
+FN_IMP_PSL_BON_ADJ_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_st_cdrpsl_imp_bonadjt.par
+		tables=CDRPSL.ST_CDRPSL_IMPORT_BONUSADJT
+		content=data_only
+		table_exists_action=append
+		parallel=5
+		dumpfile=ST_CDRPSL_IMPADJT_${DT_OTHERS}_%u.dmp
+		logfile=IMP_ST_CDRPSL_IMPADJT_${DT_OTHERS}.log
+		directory=ARCHIVE1_DUMPS		
+		EOF
+	}
+	
+FN_IMP_PSL_BON_ADJ_AT()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_at_cdrpsl_load_bonadjt.par
+		tables=CDRPSL.AT_CDRPSL_LOADED_BONUSADJT
+		content=data_only
+		table_exists_action=append
+		parallel=4
+		dumpfile=AT_CDRPSL_BONADJT_${DT_OTHERS}_%u.dmp
+		logfile=IMP_AT_CDRPSL_BONADJT_${DT_OTHERS}.log
+		directory=ARCHIVE1_DUMPS		
+		EOF
+	}
+
+
+#==========================================================================================================
+#========= LTE ROAMERS FUNCTION
+#==========================================================================================================
+
+# EXPDP
+FN_EXP_LTER_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_st_lte_roam_loaded.par
+		directory=DATA_DUMPS
+		dumpfile=ST_LTE_ROAMERS_IMPORT_${DT_OTHERS}_%u.dmp
+		logfile=ST_LTE_ROAMERS_IMPORT_${DT_OTHERS}.log
+		parallel=5
+		exclude=statistics
+		exclude=INDEX
+		#reuse_dumpfiles=YES
+		tables=ROAMBROKER.ST_LTE_ROAMERS_IMPORT:PART_${YR_OTHERS}
+		query=ROAMBROKER.ST_LTE_ROAMERS_IMPORT:"where date_code ='${FD_OTHERS}'"
+		EOF
+	}
+
+FN_EXP_LTER_AT()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_at_lte_roam_loaded.par
+		directory=DATA_DUMPS
+		dumpfile=AT_LTE_ROAMERS_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=AT_LTE_ROAMERS_LOADED_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics,INDEX
+		reuse_dumpfiles=Y
+		tables=ROAMBROKER.AT_LTE_ROAMERS_LOADED
+		query=CDRMSC.AT_CDRUSSDMSC_LOADED:"where date_call ='${FD_OTHERS}'"
+		EOF
+	}
+
+# IMPDP
+FN_IMP_LTER_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_st_lte_roam_import.par
+		tables=ROAMBROKER.ST_LTE_ROAMERS_IMPORT
+		content=data_only
+		table_exists_action=append
+		parallel=5
+		dumpfile=ST_LTE_ROAMERS_IMPORT_${DT_OTHERS}_%u.dmp
+		logfile=IMP_ST_LTE_ROAMERS_IMPORT_${DT_OTHERS}.log
+		directory=ARCHIVE1_DUMPS		
+		EOF
+	}
+
+FN_IMP_LTER_AT()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_at_lte_roam_loaded.par
+		tables=ROAMBROKER.AT_LTE_ROAMERS_LOADED
+		content=data_only
+		table_exists_action=append
+		parallel=5
+		dumpfile=AT_LTE_ROAMERS_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=IMP_AT_LTE_ROAMERS_LOADED_${DT_OTHERS}.log
+		directory=ARCHIVE1_DUMPS		
+		EOF
+	}
+
+
+#==========================================================================================================
+#========= RB GPRS FUNCTION
+#==========================================================================================================
+
+# EXPDP
+FN_EXP_RBGPRS_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_st_rbgprs_import.par
+		directory=DATA_DUMPS
+		dumpfile=ST_RBGPRS_IMPORT_${DT_OTHERS}_%u.dmp
+		logfile=ST_RBGPRS_IMPORT_${DT_OTHERS}.log
+		parallel=5
+		exclude=statistics
+		exclude=INDEX
+		#reuse_dumpfiles=YES
+		tables=ROAMBROKER.ST_RBGPRS_IMPORT:PART_${YR_OTHERS}
+		query=ROAMBROKER.ST_RBGPRS_IMPORT:"where date_code ='${FD_OTHERS}'"
+		EOF
+	}
+
+FN_EXP_RBGPRS_AT()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_at_rbgprs_loaded.par
+		directory=DATA_DUMPS
+		dumpfile=AT_RBGPRS_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=AT_RBGPRS_LOADED_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics,INDEX
+		reuse_dumpfiles=Y
+		tables=ROAMBROKER.AT_RBGPRS_LOADED
+		query=ROAMBROKER.AT_RBGPRS_LOADED:"where date_call ='${FD_OTHERS}'"
+		EOF
+	}
+
+# IMPDP
+FN_IMP_RBGPRS_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_st_rbgprs_import.par
+		tables=ROAMBROKER.ST_RBGPRS_IMPORT
+		content=data_only
+		table_exists_action=append
+		parallel=5
+		dumpfile=ST_RBGPRS_IMPORT_${DT_OTHERS}_%u.dmp
+		logfile=IMP_ST_RBGPRS_IMPORT_${DT_OTHERS}.log
+		directory=ARCHIVE1_DUMPS		
+		EOF
+	}
+
+FN_IMP_RBGPRS_AT()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_at_rbgprs_loaded.par
+		tables=ROAMBROKER.AT_RBGPRS_LOADED
+		content=data_only
+		table_exists_action=append
+		parallel=5
+		dumpfile=AT_RBGPRS_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=IMP_AT_RBGPRS_LOADED_${DT_OTHERS}.log
+		directory=ARCHIVE1_DUMPS		
+		EOF
+	}
+
+#==========================================================================================================
+#========= RB VOICE FUNCTION
+#==========================================================================================================
+
+# EXPDP
+FN_EXP_RBVOICE_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_st_rbvoice_import.par
+		directory=DATA_DUMPS
+		dumpfile=ST_RBVOICE_IMPORT_${DT_OTHERS}_%u.dmp
+		logfile=ST_RBVOICE_IMPORT_${DT_OTHERS}.log
+		parallel=5
+		exclude=statistics
+		exclude=INDEX
+		#reuse_dumpfiles=YES
+		tables=ROAMBROKER.ST_RBVOICE_IMPORT:PART_${YR_OTHERS}
+		EOF
+	}
+
+FN_EXP_RBVOICE_AT()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/exp_at_rbvoice_loaded.par
+		directory=DATA_DUMPS
+		dumpfile=AT_RBVOICE_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=AT_RBVOICE_LOADED_${DT_OTHERS}.log
+		parallel=4
+		exclude=statistics,INDEX
+		reuse_dumpfiles=Y
+		tables=ROAMBROKER.AT_RBVOICE_LOADED
+		query=ROAMBROKER.AT_RBVOICE_LOADED:"where date_call ='${FD_OTHERS}'"
+		EOF
+	}
+
+# IMPDP
+FN_IMP_RBVOICE_ST()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_st_rbvoice_import.par
+		tables=ROAMBROKER.ST_RBVOICE_IMPORT
+		content=data_only
+		table_exists_action=append
+		parallel=5
+		dumpfile=ST_RBVOICE_IMPORT_${DT_OTHERS}_%u.dmp
+		logfile=IMP_ST_RBVOICE_IMPORT_${DT_OTHERS}.log
+		directory=ARCHIVE1_DUMPS		
+		EOF
+	}
+	
+FN_IMP_RBVOICE_AT()
+	{
+		cat <<-EOF >> ${PAR_FOLDER_LOC}/imp_at_rbvoice_loaded.par
+		tables=ROAMBROKER.AT_RBVOICE_LOADED
+		content=data_only
+		table_exists_action=append
+		parallel=5
+		dumpfile=AT_RBVOICE_LOADED_${DT_OTHERS}_%u.dmp
+		logfile=IMP_AT_RBVOICE_LOADED_${DT_OTHERS}.log
+		directory=ARCHIVE1_DUMPS		
+		EOF
+	}
+
+
+#==========================================================================================================
+#========= EXECUTE DATAPUMP
+#==========================================================================================================
+
+EXEC_EXP()
+	{
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_cdrmsc_import.par
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_cdrpsl_bon_adjt.par
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_cdrussd_loaded.par
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_lte_roam_loaded.par
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_rbgprs_loaded.par
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_rbvoice_loaded.par
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_cdrpsl_impbonus_adj.par
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_cdrussd_import.par
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_lte_roam_loaded.par
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_rbgprs_import.par
+		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_rbvoice_import.par
+	}
+
+EXEC_IMP()
+	{
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_cdrmsc.par
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_at_cdrpsl_load_bonadjt.par
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_at_cdrussd_loaded.par
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_at_lte_roam_loaded.par
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_at_rbgprs_loaded.par
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_at_rbvoice_loaded.par
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_st_cdrussd_import.par
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_st_lte_roam_import.par
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_st_rbgprs_import.par
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_st_rbvoice_import.par
+		impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_st_cdrpsl_imp_bonadjt.par
+	}
+
+
+#==========================================================================================================
+#========= MANAGE FILES
+#==========================================================================================================
+
+# TTCDRMSC
+DEL_LOC_PAR()
+	{
+		rm -f ${PAR_FOLDER_LOC}/*.par
+	}
+
+DEL_LOC_DUMP()
+	{
+		rm -f ${PAR_FOLDER_LOC}/ST_*.dmp
+		rm -f ${PAR_FOLDER_LOC}/AT_*.dmp
+	}
+
+MOVE_LOC_LOG()
+	{
+		mv ${PAR_FOLDER_LOC}/ST_*.log logs/
+		mv ${PAR_FOLDER_LOC}/AT_*.log logs/
+	}
+
+# TTDWH004
+DEL_REM_PAR()
+	{
+		ssh oracle@172.20.10.20 'rm -f ${PAR_FOLDER_REM}/*.par'
+	}
+
+COPY_IMP_PAR()
+	{
+		scp ${PAR_FOLDER_LOC}/imp_*.par  oracle@172.20.10.20:${PAR_FOLDER_REM}
+	}
+
+COPY_EXP_DUMP()
+	{
+		scp ${DMP_FOLDER_LOC}*.dmp  oracle@172.20.10.20:${DMP_FOLDER_REM}
+	}
+
+DEL_REM_DUMP()
+	{
+		ssh oracle@172.20.10.20 'rm -f ${DMP_FOLDER_REM}/ST_*.dmp'
+		ssh oracle@172.20.10.20 'rm -f ${DMP_FOLDER_REM}/AT_*.dmp'
+	}
+
+MOVE_REM_LOG()
+	{
+		ssh oracle@172.20.10.20 'mv ${PAR_FOLDER_LOC}/imp_*.log logs/'
+	}
+
+
+#==========================================================================================================
+#========= FUNCTION WRAP
+#==========================================================================================================
+
+# DELETE PARFILES
+DEL_PAR()
+	{
+		DEL_LOC_PAR
+		DEL_REM_PAR
+	}
+
+# EXPDP
+CREATE_EXP_ST()
+	{
+		FN_EXP_CDRMSC_ST
+		FN_EXP_CDRUSSDMSC_ST
+		FN_EXP_PSL_BON_ADJ_ST
+		FN_EXP_LTER_ST
+		FN_IMP_RBGPRS_ST
+		FN_EXP_RBVOICE_ST
+	}
+
+CREATE_EXP_AT()
+	{
+		FN_EXP_CDRUSSDMSC_AT
+		FN_EXP_PSL_BON_ADJ_AT
+		FN_EXP_LTER_AT
+		FN_IMP_RBGPRS_AT
+		FN_EXP_RBVOICE_AT
+	}
+
+# IMPDP
+CREATE_IMP_ST()
+	{
+		FN_IMP_CDRMSC_ST
+		FN_IMP_CDRUSSDMSC_ST
+		FN_IMP_PSL_BON_ADJ_ST
+		FN_IMP_LTER_ST
+		FN_IMP_RBGPRS_ST
+		FN_IMP_RBVOICE_ST
+	}
+
+CREATE_IMP_AT()
+	{
+		FN_IMP_CDRUSSDMSC_AT
+		FN_IMP_PSL_BON_ADJ_AT
+		FN_IMP_LTER_AT
+		FN_IMP_RBGPRS_AT
+		FN_IMP_RBVOICE_AT
+	}
+
+# DELETE DUMPS
+DEL_FILE()
+	{
+		DEL_LOC_DUMP
+		DEL_REM_DUMP
+	}
+
+# MOVE LOGS
+MOVE_LOG()
+	{
+		MOVE_LOC_LOG
+		MOVE_REM_LOG
+	}
+
+
+#==========================================================================================================
+#========= EXECUTION CONTROL
+#==========================================================================================================
+
+#DEL_PAR
+
+CREATE_EXP_ST
+CREATE_EXP_AT
+
+CREATE_IMP_ST
+CREATE_IMP_AT
+#COPY_EXP_DUMP
+
+EXEC_EXP
+
+#DMP_EXP_COPY
+
+#EXEC_IMP
+
+#DEL_FILE
+
+#MOVE_LOG
