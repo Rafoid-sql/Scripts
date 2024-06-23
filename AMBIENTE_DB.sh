@@ -1,7 +1,15 @@
 ## INSTANCIAS ##
 
 # Prompt Settings
-export PS1='[\u@\h:\[\e[01;31m$ORACLE_SID\e[m\] $PWD]\$ '
+echo "*********************************"
+echo "Databases Running on This Server:"
+echo "*********************************"
+#ps -ef| grep pmon_|grep -v grep|awk -F_ '{print $3}'
+ps -ef | grep pmon | grep -v grep | awk '{ print $8 }' | cut -d '_' -f3
+#ps -e -o command | grep pmon | grep -v grep | cut -d '_' -f3
+
+# Terminal Settings
+export PS1='[\u@\h:\[\e[01;31m$ORACLE_SID\e[m\]:$PWD]\$ '
 
 # History Settings
 export HISTTIMEFORMAT="%d/%m/%y %T "

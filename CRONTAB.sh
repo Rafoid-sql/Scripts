@@ -1,3 +1,38 @@
+
+#######################################################################################
+# Minute(00-59) Hour(00-23) Monthday(01-31) Month(01-12) Weekday(0-6, Sunday=0) Command
+#######################################################################################
+
+###############################  M A I N T E N A N C E  ###############################
+#### PARTITIONS:
+#59 23 * * * /home/oracle/scripts/check_partitions.sh > /dev/null 2>&1
+
+#### ALERTLOG:
+#59 23 * * * /home/oracle/scripts/alert_log.sh > /dev/null 2>&1
+
+################################  M O N I T O R I N G  ################################
+#### OS HEALTH CHECK:
+#*/5 * * * * /home/oracle/scripts/os_hc.sh > /dev/null 2>&1
+
+###################################  S T A N D B Y  ###################################
+#### SYNC:
+#* * * * * /home/oracle/scripts/check_standby_sync.sh > /dev/null 2>&1
+
+####################################  B A C K U P  ####################################
+#### RMAN:
+#* * * * * /home/oracle/scripts/rman_lvl0.sh > /dev/null 2>&1
+#* * * * * /home/oracle/scripts/rman_arch.sh > /dev/null 2>&1
+
+#### DATAPUMP:
+#* * * * * /home/oracle/scripts/dp_full.sh > /dev/null 2>&1
+#* * * * * /home/oracle/scripts/dp_schema.sh > /dev/null 2>&1
+
+#######################################  O L D  #######################################
+
+
+#######################################################################################
+
+
 ## * * * * * sh /path/to/file.sh
 ## | | | | | |
 ## | | | | | |___[Command]

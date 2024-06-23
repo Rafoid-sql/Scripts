@@ -41,8 +41,7 @@ LOG_FOLDER_LOC='/home/oracle'
 LOG_FOLDER_REM='/archive1/dumps3'
 
 # LOGFILE
-#LOGFILE=${SCR_FOLDER}/logs/log_data_transfer_`date +%Y%m%d_%H%M%S`.log
-LOGFILE=${SCR_FOLDER}/logs/log_data_transfer_`date +%Y%m%d`.log
+LOGFILE=${SCR_FOLDER}/log_data_transfer_`date +%Y%m%d_%H%M%S`.log
 
 
 #==========================================================================================================
@@ -403,7 +402,7 @@ EXEC_EXP()
 		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_lte_roam_loaded.par >> ${LOGFILE} 2>&1
 		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_rbgprs_loaded.par >> ${LOGFILE} 2>&1
 		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_rbvoice_loaded.par >> ${LOGFILE} 2>&1
-		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] EXPORT FINISHED." >> ${LOGFILE} 2>&1
+		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] EXPORT FINISHED:" >> ${LOGFILE} 2>&1
 		echo -e "" >> ${LOGFILE} 2>&1
 	}
 
@@ -421,7 +420,7 @@ EXEC_IMP()
 		ssh oracle@172.20.10.20 "impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_at_lte_roam_loaded.par" >> ${LOGFILE} 2>&1
 		ssh oracle@172.20.10.20 "impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_at_rbgprs_loaded.par" >> ${LOGFILE} 2>&1
 		ssh oracle@172.20.10.20 "impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_at_rbvoice_loaded.par" >> ${LOGFILE} 2>&1
-		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] IMPORT FINISHED." >> ${LOGFILE} 2>&1
+		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] IMPORT FINISHED:" >> ${LOGFILE} 2>&1
 		echo -e "" >> ${LOGFILE} 2>&1
 	}
 
@@ -495,6 +494,11 @@ MOVE_REM_LOG()
 	{
 		#ssh oracle@172.20.10.20 'mv ${LOG_FOLDER_REM}/IMP_*.log ${LOG_FOLDER_REM}/logs/'
 		ssh oracle@172.20.10.20 "mv ${LOG_FOLDER_REM}/IMP_*.log ${LOG_FOLDER_REM}/logs/"
+	}
+	
+MOVE_LOGFILE()
+	{
+		mv ${LOG_FOLDER_LOC}/scripts/log_data_transfer_*.log ${LOG_FOLDER_LOC}/scripts/logs/ 2>> ${LOGFILE} 2>&1
 	}
 
 
@@ -576,6 +580,7 @@ MOVE_LOG()
 		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] MOVING LOGFILES:" >> ${LOGFILE} 2>&1
 		MOVE_LOC_LOG
 		MOVE_REM_LOG
+		MOVE_LOGFILE
 		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] LOGFILES MOVED." >> ${LOGFILE} 2>&1
 		echo -e "" >> ${LOGFILE} 2>&1
 	}
@@ -639,14 +644,14 @@ then
 		if [[ "$(ls ${PAR_FOLDER_LOC}/imp_*.par | wc -l)" == "11" && "$(ls ${PAR_FOLDER_LOC}/exp_*.par | wc -l)" == "11" ]]
 		then
 			EXEC_EXP
-			if [[ "$(grep -c "successfully completed" /home/oracle/scripts/logs/log_data_transfer_`date +%Y%m%d`.log)" == "11" ]]
+			if [[ "$(grep -c "successfully completed" ${SCR_FOLDER}/`basename ${SCR_FOLDER}/log_*`)" == "11" ]]
 			then
-				CNT=`ls ${DMP_FOLDER_LOC}/ST_*.dmp ${DMP_FOLDER_LOC}/AT_*.dmp | wc -l`
+				CNT=`ls ${DMP_FOLDER_LOC}/*.dmp | wc -l`
 				COPY_FILE
 				if [[ "$(ssh oracle@172.20.10.20 ls ${PAR_FOLDER_REM}/*.par | wc -l)" == "11" && "$(ssh oracle@172.20.10.20 ls ${DMP_FOLDER_REM}/ST_*.dmp ${DMP_FOLDER_REM}/AT_*.dmp | wc -l)" == "${CNT}" ]]
 				then
 					#EXEC_IMP
-					# if [[ $(grep -c "successfully completed" /home/oracle/scripts/logs/log_data_transfer_`date +%Y%m%d`.log) == "22" ]];
+					# if [[ `grep -c "successfully completed" ${SCR_FOLDER}/`basename ${SCR_FOLDER}/log_*`` == "22" ]];
 					# then
 						#EXEC_INSERT
 						# if [[ $? -eq 0 ]]
@@ -654,11 +659,11 @@ then
 							# DEL_FILE
 							# if [[ "$(ls ${DMP_FOLDER_LOC}/ST_*.dmp ${DMP_FOLDER_LOC}/AT_*.dmp | wc -l)" == "" && "$(ssh oracle@172.20.10.20 ls ${DMP_FOLDER_REM}/ST_*.dmp ${DMP_FOLDER_REM}/AT.dmp | wc -l)" == "" ]]
 							# then
-								EMAIL_LOG_SUCCESS
-								# MOVE_LOG
 								echo -e "#############################################################################################" >> ${LOGFILE} 2>&1
 								echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] DATA TRANSFER PROCESS FINISHED." >> ${LOGFILE} 2>&1
 								echo -e "#############################################################################################" >> ${LOGFILE} 2>&1
+								EMAIL_LOG_SUCCESS
+								MOVE_LOG
 								exit;
 							# else
 								# echo -e "" >> ${LOGFILE} 2>&1

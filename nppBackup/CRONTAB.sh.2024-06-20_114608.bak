@@ -1,0 +1,72 @@
+
+#######################################################################################
+# Minute(00-59) Hour(00-23) Monthday(01-31) Month(01-12) Weekday(0-6, Sunday=0) Command
+#######################################################################################
+
+###############################  M A I N T E N A N C E  ###############################
+#### PARTITIONS:
+#59 23 * * * /home/oracle/scripts/check_partitions.sh > /dev/null 2>&1
+
+################################  M O N I T O R I N G  ################################
+#### ALERTLOG:
+#59 23 * * * /home/oracle/scripts/alert_log.sh > /dev/null 2>&1
+
+###################################  S T A N D B Y  ###################################
+#### SYNC:
+#* * * * * /home/oracle/scripts/check_standby_sync.sh > /dev/null 2>&1
+
+####################################  B A C K U P  ####################################
+#### RMAN:
+#* * * * * /home/oracle/scripts/rman_lvl0.sh > /dev/null 2>&1
+#* * * * * /home/oracle/scripts/rman_arch.sh > /dev/null 2>&1
+
+#### DATAPUMP:
+#* * * * * /home/oracle/scripts/dp_full.sh > /dev/null 2>&1
+#* * * * * /home/oracle/scripts/dp_schema.sh > /dev/null 2>&1
+
+#######################################  O L D  #######################################
+
+
+
+## * * * * * sh /path/to/file.sh
+## | | | | | |
+## | | | | | |___[Command]
+## | | | | |_____[Day of the Week] 0-6 | SUN-SAT
+## | | | |_______[Month of the Year] 1-12 | JAN-DEC
+## | | |_________[Day of the Month] 1-31
+## | |___________[Hour] 00-23
+## |_____________[Minute] 00-59
+
+
+
+####################  B A C K U P   F I S I C O  ####################
+
+## BackupRmanFull.sh <INST> <RET BKP> <REMOTO [S|N]> <RET COPIA> <CLOUD [S|N]>
+00 00 * * * sh /backup/scripts/BackupRmanFull.sh viasoft 1 N 0 N
+
+## BackupRmanArch.sh <INST> <RET ARC> <REMOTO [S|N]> <RET COPIA> <CLOUD [S|N]>
+00 00 * * * sh /backup/scripts/BackupRmanArch.sh viasoft 1 N 0 N
+
+
+####################  B A C K U P   L O G I C O  ####################
+
+## BackupExpdp.sh <INST> <TIPO [FULL|OWNER]> <RET BKP> <RET TGZ> <RET LOG> <REMOTO [S|N]> <RET COPIA> <CLOUD [S|N]>
+00 00 * * * sh /backup/scripts/BackupExpdp.sh viasoft FULL 1 5 5 S 10 S
+
+
+#####################  S Y N C   S T A N D B Y  #####################
+
+## Sincroniza Archives para o Standby
+00 00 * * * sh /backup/scripts/StandbySync.sh
+
+## Restaura Archives para Sincronização
+00 00 * * * sh /backup/scripts/RestoreArch.sh
+
+
+####################  C A R G A   D E   B A S E  ####################
+
+## Atualiza a base <nome_da_base> via RMAN/DataPump
+00 00 * * * sh /backup/scripts/DP_CargaBase.sh
+00 00 * * * sh /backup/scripts/RMAN_CargaBase.sh
+
+###########################  A N T I G O  ###########################

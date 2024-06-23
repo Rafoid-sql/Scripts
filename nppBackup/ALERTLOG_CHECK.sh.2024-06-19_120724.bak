@@ -1,0 +1,414 @@
+#!/bin/sh
+#
+# Minute(00-59) Hour(00-23) Monthday(01-31) Month(01-12) Weekday(0-6, Sunday=0) Command
+#59 23 * * * /orasw/static/oradba/bin/alert_log.ksh > /dev/null 2>&1
+#########################################################################################
+# The following files are used to keep the alert.log history online
+#
+# File Name                    Contents
+# alert_<SID>.log              Today's Alert_<SID>.log entries
+# alert_work_<SID>.log         Temporary file used during file copies
+# alert_<SID>_cur.log          Current Month's accumulated alert_<SID>.log entries
+# alert_<SID>_hist.log         Previous Month's accumulated alert_<SID>.log entries
+# alert_<SID>_hist.<DATE>.gz   Compressed alert_<SID>_hist.log from previous months
+#
+# Equivalent names are used for sqlnet.log and listener.log files
+#
+# # # # # # # # # # # # # # # # # Maintenance History # # # # # # # # # # # # # # # # # #
+#
+  SCRIPT_NAME=`basename $0`
+  SCR_ID=`echo $SCRIPT_NAME | cut -d. -f1`
+#
+  SCR_DIR=`dirname $0`
+  cd ${SCR_DIR}
+  SCR_DIR=`pwd -P`
+  #ORG_PATH="$PATH"
+  ACTIVE_LISTENERS="/tmp/active_listeners.tmp"
+  OLD_HOME="XX"
+#
+  MONTHDAY=`date +%d`
+  DDATE=`date +%y%m%d`
+  RUN_DATE=`date +%y%m%d%H%M`
+#
+  export SCR_DIR
+  export ORAENV_ASK=NO
+  export HOST=`hostname`
+  export PATH=.:/usr/local/bin:/usr/contrib/bin:/usr/bin:$PATH
+  ORG_PATH="$PATH"
+  export LOG_FILE=${SCR_DIR}/log/${SCR_ID}_${RUN_DATE}.log
+
+  CRS_HOME=`cat /etc/oratab | grep -v ^# | grep -Ei 'crs|grid' | grep -i oracle | awk -F : '{print $2}' | sort -u | head -1`
+  export GRID_HOME=$CRS_HOME
+
+#
+# Write log messages.
+#
+wrt_log () {
+	echo "$1" >> $LOG_FILE
+# echo "$1"
+}
+#
+# Set Server Type
+#
+ser_type=$(uname -a | cut -c1)
+if [ $ser_type = 'L' ]
+then
+	ser_1_lvl=$(uname -a | cut -d" " -f3 | cut -d. -f2)
+	ser_2_lvl=$(uname -a | cut -d" " -f3 | cut -d. -f3)
+    if [ ${ser_1_lvl:-0} -lt '11' ]
+    then
+		ser_type='S'           # Really HP but at a back-level
+    fi
+    if [ ${ser_1_lvl:-0} -eq '11' -a ${ser_2_lvl:-0} -lt '11' ]
+    then
+		ser_type='S'           # Really HP but at a back-level
+    fi
+fi
+#
+if [ ! -d `dirname $LOG_FILE` ]
+then
+	mkdir -p `dirname $LOG_FILE`
+fi
+#
+wrt_log "\n`date`: Starting ${SCR_DIR}/${SCRIPT_NAME}"
+
+for SID in $(ps -ef | grep -v 'grep ' | egrep 'ora_pmon|asm_pmon' | cut -d_ -f3-)
+do
+	BDUMP_LOC=""
+	UDUMP_LOC=""
+	AUDIT_LOC=""
+	CORE_LOC=""
+	DIAGA_LOC=""
+	DIAGI_LOC=""
+	ORA1017=""
+	ORA_MSG=""
+	export ORACLE_SID=${SID}
+	. oraenv > /dev/null 2>&1
+
+# Find out if instance is ASM
+	if [ `echo ${SID}|cut -b1` = "+" ] 
+	then
+		SQLPLUS='sqlplus -s / as sysasm'
+	else
+		SQLPLUS='sqlplus -s /'
+	fi
+
+	DBVER=`sqlplus -v|grep SQL|awk '{print $3}'|cut -b1-2`
+
+	if [ ${DBVER} -eq 10 ] 
+	then
+		$SQLPLUS <<-EOF | egrep '(ORA-|BDUMP:|UDUMP:|AUDIT:|CORE:)' | while read S_LOG
+		Set head off echo off feedback off linesize 120 pagesize 0
+		select 'UDUMP:'||Value from V\$parameter where name = 'user_dump_dest';
+		select 'BDUMP:'||Value from V\$parameter where name = 'background_dump_dest';
+		select 'AUDIT:'||Value from V\$parameter where name = 'audit_file_dest';
+		select 'CORE:'||Value from V\$parameter where name = 'core_dump_dest';
+		EOF
+		do
+			TAG=$(echo $S_LOG | cut -d: -f1)
+			case $TAG in
+			BDUMP) BDUMP_LOC=$(echo $S_LOG | cut -d: -f2);;
+			UDUMP) UDUMP_LOC=$(echo $S_LOG | cut -d: -f2);;
+			AUDIT) AUDIT_LOC=$(echo $S_LOG | cut -d: -f2);;
+			CORE) CORE_LOC=$(echo $S_LOG | cut -d: -f2);;
+			ORA-01017) ORA1017=$S_LOG;
+						ORA_MSG=$S_LOG;;
+				*) ORA_MSG=$S_LOG;;
+			esac
+		done
+	else
+		$SQLPLUS <<-EOF | egrep '(ORA-|BDUMP:|UDUMP:|AUDIT:|CORE:|DIAGA:|DIAGI:)' | while read S_LOG
+		Set head off echo off feedback off linesize 120 pagesize 0
+		select 'UDUMP:'||Value from V\$parameter where name = 'user_dump_dest';
+		select 'BDUMP:'||Value from V\$parameter where name = 'background_dump_dest';
+		select 'AUDIT:'||Value from V\$parameter where name = 'audit_file_dest';
+		select 'CORE:'||Value from V\$parameter where name = 'core_dump_dest';
+		select 'DIAGA:'||Value from v\$diag_info where name = 'Diag Alert';
+		select 'DIAGI:'||Value from v\$diag_info where name = 'Diag Incident';
+		EOF
+		do
+			TAG=$(echo $S_LOG | cut -d: -f1)
+			case $TAG in
+			BDUMP) BDUMP_LOC=$(echo $S_LOG | cut -d: -f2);;
+			UDUMP) UDUMP_LOC=$(echo $S_LOG | cut -d: -f2);;
+			AUDIT) AUDIT_LOC=$(echo $S_LOG | cut -d: -f2);;
+			CORE) CORE_LOC=$(echo $S_LOG | cut -d: -f2);;
+			DIAGA) DIAGA_LOC=$(echo $S_LOG | cut -d: -f2);;
+			DIAGI) DIAGI_LOC=$(echo $S_LOG | cut -d: -f2);;
+			ORA-01017) ORA1017=$S_LOG;
+						ORA_MSG=$S_LOG;;
+				*) ORA_MSG=$S_LOG;;
+			esac
+		done
+	fi
+		export ORACLE_SID=${SID}
+###
+	if [ ! -z "$ORA_MSG" ]                  # If present we couldn't access the database
+	then                                    # log the error and try next database
+		wrt_log "\n`date`- ${SID}: Processing database \"${SID}\"."
+		wrt_log "`date`- Can't access database \"$SID\" -- \"$ORA_MSG\" "
+		wrt_log "`date`- ${SID}: Processing complete for database \"${SID}\"."
+		continue
+	fi
+#
+wrt_log "\n`date`- ${SID}: Processing database \"${SID}\"."
+	if [ -f ${BDUMP_LOC}/alert_${SID}.log ]
+	then
+		wrt_log "`date`- ${SID}: Processing ${BDUMP_LOC}/alert_${SID}.log "
+		cd ${BDUMP_LOC}
+		if [ -s alert_${SID}.log ]
+		then
+			mv alert_${SID}.log alert_work_${SID}.log
+			> alert_${SID}.log
+			echo "0" > lcnt_store_file            # For alert_log_monitor.ksh
+			echo ">>>>>>>>>>>> `date`- New run <<<<<<<<<<<<" >> alert_${SID}_cur.log
+			cat alert_work_${SID}.log >> alert_${SID}_cur.log
+			echo ">>>>>>>>>>>> End run <<<<<<<<<<<<" >> alert_${SID}_cur.log
+			rm -f alert_work_${SID}.log
+		fi
+#
+		if [ $MONTHDAY = '01' ]
+		then
+			cat -s alert_${SID}_hist.log > alert_${SID}_hist.$DDATE
+			cat -s alert_${SID}_cur.log  > alert_${SID}_hist.log
+			> alert_${SID}_cur.log
+			if [ -s alert_${SID}_hist.$DDATE ]
+			then
+				wrt_log "`date`- ${SID}: Compressing ${BDUMP_LOC}/alert_${SID}_hist.$DDATE "
+				gzip alert_${SID}_hist.$DDATE
+			fi
+		fi
+		wrt_log "`date`- ${SID}: ${BDUMP_LOC}/alert_${SID}.log Processing complete."
+	fi
+
+############################ Zipping and Purging Incident Log Files ####################
+#
+	if [ ! -z ${DIAGI_LOC} ]
+	then
+		wrt_log "`date`- ${SID}: Zipping and Purging old incident dump files - ${DIAGI_LOC} "
+		find ${DIAGI_LOC}  -type f -name "*" -mtime +180 -exec rm -fr {} \;
+		find ${DIAGI_LOC}  -type f -name "*" -mtime +7 -exec gzip {} \;
+	else
+		wrt_log "`date`- ${SID} **** Warning: Incident Location \"${DIAGI_LOC}\" Not found."
+	fi
+	if [ ! -z ${DIAGA_LOC} ]
+	then
+		wrt_log "`date`- ${SID}: Zipping and Purging old alert files - ${DIAGA_LOC} "
+		find ${DIAGA_LOC}/  -type f -name "*" -mtime +180 -exec rm -fr {} \;
+		find ${DIAGA_LOC}/  -type f -name "*" -mtime +15 -exec gzip {} \;
+	else
+		wrt_log "`date`- ${SID} **** Warning: alert Location \"${DIAGA_LOC}\" Not found."
+	fi
+
+########################### End of Incident Log Processing ###########################
+
+# Purging bdump log files older than 30 days
+	if [ -d ${BDUMP_LOC} ]
+	then
+		wrt_log "`date`- ${SID}: Purging old bdump trace files - ${BDUMP_LOC}"
+		find ${BDUMP_LOC} -name "*.trc" -mtime +7 -exec rm {} \;
+		find ${BDUMP_LOC} -name "*.trm" -mtime +7 -exec rm {} \;
+	 else
+		wrt_log "`date`- ${SID} **** Warning: BDUMP Location \"${BDUMP_LOC}\" Not found."
+	fi
+
+# Purging udump log files older than 30 days
+	if [ -d ${UDUMP_LOC} ]
+	then
+		wrt_log "`date`- ${SID}: Purging old udump trace files - ${UDUMP_LOC} "
+		find ${UDUMP_LOC} -name "*.trc" -mtime +15 -exec rm {} \;
+	else
+		wrt_log "`date`- ${SID} **** Warning: UDUMP Location \"${UDUMP_LOC}\" Not found."
+	fi
+
+# Purging cdump log files older than 30 days
+	if [ -d ${CORE_LOC} ]
+	then
+		wrt_log "`date`- ${SID}: Purging old core dump files -${CORE_LOC}"
+		find ${CORE_LOC} -type f -name "core" -mtime +15 -exec rm {} \;
+		find ${CORE_LOC} -type d -name "core" -mtime +15 -exec rm -fr {} \;
+	else
+		wrt_log "`date`- ${SID} **** Warning: CDUMP Location \"${CORE_LOC}\" Not found."
+	fi
+
+# Purging audit log files older than 3 days
+	if [[ -d ${AUDIT_LOC} ]]
+	then
+		wrt_log "`date`- ${SID}: Purging old audit logs - ${AUDIT_LOC} "
+		find ${AUDIT_LOC} -type f -name "*aud" -mtime +3| xargs rm
+		find ${AUDIT_LOC} -type f -name "*xml" -mtime +3| xargs rm
+	else
+		wrt_log "`date`: ${SID} **** Warning: Audit log not Deleted. -${AUDIT_LOC}"
+	fi
+
+#### End of Script
+# Generate Control File
+	if [ `echo ${SID}|cut -b1` != "+" ]
+	then
+		wrt_log "`date`- ${SID}: Backing up Control File"
+	# Backup controlfile for Non ASM Instances
+		sqlplus -s /<<-EOF
+		set feedback off
+		alter database backup controlfile to trace as '${SCR_DIR}/log/${SID}_control_${RUN_DATE}.txt';
+		exit
+		EOF
+		wrt_log "`date`- ${SID}: Completed Backing Control File"
+	fi
+
+# Purging rman log files older than 365 days
+
+	if [ -d /orasw/*/oradba/bin/rman/log ]
+	then
+		rman_log=/orasw/*/oradba/bin/rman/log
+				wrt_log "`date`- ${SID}: Purging rman log files older than 360 days now - ${rman_log}"
+		find ${rman_log} -type f -name "log" -mtime +360 -exec rm {} \;
+	
+	elif [ -d /orasw/*/app/oracle/common/scripts/rman/log ]
+	then
+		rman_log=/orasw/*/app/oracle/common/scripts/rman/log
+		wrt_log "`date`- ${SID}: Purging rman log files older than 360 days now - ${rman_log}"
+		find ${rman_log} -type f -name "log" -mtime +360 -exec rm {} \;
+	elif [ -d /db01/*/oradba/bin/rman/log ]
+	then
+		rman_log=/db01/*/oradba/bin/rman/log
+		wrt_log "`date`- ${SID}: Purging rman log files older than 360 days now - ${rman_log}"
+		find ${rman_log} -type f -name "log" -mtime +360 -exec rm {} \;
+	else
+		rman_log=UNKNOWN
+		wrt_log "`date`- ${SID} **** Warning: rman log files Not Found. - ${rman_log}"
+	fi
+done
+
+# Check if GRID_HOME is empty
+if [[ ! -z $GRID_HOME ]]; then
+	wrt_log "`echo `"
+	wrt_log "`date`- Purging CRS Logs on ${HOST} "
+# Purging CRS log files older than 90 days
+	if [[ -d ${GRID_HOME}/log/$HOST/client ]]
+	then
+		wrt_log "`date`- Purging CRS log files older than 90 days now - ${GRID_HOME}/log/$HOST/client"
+		find ${GRID_HOME}/log/$HOST/client -user oracle -mtime +90 -exec rm -f {} \;
+	else
+		wrt_log "`date`- **** Warning: CRS log files Not Found. - ${GRID_HOME}/log/$HOST/client"
+	fi
+		if [[ -d ${GRID_HOME}/log/$HOST/racg ]]
+	then
+		wrt_log "`date`- Purging CRS log files older than 90 days now - ${GRID_HOME}/log/$HOST/racg"
+		find ${GRID_HOME}/log/$HOST/racg -type -f -user oracle -mtime +90 -exec rm -f {} \;
+	else
+		wrt_log "`date`- **** Warning: CRS log files Not Found. - ${GRID_HOME}/log/$HOST/racg"
+	fi
+fi
+#
+
+###########################################################################################
+################################# Process listener logs ###################################
+###########################################################################################
+#
+	if [ $ser_type = 'H' ]
+	then
+		echo "`ps -efx | grep tnslsnr | grep -v 'grep ' | cut -d/ -f2-`" > $ACTIVE_LISTENERS
+	else
+		echo "`ps -ef  | grep tnslsnr | grep -v 'grep ' | cut -d/ -f2-`" > $ACTIVE_LISTENERS
+	fi
+	exec 5< $ACTIVE_LISTENERS
+	while read -r -u5 line                              # List of active listeners on this server
+	do                                                  # Process the active listener
+		LSNR=`echo $line | cut -f2 -d" "`                 # Get listener name
+		LSNR_LOG=`echo $LSNR | tr '[A-Z]' '[a-z]'`        # Xlate to lower case for file-name
+		TMP_DIR="/"`echo $line | cut -f1 -d" "`           # Isolate PATH and PGM name
+		TMP_DIR=`dirname $TMP_DIR`                        # Strip Program name
+		export ORACLE_HOME="`dirname $TMP_DIR`"           # and strip "bin" directory
+		export PATH=$ORACLE_HOME/bin:$ORG_PATH
+
+# Get Listener Alert and Trace directory location
+	lsnrctl <<-EOF |egrep '(trc_directory|log_directory)'| awk '{print $3 ":" $NF}'| sed "s/\"//g" > /tmp/listener.log
+	set current_listener $LSNR
+	show trc_directory
+	show log_directory
+	EOF
+
+	if [ -f /tmp/listener.log ]
+	then
+		LSNRA=`cat /tmp/listener.log|grep log_directory| awk -F: '{print $2}'`
+		LSNRT=`cat /tmp/listener.log|grep trc_directory| awk -F: '{print $2}'`
+	fi
+	if [ $ser_type = 'H' ]
+	then
+		export DBVERSION=`lsnrctl status $LSNR |grep Version |grep LSNRCTL |cut -f5 -d" " |cut -f1 -d"."`
+	else
+		export DBVERSION=`lsnrctl status $LSNR |grep Version |grep LSNRCTL |cut -f7 -d" " |cut -f1 -d"."`
+	fi
+
+	if [ $DBVERSION = '11' ]
+	then
+		export LOG_DIR=${LSNRT}
+	else
+		export LOG_DIR=${LSNRA}
+	fi
+	if [ -d ${LSNRT} ]
+	then
+		wrt_log "\n`date`- Processing listener \"$LSNR\""
+		if [ -d ${LSNRA} ]
+		then
+			wrt_log "`date`- Zipping and Purging old listener alert files - ${LSNRA} "
+			find ${LSNRA}  -type f -name "*" -mtime +15 -exec rm -fr {} \;
+			#find ${LSNRA}  -type f -name "*" -mtime +2 -exec gzip {} \;
+		else
+			wrt_log "`date`- ${SID} **** Warning: listener alert Location \"${LSNRA}\" Not found."
+		fi
+#
+# sqlnet.ora history file processing
+#
+		if [ $MONTHDAY = '01' -a "$OLD_HOME" != "$ORACLE_HOME" ]
+		then
+			cat -s ${LOG_DIR}/sqlnet.log >> ${LOG_DIR}/sqlnet_cur.log
+			> ${LOG_DIR}/sqlnet.log
+			cat -s ${LOG_DIR}/sqlnet_hist.log > ${LOG_DIR}/sqlnet_hist.log.$DDATE
+			cat -s ${LOG_DIR}/sqlnet_cur.log  > ${LOG_DIR}/sqlnet_hist.log
+			if [ -s ${LOG_DIR}/sqlnet_hist.log.$DDATE ]
+			then
+				wrt_log "`date`- gzip ${LOG_DIR}/sqlnet_hist.log.$DDATE "
+				gzip ${LOG_DIR}/sqlnet_hist.log.$DDATE
+			fi
+		else
+			cat -s ${LOG_DIR}/sqlnet.log >> ${LOG_DIR}/sqlnet_cur.log
+			> ${LOG_DIR}/sqlnet.log
+		fi
+		OLD_HOME="$ORACLE_HOME"
+
+# Copy Listener log to current month file
+		cat -s ${LOG_DIR}/${LSNR_LOG}.log >> ${LOG_DIR}/${LSNR_LOG}_cur.log
+		> ${LOG_DIR}/${LSNR_LOG}.log
+
+#  listener.log history file processing
+		if [ $MONTHDAY = '01' ]
+		then
+			cat -s ${LOG_DIR}/${LSNR_LOG}_cur.log  > ${LOG_DIR}/${LSNR_LOG}_hist.log
+			cat -s ${LOG_DIR}/${LSNR_LOG}_hist.log > ${LOG_DIR}/${LSNR_LOG}_hist.log.$DDATE
+			> ${LOG_DIR}/${LSNR_LOG}_cur.log
+			if [ -s ${LOG_DIR}/${LSNR_LOG}_hist.log.$DDATE ]
+			then
+				wrt_log "`date`- gzip ${LOG_DIR}/${LSNR_LOG}_hist.log.$DDATE"
+				gzip ${LOG_DIR}/${LSNR_LOG}_hist.log.$DDATE
+			fi
+		fi
+		rm -f ${LOG_DIR}/${LSNR_LOG}_temp.log
+		wrt_log "`date`- Purging old Zipped Listener Logs - ${LOG_DIR} "
+		find ${LOG_DIR} -name "*.log" -mtime +240 -exec rm {} \;
+		find ${LOG_DIR} -name "*.gz" -mtime +240 -exec rm {} \;
+		wrt_log "`date`- Processing complete for listener \"$LSNR\"."
+	fi
+done
+exec 5<&-
+#
+############################ End of Listener.log processing #############################
+#
+find ${SCR_DIR}/log -name "${SCR_ID}*.log" -mtime +7 -exec rm {} \;
+find ${SCR_DIR}/log -name "${SCR_ID}*.txt" -mtime +15 -exec rm {} \;
+rm -f $ACTIVE_LISTENERS
+#rm -f /tmp/listener.log
+wrt_log "\n`date`: Completed ${SCR_DIR}/${SCRIPT_NAME}"
+############################################################################################
+
+#### End of Script
