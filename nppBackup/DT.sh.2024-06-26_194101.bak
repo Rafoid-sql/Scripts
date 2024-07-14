@@ -15,39 +15,39 @@
 
 # CREDENTIALS
 #export INSTANCE=`ps -ef | grep ora_pmon_| grep -v grep | awk -F_ '{print $3}'`
-export INSTANCE=TTDWH004
-export USER_PROXY=ROLIVEIRA
-export USER_PROXY_PWD='"Airbus#01"'
-export EXP_USR='system'
-export EXP_PWD='vpersie#11'
-export IMP_USR='system'
-export IMP_PWD='"InfinityEndGame#2019!!!"'
-export EMAIL=''COE_DBA@DIGICELGROUP.COM' 'TNT_IT_DWH@DIGICELGROUP.COM''
+export INSTANCE = TTDWH004
+export USER_PROXY = ROLIVEIRA
+export USER_PROXY_PWD = '"Airbus#01"'
+export EXP_USR = 'system'
+export EXP_PWD = 'vpersie#11'
+export IMP_USR = 'system'
+export IMP_PWD = '"InfinityEndGame#2019!!!"'
+export EMAIL = ''COE_DBA@DIGICELGROUP.COM' 'TNT_IT_DWH@DIGICELGROUP.COM''
 
 # DATE
-DT_CDRMSC=`date -d "1 days ago" +%b%d`
-DT_OTHERS=`date -d "2 days ago" +%b%d`
-YR_CDRMSC=`date -d "1 days ago" +%Y%m`
-YR_OTHERS=`date -d "2 days ago" +%Y%m`
-FD_CDRMSC=`date -d "1 days ago" +%Y%m%d`
-FD_OTHERS=`date -d "2 days ago" +%Y%m%d`
+DT_CDRMSC = `date -d "1 days ago" +%b%d`
+DT_OTHERS = `date -d "2 days ago" +%b%d`
+YR_CDRMSC = `date -d "1 days ago" +%Y%m`
+YR_OTHERS = `date -d "2 days ago" +%Y%m`
+FD_CDRMSC = `date -d "1 days ago" +%Y%m%d`
+FD_OTHERS = `date -d "2 days ago" +%Y%m%d`
 
 # PARFILE
-SCR_FOLDER='/home/oracle/scripts'
-PAR_FOLDER_LOC='/home/oracle/parfile'
-PAR_FOLDER_REM='/archive1/dumps3/parfile'
+SCR_FOLDER = '/home/oracle/scripts'
+PAR_FOLDER_LOC = '/home/oracle/parfile'
+PAR_FOLDER_REM = '/archive1/dumps3/parfile'
 
 # DUMP
-DMP_FOLDER_LOC='/home/oracle'
-DMP_FOLDER_REM='/archive1/dumps3'
+DMP_FOLDER_LOC = '/home/oracle'
+DMP_FOLDER_REM = '/archive1/dumps3'
 
 # LOGS
-LOG_FOLDER_LOC='/home/oracle'
-LOG_FOLDER_REM='/archive1/dumps3'
+LOG_FOLDER_LOC = '/home/oracle'
+LOG_FOLDER_REM = '/archive1/dumps3'
 
 # LOGFILE
 #LOGFILE=${SCR_FOLDER}/logs/log_data_transfer_`date +%Y%m%d_%H%M%S`.log
-LOGFILE=${SCR_FOLDER}/logs/log_data_transfer_`date +%Y%m%d`.log
+LOGFILE = ${SCR_FOLDER}/logs/log_data_transfer_`date +%Y%m%d`.log
 
 #==========================================================================================================
 #========= CDRMSC FUNCTION
@@ -382,29 +382,29 @@ FN_IMP_RBVOICE_AT()
 EXEC_EXP()
 	{
 		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] STARTING EXPORT:" >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_cdrmsc_import.par >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_cdrpsl_impbonus_adj.par >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_cdrussd_import.par >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_lte_roam_loaded.par >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_rbgprs_import.par >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_rbvoice_import.par >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_cdrpsl_bon_adjt.par >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_cdrussd_loaded.par >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_lte_roam_loaded.par >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_rbgprs_loaded.par >> ${LOGFILE} 2>&1
-		expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_rbvoice_loaded.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_cdrmsc_import.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_cdrpsl_impbonus_adj.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_cdrussd_import.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_lte_roam_loaded.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_rbgprs_import.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_st_rbvoice_import.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_cdrpsl_bon_adjt.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_cdrussd_loaded.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_lte_roam_loaded.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_rbgprs_loaded.par >> ${LOGFILE} 2>&1
+		# expdp system/vpersie#11 parfile=${PAR_FOLDER_LOC}/exp_at_rbvoice_loaded.par >> ${LOGFILE} 2>&1
 		
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_cdrmsc_import.par >> ${LOGFILE} 2>&1
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_cdrpsl_impbonus_adj.par >> ${LOGFILE} 2>&1
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_cdrussd_import.par >> ${LOGFILE} 2>&1
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_lte_roam_loaded.par >> ${LOGFILE} 2>&1
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_rbgprs_import.par >> ${LOGFILE} 2>&1
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_rbvoice_import.par >> ${LOGFILE} 2>&1
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_at_cdrpsl_bon_adjt.par >> ${LOGFILE} 2>&1
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_at_cdrussd_loaded.par >> ${LOGFILE} 2>&1
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_at_lte_roam_loaded.par >> ${LOGFILE} 2>&1
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_at_rbgprs_loaded.par >> ${LOGFILE} 2>&1
-		# expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_at_rbvoice_loaded.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_cdrmsc_import.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_cdrpsl_impbonus_adj.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_cdrussd_import.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_lte_roam_loaded.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_rbgprs_import.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_st_rbvoice_import.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_at_cdrpsl_bon_adjt.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_at_cdrussd_loaded.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_at_lte_roam_loaded.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_at_rbgprs_loaded.par >> ${LOGFILE} 2>&1
+		expdp '${EXP_USR}/${EXP_PWD}' parfile=${PAR_FOLDER_LOC}/exp_at_rbvoice_loaded.par >> ${LOGFILE} 2>&1
 	}
 
 EXEC_IMP()
@@ -423,17 +423,17 @@ EXEC_IMP()
 		# ssh oracle@172.20.10.20 "impdp 'system/"InfinityEndGame#2019!!!"' parfile=${PAR_FOLDER_LOC}/imp_at_rbvoice_loaded.par" >> ${LOGFILE} 2>&1
 		
 		ssh oracle@172.20.10.20 <<-EOF
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_cdrmsc.par >> ${LOGFILE} 2>&1
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_st_cdrussd_import.par >> ${LOGFILE} 2>&1
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_st_lte_roam_import.par >> ${LOGFILE} 2>&1
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_st_rbgprs_import.par >> ${LOGFILE} 2>&1
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_st_rbvoice_import.par >> ${LOGFILE} 2>&1
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_st_cdrpsl_imp_bonadjt.par >> ${LOGFILE} 2>&1
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_at_cdrpsl_load_bonadjt.par >> ${LOGFILE} 2>&1
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_at_cdrussd_loaded.par >> ${LOGFILE} 2>&1
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_at_lte_roam_loaded.par >> ${LOGFILE} 2>&1
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_at_rbgprs_loaded.par >> ${LOGFILE} 2>&1
-		impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_at_rbvoice_loaded.par >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_cdrmsc.par" >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_st_cdrussd_import.par" >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_st_lte_roam_import.par" >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_st_rbgprs_import.par" >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_st_rbvoice_import.par" >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_st_cdrpsl_imp_bonadjt.par" >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_at_cdrpsl_load_bonadjt.par" >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_at_cdrussd_loaded.par" >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_at_lte_roam_loaded.par" >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_at_rbgprs_loaded.par" >> ${LOGFILE} 2>&1
+		"impdp '${IMP_USR}/${IMP_PWD}' parfile=${PAR_FOLDER_LOC}/imp_at_rbvoice_loaded.par" >> ${LOGFILE} 2>&1
 		EOF
 	}
 
@@ -583,7 +583,7 @@ EXEC_INSERT()
 	}
 
 # EMAIL LOGFILE
-EMAIL_BEGIN()
+EMAIL_LOG_BEGIN()
 	{
 		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] SENDING START EMAIL:" >> ${LOGFILE} 2>&1
 		echo -e "Data transfer process STARTED.\n\nLog created in /home/oracle/scripts/`basename /home/oracle/scripts/log_*` on `hostname`." | mail -s "DATA TRANSFER `date +%m/%d/%Y` - STARTED" 'rafael.oliveira@digicelgroup.com'
@@ -592,19 +592,19 @@ EMAIL_BEGIN()
 		echo -e "" >> ${LOGFILE} 2>&1
 	}
 
-EMAIL_SUCCESS()
+EMAIL_LOG_SUCCESS()
 	{
 		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] SENDING FINISH EMAIL:" >> ${LOGFILE} 2>&1
-		echo -e "Data transfer process FINISHED.\n\nOperation log attached." | mail -s "DATA TRANSFER `date +%m/%d/%Y` - FINISHED" -a `basename /home/oracle/scripts/log_*` 'rafael.oliveira@digicelgroup.com'
+		echo -e "Data transfer process FINISHED.\n\nOperation log attached, or check /home/oracle/scripts/`basename /home/oracle/scripts/log_*` on `hostname`." | mail -s "DATA TRANSFER `date +%m/%d/%Y` - FINISHED" -a `basename /home/oracle/scripts/log_*` 'rafael.oliveira@digicelgroup.com'
 		# ${EMAIL}
 		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] EMAIL SENT." >> ${LOGFILE} 2>&1
 		echo -e "" >> ${LOGFILE} 2>&1
 	}
 	
-EMAIL_FAIL()
+EMAIL_LOG_FAIL()
 	{
 		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] SENDING FAIL EMAIL:" >> ${LOGFILE} 2>&1
-		echo -e "Data transfer process FAILED.\n\nPlease check the attached log."|mail -s "DATA TRANSFER `date +%m/%d/%Y` - FAILED" -a `basename /home/oracle/scripts/log_*` 'rafael.oliveira@digicelgroup.com'
+		echo -e "Data transfer process FAILED.\n\nFor more information, please check the attached log or access /home/oracle/scripts/`basename /home/oracle/scripts/log_*` on `hostname`." | mail -s "DATA TRANSFER `date +%m/%d/%Y` - FAILED" -a `basename /home/oracle/scripts/log_*` 'rafael.oliveira@digicelgroup.com'
 		# ${EMAIL}
 		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] EMAIL SENT." >> ${LOGFILE} 2>&1
 		echo -e "" >> ${LOGFILE} 2>&1
@@ -621,7 +621,7 @@ then
 	echo -e "" >> ${LOGFILE} 2>&1
 	#echo -e "CDRMSC DATE: ${FD_CDRMSC}" >> ${LOGFILE} 2>&1
 	#echo -e "OTHERS DATE: ${FD_OTHERS}" >> ${LOGFILE} 2>&1
-	EMAIL_BEGIN
+	EMAIL_LOG_BEGIN
 	DEL_PAR
 	echo -e "## CHECKING FOLDERS..." >> ${LOGFILE} 2>&1
 	if [[ "$(ls -A ${PAR_FOLDER_LOC}/*.par 2>/dev/null)" == ""  && "$(ssh oracle@172.20.10.20 ls -A ${PAR_FOLDER_REM}/*.par 2>/dev/null)" == "" ]]
@@ -631,14 +631,14 @@ then
 		echo -e "" >> ${LOGFILE} 2>&1
 		CREATE_EXP
 		echo -e "## CHECKING EXP FILES..." >> ${LOGFILE} 2>&1
-		if [[ "$(ls ${PAR_FOLDER_LOC}/exp_*.par | wc -l)" == "11" ]]
+		if [[ "$(ls ${PAR_FOLDER_LOC}/imp_*.par | wc -l)" == "11" ]]
 		then
 			echo -e "## ...EXP FILES CHECKED" >> ${LOGFILE} 2>&1
 			echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] EXPDP FILES CREATED." >> ${LOGFILE} 2>&1
 			echo -e "" >> ${LOGFILE} 2>&1
 			CREATE_IMP
 			echo -e "## CHECKING IMP FILES..." >> ${LOGFILE} 2>&1
-			if [[ "$(ls ${PAR_FOLDER_LOC}/imp_*.par | wc -l)" == "11" ]]
+			if [[ "$(ls ${PAR_FOLDER_LOC}/exp_*.par | wc -l)" == "11" ]]
 			then
 				echo -e "## ...IMP FILES CHECKED" >> ${LOGFILE} 2>&1
 				echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] IMPDP FILES CREATED." >> ${LOGFILE} 2>&1
@@ -658,7 +658,7 @@ then
 						echo -e "## ...COPY CHECKED" >> ${LOGFILE} 2>&1
 						echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] FILES COPIED." >> ${LOGFILE} 2>&1
 						echo -e "" >> ${LOGFILE} 2>&1
-						# EXEC_IMP
+						#EXEC_IMP
 						# echo -e "## CHECKING IMPORT..." >> ${LOGFILE} 2>&1
 						# if [[ $(grep -c "successfully completed" /home/oracle/scripts/logs/log_data_transfer_`date +%Y%m%d`.log) == "22" ]];
 						# then
@@ -679,7 +679,7 @@ then
 									# echo -e "## ...FOLDERS CHECKED" >> ${LOGFILE} 2>&1
 									# echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] DUMPFILES DELETED." >> ${LOGFILE} 2>&1
 									# echo -e "" >> ${LOGFILE} 2>&1
-									EMAIL_SUCCESS
+									EMAIL_LOG_SUCCESS
 									# MOVE_LOG
 									# echo -e "## CHECKING LOGFILES..." >> ${LOGFILE} 2>&1
 									# echo -e "## ...LOGFILES CHECKED" >> ${LOGFILE} 2>&1
@@ -690,73 +690,82 @@ then
 									echo -e "#############################################################################################" >> ${LOGFILE} 2>&1
 									exit;
 								# else
+									# echo -e "" >> ${LOGFILE} 2>&1
 									# echo -e "## ...FOLDERS CHECKED" >> ${LOGFILE} 2>&1
 									# echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] DUMPFILES NOT DELETED." >> ${LOGFILE} 2>&1
 									# echo -e "" >> ${LOGFILE} 2>&1
 									# echo -e "!! DELETION ERROR !!" >> ${LOGFILE} 2>&1
-									# EMAIL_FAIL
+									# EMAIL_LOG_FAIL
 									# exit 1;
 								# fi
 							# else
-										# echo -e "## ...INSERT CHECKED" >> ${LOGFILE} 2>&1
+								# echo -e "" >> ${LOGFILE} 2>&1
+								# echo -e "## ...INSERT CHECKED" >> ${LOGFILE} 2>&1
 								# echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] INSERT NOT FINISHED." >> ${LOGFILE} 2>&1
 								# echo -e "" >> ${LOGFILE} 2>&1
 								# echo -e "!! INSERT ERROR !!" >> ${LOGFILE} 2>&1
-								# EMAIL_FAIL
+								# EMAIL_LOG_FAIL
 								# exit 1;
 							# fi
 						# else
+							# echo -e "" >> ${LOGFILE} 2>&1
 							# echo -e "## ...IMPORT CHECKED" >> ${LOGFILE} 2>&1
 							# echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] IMPORT NOT FINISHED." >> ${LOGFILE} 2>&1
 							# echo -e "" >> ${LOGFILE} 2>&1
 							# echo -e "!! IMPORT ERROR !!" >> ${LOGFILE} 2>&1
-							# EMAIL_FAIL
+							# EMAIL_LOG_FAIL
 							# exit 1;
 						# fi
 					else
+						echo -e "" >> ${LOGFILE} 2>&1
 						echo -e "## ...COPY CHECKED" >> ${LOGFILE} 2>&1
 						echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] FILES NOT COPIED." >> ${LOGFILE} 2>&1
 						echo -e "" >> ${LOGFILE} 2>&1
 						echo -e "!! FILE COPY ERROR !!" >> ${LOGFILE} 2>&1
-						EMAIL_FAIL
+						EMAIL_LOG_FAIL
 						exit 1;
 					fi
 				else
+					echo -e "" >> ${LOGFILE} 2>&1
 					echo -e "## ...EXPORT CHECKED" >> ${LOGFILE} 2>&1
 					echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] EXPORT NOT FINISHED." >> ${LOGFILE} 2>&1
 					echo -e "" >> ${LOGFILE} 2>&1
 					echo -e "!! EXPORT ERROR !!" >> ${LOGFILE} 2>&1
-					EMAIL_FAIL
+					EMAIL_LOG_FAIL
 					exit 1;
 				fi
 			else
+				echo -e "" >> ${LOGFILE} 2>&1
 				echo -e "## ...IMP FILES CHECKED" >> ${LOGFILE} 2>&1
 				echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] IMPDP FILES NOT CREATED." >> ${LOGFILE} 2>&1
 				echo -e "" >> ${LOGFILE} 2>&1
 				echo -e "!! IMPORT PARFILE CREATION ERROR !!" >> ${LOGFILE} 2>&1
-				EMAIL_FAIL
+				EMAIL_LOG_FAIL
 				exit 1;
 			fi
 		else
+			echo -e "" >> ${LOGFILE} 2>&1
 			echo -e "## ...EXP FILES CHECKED" >> ${LOGFILE} 2>&1
 			echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] EXPDP FILES NOT CREATED." >> ${LOGFILE} 2>&1
 			echo -e "" >> ${LOGFILE} 2>&1
 			echo -e "!! EXPORT PARFILE CREATION ERROR !!" >> ${LOGFILE} 2>&1
-			EMAIL_FAIL
+			EMAIL_LOG_FAIL
 			exit 1;		
 		fi
 	else
+		echo -e "" >> ${LOGFILE} 2>&1
 		echo -e "## ...FOLDERS CHECKED" >> ${LOGFILE} 2>&1
 		echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] OLD PARFILES NOT DELETED." >> ${LOGFILE} 2>&1
 		echo -e "" >> ${LOGFILE} 2>&1
 		echo -e "!! PARFILE DELETION ERROR !!" >> ${LOGFILE} 2>&1
-		EMAIL_FAIL
+		EMAIL_LOG_FAIL
 		exit 1;
 	fi
 else
+	echo -e "" >> ${LOGFILE} 2>&1
 	echo -e "## [`date +"%m-%d-%Y %H:%M:%S"`] CONNECTION FAILED." >> ${LOGFILE} 2>&1
 	echo -e "" >> ${LOGFILE} 2>&1
 	echo -e "!! ${INSTANCE} UNREACHABLE !!" >> ${LOGFILE} 2>&1
-	EMAIL_FAIL
+	EMAIL_LOG_FAIL
 	exit 1;
 fi

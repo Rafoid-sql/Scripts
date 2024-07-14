@@ -7,7 +7,8 @@ COL "%FULL" FOR 999.99
 SELECT TBM.TABLESPACE_NAME AS "TABLESPACE", ROUND(TBM.TABLESPACE_SIZE * TB.BLOCK_SIZE/(1024*1024*1024),2) AS "TOTAL(GB)", ROUND(TBM.USED_SPACE * TB.BLOCK_SIZE/(1024*1024*1024),2) AS "USED(GB)", ROUND((TBM.TABLESPACE_SIZE - TBM.USED_SPACE) * TB.BLOCK_SIZE/(1024*1024*1024),2) "FREE(GB)", TBM.USED_PERCENT AS "%FULL"
 FROM DBA_TABLESPACE_USAGE_METRICS TBM
 JOIN DBA_TABLESPACES TB ON TB.TABLESPACE_NAME = TBM.TABLESPACE_NAME
---WHERE TBM.TABLESPACE_NAME LIKE 'D1ME%'
+WHERE TBM.TABLESPACE_NAME = 'DIGICELTT_DATA'
+--WHERE TBM.TABLESPACE_NAME = 'BSSGP_DATA'
 ORDER BY "%FULL" ASC;
 =========================================================================================================================================
 --UNDO SPACE USAGE
@@ -65,6 +66,32 @@ WHERE DF.TABLESPACE_NAME = FS.TABLESPACE_NAME(+) AND DF.TABLESPACE_NAME = DD.TAB
 --AND DF.TABLESPACE_NAME = 'RUN_DATA'
 --AND FS.TABLESPACE_NAME = 'RUN_DATA'
 ORDER BY 1;
+=========================================================================================================================================
+-- CHECK RECLAIMABLE DATAFILE SPACE:
+select file_name,
+ceil((nvl(hwm,1)*&&blksize)/1024/1024) smallest,
+ceil(blocks*&&blksize/1024/1024) currsize,
+ceil(blocks*&&blksize/1024/1024) -
+ceil((nvl(hwm,1)*&&blksize)/1024/1024) savings
+from dba_data_files a,
+(select file_id, max(block_id+blocks-1) hwm
+from dba_extents
+group by file_id) b
+where a.file_id = b.file_id(+);
+=========================================================================================================================================
+-- GENERATE RESIZE DATAFILE COMMANDS:
+set pages 0
+set lines 300
+column cmd format a300 word_wrapped
+select ‘alter database datafile ‘’’||file_name||’’’ resize ‘ ||
+ceil( (nvl(hwm,1)*&&blksize)/1024/1024 ) || ‘m;’ cmd
+from dba_data_files a,
+( select file_id, max(block_id+blocks-1) hwm
+from dba_extents
+group by file_id ) b
+where a.file_id = b.file_id(+)
+and ceil( blocks*&&blksize/1024/1024) -
+ceil( (nvl(hwm,1)*&&blksize)/1024/1024 ) > 0;
 =========================================================================================================================================
 SET SERVEROUTPUT ON
 DECLARE
