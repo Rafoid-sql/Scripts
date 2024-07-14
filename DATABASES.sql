@@ -43,9 +43,7 @@ export PATH=$PATH:$ORACLE_HOME/bin:/usr/local/bin
 . oraenv
 sqlplus /nolog
 conn ROLIVEI4/"8V!WB5TdgoKiV2#IuPhY58uBU98j8$" | "KgNMsXUh5jWH6V3JAPZdp#8C!9rxkR"
-
-
-rgXVqrWZ_Fw43FF_JEul0TjsS7xgPE
+conn ROLIVEI4/"JGDAcNb5wXK8B2#!SReWj6TLmhqdpg"
 =========================================================================================================================================
 --SEND EMAIL FROM AIX SERVER
 uuencode listener_pcdep.log listener_pcdep.log | mailx -s "listener_pcdep.log" rafael.oliveira@t-mobile.com
