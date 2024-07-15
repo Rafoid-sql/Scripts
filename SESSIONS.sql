@@ -36,7 +36,8 @@ select * from (
   where x.dbid = z.dbid and x.sql_id = z.sql_id 
   order by elapsed_time desc) 
 where rownum <=10
-=========================================================================================================================================
+
+
 --Verify Jobs (detailed):
 COL OBJECT_NAME FOR A20
 COL PORT FOR 999999
@@ -46,42 +47,6 @@ COL SQL_FULLTEXT FOR A60
 SELECT O.OBJECT_NAME, S.SID, S.SERIAL#, P.SPID, S.PROGRAM, S.USERNAME, S.MACHINE, S.PORT , S.LOGON_TIME, SQ.SQL_FULLTEXT
 FROM V$LOCKED_OBJECT L, DBA_OBJECTS O, V$SESSION S, V$PROCESS P, V$SQL SQ
 WHERE L.OBJECT_ID = O.OBJECT_ID AND L.SESSION_ID = S.SID AND S.PADDR = P.ADDR AND S.SQL_ADDRESS = SQ.ADDRESS;
-=========================================================================================================================================
---Check active sessions
-COL PID FOR A10
-COL SID FOR A5
-COL SER# FOR A5
-COL STATUS FOR A10
-COL BOX FOR A15
-COL USERNAME FOR A20
-COL SERVER FOR A10
-COL OS_USER FOR A20
-COL PROGRAM FOR A50
-SELECT SUBSTR(A.SPID,1,9) PID, SUBSTR(B.SID,1,5) SID,SUBSTR(B.SERIAL#,1,5) SER#,SUBSTR(B.STATUS,1,7) STATUS, SUBSTR(B.MACHINE,1,6) BOX, SUBSTR(B.USERNAME,1,10) USERNAME, B.SERVER, SUBSTR(B.OSUSER,1,8) OS_USER, SUBSTR(B.PROGRAM,1,30) PROGRAM
-FROM V$SESSION B, V$PROCESS A
-WHERE B.PADDR = A.ADDR
-AND TYPE = 'USER'
-AND STATUS = 'ACTIVE'
-ORDER BY SPID; 
-=========================================================================================================================================
---Check inactive sessions
-COL PID FOR A10
-COL SID FOR A5
-COL SER# FOR A5
-COL STATUS FOR A10
-COL BOX FOR A15
-COL USERNAME FOR A20
-COL SERVER FOR A10
-COL OS_USER FOR A20
-COL PROGRAM FOR A50
-SELECT SUBSTR(A.SPID,1,9) PID, SUBSTR(B.SID,1,5) SID,SUBSTR(B.SERIAL#,1,5) SER#,SUBSTR(B.STATUS,1,8) STATUS, SUBSTR(B.MACHINE,1,20) BOX, SUBSTR(B.USERNAME,1,10) USERNAME, B.SERVER, SUBSTR(B.OSUSER,1,15) OS_USER, SUBSTR(B.PROGRAM,1,30) PROGRAM
-FROM GV$SESSION B, GV$PROCESS A
-WHERE B.PADDR = A.ADDR
-AND TYPE = 'USER'
-AND STATUS = 'INACTIVE'
-AND OSUSER = 'weblogiccdes'
-AND B.USERNAME = 'CDE'
-ORDER BY SPID; 
 =========================================================================================================================================
 --CHECK RUNNING JOBS
 SELECT J.SID, J.LOG_USER, J.JOB,J.BROKEN, J.FAILURES, J.LAST_DATE||':'||J.LAST_SEC LAST_DATE, J.THIS_DATE||':'||J.THIS_SEC THIS_DATE, J.NEXT_DATE||':'||J.NEXT_SEC NEXT_DATE, J.NEXT_DATE - J.LAST_DATE INTERVAL, J.WHAT
@@ -147,10 +112,9 @@ WHERE PROCESS NOT LIKE ('%BACKGROUND')
 --AND MACHINE IN ('HOSPLACI\WEKNOW-TESTE')
 --AND MACHINE NOT IN ('HMRT\SERVER_DELL')
 --AND STATUS IN ('ACTIVE','KILLED')
---AND SID IN (1327)
---AND SERIAL# IN (3072)
+AND SID IN (1327)
+AND SERIAL# IN (3072)
 --AND STATUS IN ('INACTIVE')
-AND STATUS IN ('KILLED')
 ORDER BY 1;
 SET HEADING ON
 =========================================================================================================================================
@@ -177,7 +141,7 @@ WHERE TYPE IN ('USER')
 --AND PROGRAM NOT LIKE ('JDBC Thin Client')
 --AND SCHEMANAME LIKE ('%CHUB_CDES_USER%')
 --AND SQL_ID IN ('7tusdy1ryjdc1','3tzpp57r4349s')
-AND SID IN (1279)
+--AND SID IN (3167)
 --AND SCHEMANAME = 'BPMS_APP'
 ORDER BY STATUS,OSUSER,PROGRAM;
 =========================================================================================================================================
@@ -186,13 +150,12 @@ COL NODE FOR 99
 COL FROM_WHERE FOR A35
 COL SID_SER FOR A12
 COL PROGRAM FOR A40
-COL OSUSER FOR A15
+COL OSUSER FOR A10
 SELECT INST_ID NODE,SID||','||SERIAL# SID_SER,SQL_ID,STATUS,SCHEMANAME||'@'||SERVICE_NAME FROM_WHERE,OSUSER,PROGRAM,BLOCKING_SESSION,TO_CHAR(LOGON_TIME) FROM_WHEN
 FROM GV$SESSION SES
 WHERE TYPE = 'USER'
 --AND SID IN (1)
-AND SCHEMANAME = 'CDE'
-AND OSUSER LIKE 'weblogiccdes%'
+--AND SCHEMANAME = 'CDE_READ'
 ORDER BY STATUS,OSUSER,PROGRAM;
 =========================================================================================================================================
 -- GET USERS SESSION HISTORY
@@ -249,12 +212,11 @@ AND TOTALWORK > 0
 AND A.USERS_EXECUTING > 0
 AND L.SQL_ID = S.SQL_ID
 AND L.SID = S.SID
-AND L.SQL_ID IN ('8btjp409pajab')
---AND L.SQL_ID IN ('3tzpp57r4349s')
---AND L.SQL_ID = ('17u3y4gbdqsbk')
+--AND L.SQL_ID IN ('7tusdy1ryjdc1','3tzpp57r4349s')
+--AND L.SQL_ID = ('ffsp4bwk9mp7k')
 --AND L.SQL_ID IN ('0a96yuav1urfh')
 --AND L.SQL_ID ='7xbzd7fp3w3xn'
---AND S.SID IN (3167)
+AND S.SID IN (3167)
 AND SOFAR != TOTALWORK;
 =========================================================================================================================================
 COL SID/SER  FOR A11
@@ -346,23 +308,16 @@ AND L.SID=V.SESSION_ID
 --AND OBJECT_NAME NOT LIKE '%TMP'
 ORDER BY CTIME ASC;
 =========================================================================================================================================
---Check for locks III:
-SELECT A.INST_ID, SID, C.SERIAL#, ORACLE_USERNAME, OS_USER_NAME,LOCKED_MODE,OBJECT_NAME,OBJECT_TYPE 
-FROM GV$LOCKED_OBJECT A, DBA_OBJECTS B, GV$SESSION C  
-WHERE A.OBJECT_ID = B.OBJECT_ID
-AND A.SESSION_ID = C.SID
-AND A.INST_ID = C.INST_ID;
-=========================================================================================================================================
 --Blocking sessions:
 COL "HOLDER" FOR 999999
 COL "WAITER" FOR A11
 COL "CLASS" FOR A20
 COL "WAIT" FOR 999999
-COL PROCESS FOR A15
-COL PROGRAM FOR A15
+COL PROCESS FOR A10
+COL PROGRAM FOR A20
 COL USERNAME FOR A20
 COL OSUSER FOR A20
-SELECT BLOCKING_SESSION as "HOLDER",BLOCKING_SESSION_STATUS "H_STATUS",SID || ',' || SERIAL# "WAITER",STATUS "W_STATUS",INST_ID,USERNAME,WAIT_CLASS "CLASS",SECONDS_IN_WAIT "WAIT",OSUSER,PROCESS,SUBSTR(PROGRAM,1,10) "PROGRAM", SQL_ID
+SELECT BLOCKING_SESSION as "HOLDER",BLOCKING_SESSION_STATUS "H_STATUS",SID || ',' || SERIAL# "WAITER",STATUS "W_STATUS",INST_ID,USERNAME,WAIT_CLASS "CLASS",SECONDS_IN_WAIT "WAIT",OSUSER,PROCESS,PROGRAM
 FROM GV$SESSION
 WHERE BLOCKING_SESSION IS NOT NULL
 ORDER BY BLOCKING_SESSION;
@@ -380,15 +335,6 @@ SELECT SUBSTR(DECODE(REQUEST,0,'Holder: ','Waiter: ')||SID,1,13) SESS,ID1,ID2,LM
 FROM V$LOCK
 WHERE (ID1,ID2,TYPE) IN (SELECT ID1,ID2,TYPE FROM V$LOCK WHERE REQUEST>0)
 ORDER BY ID1,REQUEST;
-=========================================================================================================================================
--- Check max processes/sessions:
-COL VALUE FOR A40
-select decode(name,'processes','CONFIGURED PROCESSES','sessions','CONFIGURED SESSIONS') as "CONFIG",to_char(value) as "VALUE"
-from v$parameter where name in ('processes','sessions')
-UNION ALL
-select decode(resource_name,'processes','ACTIVE PROCESSES','sessions','ACTIVE SESSIONS') as "CONFIG", 
-to_char(CURRENT_UTILIZATION) as "VALUE"
-from v$resource_limit where resource_name in ('processes','sessions');
 =========================================================================================================================================
 --Check Session Count from users:
 COL USERNAME FOR A20
@@ -438,66 +384,26 @@ SELECT SID, SQL_TEXT
 FROM V$SESSION S, V$SQL Q
 WHERE SID IN (SELECT SID FROM V$SESSION WHERE STATE IN ('WAITING') AND WAIT_CLASS != 'IDLE' AND EVENT='ENQ: TX - ROW LOCK CONTENTION' AND (Q.SQL_ID = S.SQL_ID OR Q.SQL_ID = S.PREV_SQL_ID));
 =========================================================================================================================================
--- CHECK IDLE TIME FOR INACTIVE CONNECTIONS
-COL INST FOR A4
-COL USERNAME FOR A20
-SELECT TO_CHAR(INST_ID) INST, SID, USERNAME, STATUS, TO_CHAR(LOGON_TIME,'DD-MM-YY HH:MI:SS') "LOGON", FLOOR(LAST_CALL_ET/3600)||':'|| TO_CHAR(FLOOR(MOD(LAST_CALL_ET,3600)/60),'FM00')||':'|| TO_CHAR(MOD(MOD(LAST_CALL_ET,3600),60),'FM00') "IDLE", PROGRAM
-FROM GV$SESSION
-WHERE TYPE='USER'
-ORDER BY LAST_CALL_ET;
-=========================================================================================================================================
 --Running Queries (%)
 COL "%_COMP" FOR 99.99'%'
 COL "SID/SER" FOR A11
-COL TARGET FOR A20
+COL TARGET FOR A40
 COL "SOFAR/TOTAL" FOR A15
+COL START FOR A15
+COL LAST_UPD FOR A15
 COL "ELAP/REMAIN" FOR A13
-COL MESSAGE FOR A65
+COL MESSAGE FOR A70
 COL USERNAME FOR A10
 COL OPNAME FOR A20
 COL UNITS FOR A6
 COL SQL_PLAN_OPTIONS FOR A15
 COL SQL_PLAN_OPERATION FOR A15
-SELECT ROUND(SOFAR/TOTALWORK*100,2) "%_COMP", ''||SID||','||SERIAL#||'' "SID/SER", OPNAME, TARGET,''||SOFAR||'/'||TOTALWORK||'' "SOFAR/TOTAL", TO_CHAR(START_TIME, 'dd/mm/yy') "START", TO_CHAR(LAST_UPDATE_TIME, 'dd/mm/yy') "LAST UPDATE", ''||ELAPSED_SECONDS||'/'||TIME_REMAINING||'' "ELAP/REMAIN", MESSAGE, USERNAME, SQL_ID, SQL_PLAN_OPERATION, SQL_PLAN_OPTIONS
+SELECT ROUND(SOFAR/TOTALWORK*100,2) "%_COMP", ''||SID||','||SERIAL#||'' "SID/SER", OPNAME, TARGET,''||SOFAR||'/'||TOTALWORK||'' "SOFAR/TOTAL", TO_CHAR(START_TIME, 'dd/mm/yy HH24:MI:SS') "START", TO_CHAR(LAST_UPDATE_TIME, 'dd/mm/yy HH24:MI:SS') "LAST_UPD", ''||ELAPSED_SECONDS||'/'||TIME_REMAINING||'' "ELAP/REMAIN", MESSAGE, USERNAME, SQL_ID, SQL_PLAN_OPERATION, SQL_PLAN_OPTIONS
 FROM V$SESSION_LONGOPS
 WHERE SOFAR <> TOTALWORK
+AND SID='857'
 ORDER BY TARGET,SID;
 =========================================================================================================================================
--- USAGE % FOR SESSIONS AND PROCESSES I
-COL INST FOR A4
-COL RESOURCE_NAME FOR A15
-COL CURRENT FOR A10
-COL MAX FOR A10
-COL LIMIT FOR A10
-SELECT TO_CHAR(INST_ID) INST, RESOURCE_NAME, TO_CHAR(CURRENT_UTILIZATION) "CURRENT", TO_CHAR(MAX_UTILIZATION) "MAX", TO_CHAR(LTRIM(LIMIT_VALUE)) "LIMIT", ROUND(CURRENT_UTILIZATION/LIMIT_VALUE*100,1) PCT_USED
-FROM GV$RESOURCE_LIMIT
-WHERE RESOURCE_NAME IN ( 'sessions', 'processes')
-ORDER BY INST;
-=========================================================================================================================================
--- USAGE % FOR SESSIONS AND PROCESSES II
-COL INST FOR A4
-COL RESOURCE FOR A15
-COL "CURRENT (LIMIT)" FOR A20
-COL PCT_USED FOR A10
-SELECT TO_CHAR(INST_ID) INST, RESOURCE_NAME "RESOURCE", TO_CHAR(CURRENT_UTILIZATION) ||' ('|| TO_CHAR(LTRIM(LIMIT_VALUE)) ||')' "CURRENT (LIMIT)" , ROUND(CURRENT_UTILIZATION/LIMIT_VALUE*100,2)||'%' PCT_USED
-FROM GV$RESOURCE_LIMIT
-WHERE RESOURCE_NAME IN ( 'sessions', 'processes')
-ORDER BY INST;
-=========================================================================================================================================
--- LIST TYPES OF PROCESSES
-COL USERNAME FOR A20
-COL PROCESSES# FOR A10
-COL PCT_USED FOR 990D00
-COL INST FOR A4
-WITH PROCESSES AS (
-SELECT TO_CHAR(S.INST_ID) INST, NVL(S.USERNAME,'BACKGROUND') USERNAME, TO_CHAR(COUNT(NVL(S.USERNAME,'BACKGROUND'))) PROCESSES#
-FROM GV$SESSION S, GV$PROCESS P
-WHERE S.PADDR=P.ADDR
-GROUP BY  S.INST_ID, NVL(S.USERNAME,'BACKGROUND'))
-SELECT INST, USERNAME, PROCESSES#, ROUND((PROCESSES#/SUM(PROCESSES#) OVER ())*100,2) PCT_USED
-FROM PROCESSES
-ORDER BY 4;
-=========================================================================================================================================  
 -- USERS SESSION HISTORY:
 SET LINES 300 PAGES 20000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPOOL ON
 COL "INST#" FOR 99

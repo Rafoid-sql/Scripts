@@ -1,0 +1,39 @@
+root "/"
+
+chagarch#
+
+chargarch#/dumps/<year>/dma
+
+find the folder you need
+
+copy the folder to /archive1/dumps
+
+copy the g-zipped files from the folder into /archive1/dumps
+
+unzip the files with nohup
+nohup gunzip *.gz &
+
+go to parameter_files folder and edit dma_msc.par parfile
+
+run the import
+
+nohup impdp system/vpersie#11 parfile=/archive1/dumps/parameter_files/dma_msc.par &
+nohup impdp system/vpersie#11 parfile=/archive1/dumps/parameter_files/data.par &
+nohup impdp system/vpersie#11 parfile=/archive1/dumps/parameter_files/rmbkr_cdrr.par &
+
+after the import, run that command on sqlplus:
+
+
+grant read on DMA.RT_CDRMSC_DAY_BACK_UP_AUG23 to TTDWH_LINKER;
+grant read on ROAMBROKER.ST_CDRROAM_IMPORT_DEC21 to TTDWH_LINKER;
+grant read on DATA.ST_CDRGGSN_IMPORT_DEC21 to TTDWH_LINKER;
+
+
+script:
+
+archive_data_restore.sh oct 23
+`date  -d +%b`
+
+
+DT_CDRMSC=`date -d "1 days ago" +%b%d`
+DT_OTHERS=`date -d "2 days ago" +%b%d`
