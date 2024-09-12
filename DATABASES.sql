@@ -25,7 +25,7 @@ $ rman
 connect rcvcat rcat_teq_122/Atlantic_cit8@prman
 
 export TNS_ADMIN=/db01/static/oradba/bin/rman/
-export TNS_ADMIN=/orasw/static/oradba/bin/rman
+export TNS_ADMIN=/orasw/static/oradba/bin/rman/
 connect rcvcat /@trmanp1
 RMAN> set dbid 1523174064
 RMAN> LIST BACKUP SUMMARY;
@@ -44,6 +44,8 @@ export PATH=$PATH:$ORACLE_HOME/bin:/usr/local/bin
 sqlplus /nolog
 conn ROLIVEI4/"8V!WB5TdgoKiV2#IuPhY58uBU98j8$" | "KgNMsXUh5jWH6V3JAPZdp#8C!9rxkR"
 conn ROLIVEI4/"JGDAcNb5wXK8B2#!SReWj6TLmhqdpg"
+
+conn ROLIVEI4/"reEHheGG_Gn55fb_HWasVPlnYNouMO"
 =========================================================================================================================================
 --SEND EMAIL FROM AIX SERVER
 uuencode listener_pcdep.log listener_pcdep.log | mailx -s "listener_pcdep.log" rafael.oliveira@t-mobile.com
