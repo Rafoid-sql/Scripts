@@ -4,8 +4,8 @@
 echo "*********************************"
 echo "Databases Running on This Server:"
 echo "*********************************"
-#ps -ef| grep pmon_|grep -v grep|awk -F_ '{print $3}'
-ps -ef | grep pmon | grep -v grep | awk '{ print $8 }' | cut -d '_' -f3
+ps -ef| grep pmon_|grep -v grep|awk -F_ '{print $3}'
+#ps -ef | grep pmon | grep -v grep | awk '{ print $8 }' | cut -d '_' -f3
 #ps -e -o command | grep pmon | grep -v grep | cut -d '_' -f3
 
 # Terminal Settings

@@ -4,11 +4,15 @@ SET LINES 280 PAGESIZE 1000 LONG 15000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPO
 =========================================================================================================================================
 COL "TABLESPACE" FOR A30
 COL "%FULL" FOR 999.99
-SELECT TBM.TABLESPACE_NAME AS "TABLESPACE", ROUND(TBM.TABLESPACE_SIZE * TB.BLOCK_SIZE/(1024*1024*1024),2) AS "TOTAL(GB)", ROUND(TBM.USED_SPACE * TB.BLOCK_SIZE/(1024*1024*1024),2) AS "USED(GB)", ROUND((TBM.TABLESPACE_SIZE - TBM.USED_SPACE) * TB.BLOCK_SIZE/(1024*1024*1024),2) "FREE(GB)", TBM.USED_PERCENT AS "%FULL"
+SELECT TBM.TABLESPACE_NAME AS "TABLESPACE", 
+ROUND(TBM.TABLESPACE_SIZE * TB.BLOCK_SIZE/(1024*1024*1024),2) AS "TOTAL(GB)", 
+ROUND(TBM.USED_SPACE * TB.BLOCK_SIZE/(1024*1024*1024),2) AS "USED(GB)", 
+ROUND((TBM.TABLESPACE_SIZE-TBM.USED_SPACE) * TB.BLOCK_SIZE/(1024*1024*1024),2) "FREE(GB)", 
+TBM.USED_PERCENT AS "%FULL"
 FROM DBA_TABLESPACE_USAGE_METRICS TBM
 JOIN DBA_TABLESPACES TB ON TB.TABLESPACE_NAME = TBM.TABLESPACE_NAME
-WHERE TBM.TABLESPACE_NAME = 'DIGICELTT_DATA'
---WHERE TBM.TABLESPACE_NAME = 'BSSGP_DATA'
+--WHERE TBM.TABLESPACE_NAME IN ('B2C_BI_DATA')
+--WHERE TBM.TABLESPACE_NAME = 'ACTIVE_CHARGEABLE'
 ORDER BY "%FULL" ASC;
 =========================================================================================================================================
 --UNDO SPACE USAGE
@@ -35,15 +39,55 @@ COMPUTE SUM OF TOTAL_MB ON REPORT
 COMPUTE SUM OF USED_MB ON REPORT
 COMPUTE SUM OF FREE_MB ON REPORT
 BREAK ON REPORT 
-SELECT TOTAL.TS TABLESPACE, DECODE(TOTAL.MB,NULL,'OFFLINE',DBAT.STATUS) STATUS, TOTAL.MB TOTAL_MB, NVL(TOTAL.MB - FREE.MB,TOTAL.MB) USED_MB, NVL(FREE.MB,0) FREE_MB,  DECODE(TOTAL.MB,NULL,0,NVL(ROUND((TOTAL.MB - FREE.MB)/(TOTAL.MB)*100,2),100)) PCT_USED, CASE WHEN (TOTAL.MB IS NULL) THEN '['||RPAD(LPAD('OFFLINE',13,'-'),20,'-')||']' ELSE '['|| DECODE(FREE.MB, NULL,'XXXXXXXXXXXXXXXXXXXX', NVL(RPAD(LPAD('X',TRUNC((100-ROUND( (FREE.MB)/(TOTAL.MB) * 100, 2))/5),'X'),20,'-'), '--------------------'))||']' 
+SELECT TOTAL.TS TABLESPACE, DECODE(TOTAL.MB,NULL,'OFFLINE',DBAT.STATUS) STATUS, TOTAL.MB TOTAL_MB, NVL(TOTAL.MB - FREE.MB,TOTAL.MB) USED_MB, NVL(FREE.MB,0) FREE_MB,  
+DECODE(TOTAL.MB,NULL,0,NVL(ROUND((TOTAL.MB - FREE.MB)/(TOTAL.MB)*100,2),100)) PCT_USED, 
+CASE WHEN (TOTAL.MB IS NULL) THEN '['||RPAD(LPAD('OFFLINE',13,'-'),20,'-')||']' ELSE '['|| DECODE(FREE.MB, NULL,'XXXXXXXXXXXXXXXXXXXX', 
+NVL(RPAD(LPAD('X',TRUNC((100-ROUND( (FREE.MB)/(TOTAL.MB) * 100, 2))/5),'X'),20,'-'), '--------------------'))||']' 
 END AS GRAPH
-FROM (SELECT TABLESPACE_NAME TS, SUM(BYTES)/1024/1024 MB FROM DBA_DATA_FILES GROUP BY TABLESPACE_NAME) TOTAL, (SELECT TABLESPACE_NAME TS, SUM(BYTES)/1024/1024 MB FROM DBA_FREE_SPACE GROUP BY TABLESPACE_NAME) FREE, DBA_TABLESPACES DBAT
+FROM (SELECT TABLESPACE_NAME TS, SUM(BYTES)/1024/1024 MB FROM DBA_DATA_FILES GROUP BY TABLESPACE_NAME) TOTAL, (SELECT TABLESPACE_NAME TS, 
+SUM(BYTES)/1024/1024 MB FROM DBA_FREE_SPACE GROUP BY TABLESPACE_NAME) FREE, DBA_TABLESPACES DBAT
 WHERE TOTAL.TS=FREE.TS(+) AND TOTAL.TS=DBAT.TABLESPACE_NAME
 UNION ALL
-SELECT SH.TABLESPACE_NAME, 'TEMP', SUM(SH.BYTES_USED+SH.BYTES_FREE)/1024/1024 TOTAL_MB, SUM(SH.BYTES_USED)/1024/1024 USED_MB, SUM(SH.BYTES_FREE)/1024/1024 FREE_MB, ROUND(SUM(SH.BYTES_USED)/SUM(SH.BYTES_USED+SH.BYTES_FREE)*100,2) PCT_USED, '['||DECODE(SUM(SH.BYTES_FREE),0,'XXXXXXXXXXXXXXXXXXXX', NVL(RPAD(LPAD('X',(TRUNC(ROUND((SUM(SH.BYTES_USED)/SUM(SH.BYTES_USED+SH.BYTES_FREE))*100,2)/5)),'X'),20,'-'), '--------------------'))||']'
+SELECT SH.TABLESPACE_NAME, 'TEMP', SUM(SH.BYTES_USED+SH.BYTES_FREE)/1024/1024 TOTAL_MB, SUM(SH.BYTES_USED)/1024/1024 USED_MB, SUM(SH.BYTES_FREE)/1024/1024 FREE_MB, 
+ROUND(SUM(SH.BYTES_USED)/SUM(SH.BYTES_USED+SH.BYTES_FREE)*100,2) PCT_USED, '['||DECODE(SUM(SH.BYTES_FREE),0,'XXXXXXXXXXXXXXXXXXXX', 
+NVL(RPAD(LPAD('X',(TRUNC(ROUND((SUM(SH.BYTES_USED)/SUM(SH.BYTES_USED+SH.BYTES_FREE))*100,2)/5)),'X'),20,'-'), '--------------------'))||']'
 FROM V$TEMP_SPACE_HEADER SH
 GROUP BY TABLESPACE_NAME
 ORDER BY 6;
+=========================================================================================================================================
+-- CHECK RECLAIMABLESPACE ON TABLESPACES
+col tablespace_name for a20
+col file_size for 9999999
+col file_name for a60
+col hwm for 9999999
+col can_save for 9999999
+SELECT tablespace_name, file_name, file_size, hwm, file_size-hwm can_save
+FROM (SELECT /*+ RULE */ ddf.tablespace_name, ddf.file_name file_name,
+ddf.bytes/1048576 file_size,(ebf.maximum + de.blocks-1)*dbs.db_block_size/1048576 hwm
+FROM dba_data_files ddf,(SELECT file_id, MAX(block_id) maximum FROM dba_extents GROUP BY file_id) ebf,dba_extents de,
+(SELECT value db_block_size FROM v$parameter WHERE name='db_block_size') dbs
+WHERE ddf.file_id = ebf.file_id
+AND de.file_id = ebf.file_id
+AND de.block_id = ebf.maximum
+ORDER BY 1,2);
+=========================================================================================================================================
+-- CHECK SEGMENT NAMES BY SCHEMA
+select segment_name, sum(bytes)/1024/1024 as mb 
+from dba_segments 
+where owner='CAIN2' and segment_type like 'TABLE%' and segment_name not like '%_ARCHIVE'
+group by segment_name
+order by mb;
+=========================================================================================================================================
+-- CHECK SEGMENTS IN THE END OF THE DATAFILE
+define m_block_size = 8192
+break on file_id skip 1
+col possible_hwm for 999,999
+col segment_name for a30
+col partition_name for a50
+select file_id, block_id end_block, round(block_id * &m_block_size/1048576) possible_hwm, segment_type, segment_name, partition_name
+from  dba_extents
+where tablespace_name = 'CAIN_DATA'
+order by file_id, block_id;
 =========================================================================================================================================
 COL "TABLESPACE" FOR A40
 COL "QTDE" FOR 9999

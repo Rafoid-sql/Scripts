@@ -4,7 +4,7 @@ SET LINES 280 PAGESIZE 1000 LONG 15000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPO
 =========================================================================================================================================
 --Create grant list for user:
 SELECT 'GRANT SELECT,INSERT,UPDATE,DELETE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO MSDP2_RW;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='MSDP2';
-SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO CDES1_RO_ROLE;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='CDES1';
+SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO RAP_TRINIDAD_RPST_RO_ROLE;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='RAP_TRINIDAD_RPST';
 SELECT 'GRANT EXECUTE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO CDES1_EXECUTE_PROCEDURES;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('PROCEDURE') AND OWNER='CDES1';
 =========================================================================================================================================
 --Get grants from user to apply to another:

@@ -126,7 +126,7 @@ COL LOCK_DATE HEADING 'LOCKED' FOR A20
 COL PROFILE FOR A25
 COL LAST_LOGIN FOR A40
 --SELECT USERNAME, ACCOUNT_STATUS, CREATED, EXPIRY_DATE, LOCK_DATE, PROFILE, LAST_LOGIN FROM DBA_USERS WHERE USERNAME LIKE UPPER('&USER');
-SELECT USERNAME, ACCOUNT_STATUS, CREATED, EXPIRY_DATE, LOCK_DATE, PROFILE FROM DBA_USERS WHERE USERNAME = UPPER('GSTRUIKEN');
+SELECT USERNAME, ACCOUNT_STATUS, CREATED, EXPIRY_DATE, LOCK_DATE, PROFILE FROM DBA_USERS WHERE USERNAME = UPPER('GIS_ADMIN');
 =========================================================================================================================================
 -- CHECK USERNAME LAST ACTIVITY:
 COL EXTENDED_TIMESTAMP FOR A60
@@ -279,7 +279,17 @@ WHERE TYPE='USER'
 GROUP BY INST_ID;
 
 =========================================================================================================================================
+-- CHECK SCHEMA SIZE BY OBJECT I
+select sum(bytes)/1024/1024/1024 as size_in_GB, segment_type
+from dba_segments
+where owner='CAIN2' and segment_name like '%_ARCHIVE'
+group by segment_type;
 =========================================================================================================================================
+-- CHECK SCHEMA SIZE BY OBJECT II
+select sum(bytes)/1024/1024/1024 as size_in_GB, segment_type
+from dba_segments
+where owner='CAIN2'
+group by segment_type;
 =========================================================================================================================================
 
 select c.username,a.SAMPLE_TIME, a.SQL_OPNAME, a.SQL_EXEC_START, a.program, a.module, a.machine,
