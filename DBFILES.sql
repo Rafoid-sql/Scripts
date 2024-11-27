@@ -8,7 +8,7 @@ COL FILE# FORMAT 9999999
 COL MBYTES FORMAT 999999999
 COL BLOCKS FORMAT 999999999
 COL BLOCK_SIZE FORMAT 99999
-SELECT 'datafile' AS TYPE, NAME, ROUND(BYTES/1048576,2) AS MBYTES, BLOCKS, BLOCK_SIZE FROM V$DATAFILE where NAME like LOWER('%CAIN_DATA%')
+SELECT 'datafile' AS TYPE, NAME, ROUND(BYTES/1048576,2) AS MBYTES, BLOCKS, BLOCK_SIZE FROM V$DATAFILE where NAME like LOWER('%CDRPSL_DATA%')
 UNION ALL
 SELECT 'tempfile' AS TYPE, NAME, ROUND(BYTES/1048576,2) AS MBYTES, BLOCKS, BLOCK_SIZE FROM V$TEMPFILE
 UNION ALL
@@ -47,9 +47,10 @@ from dba_data_files a        ,
      (select value db_block_size
       from v$parameter
       where name='db_block_size') d
-where a.file_id=  b.file_id
-and   c.file_id  = b.file_id
-and   c.block_id = b.maximum
+where a.file_id =  b.file_id
+and   c.file_id = b.file_id
+and   c.block_id = b.maximum 
+and a.tablespace_name='CDRMSC_DATA'
 order by a.tablespace_name,a.file_name);
 =========================================================================================================================================
 SET LINESIZE 1000 PAGESIZE 0 FEEDBACK OFF TRIMSPOOL ON

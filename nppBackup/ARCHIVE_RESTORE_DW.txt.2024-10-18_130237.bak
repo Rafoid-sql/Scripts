@@ -18,26 +18,17 @@ go to parameter_files folder and edit dma_msc.par parfile
 run the import
 Y!6xG#0m
 
-
-
-nohup impdp 'system/"Y!6xG#0m"' parfile=/archive1/dumps/parameter_files/dma_msc.par &
-nohup impdp 'system/"Y!6xG#0m"' parfile=/archive1/dumps/parameter_files/dma_psl_data.par &
-nohup impdp 'system/"Y!6xG#0m"' parfile=/archive1/dumps/parameter_files/recon.par &
 nohup impdp 'system/"Y!6xG#0m"' parfile=/archive1/dumps/parameter_files/cvm.par &
-nohup impdp 'system/"Y!6xG#0m"' parfile=/archive1/dumps/parameter_files/data.par &
+nohup impdp system/"Y!6xG#0m" parfile=/archive1/dumps/parameter_files/data.par &
 nohup impdp system/"Y!6xG#0m" parfile=/archive1/dumps/parameter_files/rmbkr_cdrr.par &
 nohup impdp system/"Y!6xG#0m" parfile=/archive1/dumps/parameter_files/sales_det.par &
 
-
-
-nohup impdp parfile=/archive1/dumps/parameter_files/recon.par &
-
 after the import, run that command on sqlplus:
 
-grant read on RECON.CHARGED_CAIN_PLANS_SUMM_APR23_AUG23 to TTDWH_LINKER;
-grant read on DMA.RT_CDRMSC_DAY_BACK_UP_FEB24 to TTDWH_LINKER;
+
+grant read on DMA.RT_CDRMSC_DAY_BACK_UP_JAN24 to TTDWH_LINKER;
 grant read on ROAMBROKER.ST_CDRROAM_IMPORT_DEC21 to TTDWH_LINKER;
-grant read on DATA.ST_CDRGGSN_IMPORT_SEP23 to TTDWH_LINKER;
+grant read on DATA.ST_CDRGGSN_IMPORT_DEC21 to TTDWH_LINKER;
 
 grant read on PRODUCTS.ST_SALES_DETAIL_REPORT_IMPORT_2022 to TTDWH_LINKER;
 grant read on PRODUCTS.ST_SALES_DETAIL_REPORT_IMPORT_2023 to TTDWH_LINKER;

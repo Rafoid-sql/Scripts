@@ -3,12 +3,12 @@ ALTER SESSION SET NLS_DATE_FORMAT='DD-MON-YYYY HH24:MI:SS';
 SET LINES 280 PAGESIZE 1000 LONG 15000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPOOL ON UNDERLINE =
 =========================================================================================================================================
 --Primary:
-EDIT DATABASE 'ptest' SET STATE=TRANSPORT-OFF;
-EDIT DATABASE 'ptest' SET STATE=TRANSPORT-ON;
+EDIT DATABASE 'DGIPRD1B' SET STATE=TRANSPORT-OFF;
+EDIT DATABASE 'DGIPRD1B' SET STATE=TRANSPORT-ON;
 
 --Standby:
-EDIT DATABASE 'ptest' SET STATE='APPLY-OFF';
-EDIT DATABASE 'ptest' SET STATE='APPLY-ON';
+EDIT DATABASE 'CAINTTSTBY' SET STATE='APPLY-OFF';
+EDIT DATABASE 'CAINTTSTBY' SET STATE='APPLY-ON';
 =========================================================================================================================================
 --CHECK DATAGUARD APPLY LAG
 SELECT LOG_ARCHIVED-LOG_APPLIED "LOG_GAP", LOG_ARCHIVED, LOG_APPLIED  FROM 

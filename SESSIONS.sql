@@ -107,7 +107,7 @@ SET HEADING OFF
 SELECT 'ALTER SYSTEM DISCONNECT SESSION '''||SID||','||SERIAL#||',@'||INST_ID||''' IMMEDIATE;'
 FROM GV$SESSION
 WHERE PROCESS NOT LIKE ('%BACKGROUND')
---AND USERNAME IN ('IDM_USER_INFO')
+AND USERNAME IN ('DBSNMP')
 --AND OSUSER IN ('AWahla1')
 --AND OSUSER NOT IN ('ORACLE','SISTEMA')
 --AND MACHINE IN ('HOSPLACI\WEKNOW-TESTE')
@@ -116,7 +116,7 @@ WHERE PROCESS NOT LIKE ('%BACKGROUND')
 --AND SID IN (1327)
 --AND SERIAL# IN (3072)
 --AND STATUS IN ('INACTIVE')
-AND SQL_ID ='b3dxha9tuhbur'
+--AND SQL_ID ='b3dxha9tuhbur'
 ORDER BY 1;
 SET HEADING ON
 =========================================================================================================================================
@@ -199,6 +199,25 @@ AND S.END_INTERVAL_TIME <= SYSDATE
 --AND S.SNAP_ID = RL.SNAP_ID AND RL.RESOURCE_NAME = 'processes'
 AND S.SNAP_ID = RL.SNAP_ID AND RL.RESOURCE_NAME = 'sessions'
 ORDER BY S.BEGIN_INTERVAL_TIME, RL.INSTANCE_NUMBER;
+=========================================================================================================================================
+--Check OPEN_CURSORS
+SELECT SUM(A.VALUE) TOTAL_CUR, AVG(A.VALUE) AVG_CUR, MAX(A.VALUE) MAX_CUR, S.USERNAME, S.MACHINE
+FROM GV$SESSTAT A, GV$STATNAME B, GV$SESSION S
+WHERE A.STATISTIC# = B.STATISTIC# AND S.SID = A.SID AND B.NAME = 'opened cursors current'
+GROUP BY S.USERNAME, S.MACHINE
+UNION ALL
+SELECT NULL AS TOTAL_CUR, NULL AS AVG_CUR, SUM(MAX_CUR) AS MAX_CUR, 'CURRENT' AS USERNAME, NULL AS MACHINE
+FROM (
+    SELECT MAX(A.VALUE) AS MAX_CUR
+    FROM GV$SESSTAT A, GV$STATNAME B, GV$SESSION S
+    WHERE A.STATISTIC# = B.STATISTIC# AND S.SID = A.SID AND B.NAME = 'opened cursors current'
+    GROUP BY S.USERNAME, S.MACHINE
+)
+UNION ALL
+SELECT NULL AS TOTAL_CUR, NULL AS AVG_CUR, TO_NUMBER(VALUE) AS MAX_CUR, 'TOTAL' AS USERNAME, NULL AS MACHINE
+FROM  GV$PARAMETER
+WHERE NAME = 'open_cursors'
+ORDER BY TOTAL_CUR DESC NULLS LAST;
 =========================================================================================================================================
 --Check sql_id time to finish
 COL INS FOR 999
