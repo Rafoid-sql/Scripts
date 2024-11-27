@@ -1,0 +1,37 @@
+#set -x
+#!/bin/sh
+
+ADMIN='rafael.oliveira@digicelgroup.com sonneil.wellington@digicelgroup.com Cg001110@digicelgroup.com'
+DEPLETED=100
+CRITICAL=90
+WARNING=80
+EXCLUDE_LIST="/auto/ripper|loop"
+
+main_prog()
+	{
+		while read -r output;
+		do
+			usep=$(echo "$output" | awk '{ print $1}' | cut -d'%' -f1)
+			partition=$(echo "$output" | awk '{print $2}')
+			if [[ $usep -eq $DEPLETED ]]
+			then
+				echo "Partition \"$partition ($usep%)\" on server $(hostname), $(date)" | \
+				mail -s "FATAL: Partition \"$partition ($usep%)\" on $(hostname) is depleted" "$ADMIN"
+			elif [[ $usep -ge $CRITICAL && $usep -lt $DEPLETED ]]
+			then
+				echo "Partition \"$partition ($usep%)\" on server $(hostname), $(date)" | \
+				mail -s "CRITICAL: Partition \"$partition ($usep%)\" on $(hostname) is almost out of disk space" "$ADMIN"
+			elif [[ $usep -ge $WARNING && $usep -lt $CRITICAL ]]
+			then
+				echo "Partition \"$partition ($usep%)\" on server $(hostname), $(date)" | \
+				mail -s "WARNING: Partition \"$partition ($usep%)\" on $(hostname) is filling up" "$ADMIN"
+			fi
+		done
+	}
+
+if [[ "$EXCLUDE_LIST" != "" ]]
+then
+	df -H | grep -vE "^Filesystem|tmpfs|cdrom|${EXCLUDE_LIST}" | awk '{print $5 " " $6}' | main_prog
+else
+	df -H | grep -vE "^Filesystem|tmpfs|cdrom" | awk '{print $5 " " $6}' | main_prog
+fi

@@ -4,8 +4,8 @@
 echo "*********************************"
 echo "Databases Running on This Server:"
 echo "*********************************"
-#ps -ef| grep pmon_|grep -v grep|awk -F_ '{print $3}'
-ps -ef | grep pmon | grep -v grep | awk '{ print $8 }' | cut -d '_' -f3
+ps -ef| grep pmon_|grep -v grep|awk -F_ '{print $3}'
+#ps -ef | grep pmon_ora | grep -v grep | awk '{ print $8 }' | cut -d '_' -f3
 #ps -e -o command | grep pmon | grep -v grep | cut -d '_' -f3
 
 # Terminal Settings
@@ -70,3 +70,25 @@ alias or<sid>='export ORACLE_SID=<sid>'
 
 # RDP
 	#vermelho/verde 255
+	
+	
+	
+	
+DGI SERVERS
+
+# Prompt Settings
+echo "*********************************"
+echo "Databases Running on This Server:"
+echo "*********************************"
+#ps -ef| grep pmon_|grep -v grep|awk -F_ '{print $3}'
+ps -ef | grep pmon | grep -v grep | awk '{ print $8 }' | cut -d '_' -f3
+#ps -e -o command | grep pmon | grep -v grep | cut -d '_' -f3
+export ORACLE_SID=`ps -ef | grep ora_pmon | grep -v grep | awk '{ print $8 }' | cut -d '_' -f3`
+
+# Terminal Settings
+export PS1='[\u(${LOGNAME})@\h:\[\e[01;31m$ORACLE_SID\e[m\]:$PWD]\$ '
+bash
+
+echo ""
+echo "Use \". oraenv\" to setup the ORACLE environment."
+echo ""

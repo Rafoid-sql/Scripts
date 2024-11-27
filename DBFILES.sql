@@ -8,7 +8,7 @@ COL FILE# FORMAT 9999999
 COL MBYTES FORMAT 999999999
 COL BLOCKS FORMAT 999999999
 COL BLOCK_SIZE FORMAT 99999
-SELECT 'datafile' AS TYPE, NAME, ROUND(BYTES/1048576,2) AS MBYTES, BLOCKS, BLOCK_SIZE FROM V$DATAFILE where NAME like LOWER('%ROCRA_USAGE_DATA%')
+SELECT 'datafile' AS TYPE, NAME, ROUND(BYTES/1048576,2) AS MBYTES, BLOCKS, BLOCK_SIZE FROM V$DATAFILE where NAME like LOWER('%CDRPSL_DATA%')
 UNION ALL
 SELECT 'tempfile' AS TYPE, NAME, ROUND(BYTES/1048576,2) AS MBYTES, BLOCKS, BLOCK_SIZE FROM V$TEMPFILE
 UNION ALL
@@ -16,12 +16,6 @@ SELECT 'controlfile' AS TYPE, NAME, ROUND((BLOCK_SIZE*FILE_SIZE_BLKS)/1048576,2)
 UNION ALL
 SELECT 'logfile' AS TYPE, MEMBER, NULL, NULL, NULL FROM V$LOGFILE
 ORDER BY 1,2 ASC;
-=========================================================================================================================================
--- LIST CURRENT AND MAX DB FILES
-COL CURR_DB_FILES FOR 99999
-COL MAX_DB_FILES FOR A15
-SELECT (SELECT COUNT(1) FROM V$DATAFILE) CURR_DB_FILES, (SELECT VALUE FROM V$PARAMETER WHERE UPPER(NAME) LIKE '%DB_FILES%') MAX_DB_FILES FROM DUAL;
-SHOW PARAMETER DB_FILES
 =========================================================================================================================================
 -- LIST DATAFILES
 COL TYPE FOR A15
@@ -37,6 +31,27 @@ SELECT 'DATAFILE' AS TYPE, NAME, ROUND(BYTES/1048576,2) AS MBYTES FROM V$DATAFIL
 -- LIST TEMPFILES
 COL NAME FOR A50
 SELECT 'TEMPFILE' AS TYPE, NAME, ROUND(BYTES/1048576,2) AS MBYTES, BLOCKS, BLOCK_SIZE FROM V$TEMPFILE;
+=========================================================================================================================================
+-- RESIZE DATAFILE USING HWM
+select 'alter database datafile'||' '''||file_name||''''||' resize '||round(highwater+2)||' '||'m'||';' from (
+select /*+ rule */
+   a.tablespace_name,
+    a.file_name,
+   a.bytes/1024/1024 file_size_MB,
+    (b.maximum+c.blocks-1)*d.db_block_size/1024/1024 highwater
+from dba_data_files a        ,
+     (select file_id,max(block_id) maximum
+      from dba_extents
+      group by file_id) b,
+      dba_extents c,
+     (select value db_block_size
+      from v$parameter
+      where name='db_block_size') d
+where a.file_id =  b.file_id
+and   c.file_id = b.file_id
+and   c.block_id = b.maximum 
+and a.tablespace_name='CDRMSC_DATA'
+order by a.tablespace_name,a.file_name);
 =========================================================================================================================================
 SET LINESIZE 1000 PAGESIZE 0 FEEDBACK OFF TRIMSPOOL ON
 WITH

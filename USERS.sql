@@ -2,6 +2,13 @@
 ALTER SESSION SET NLS_DATE_FORMAT='DD-MON-YYYY HH24:MI:SS';
 SET LINES 280 PAGESIZE 5000 LONG 15000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPOOL ON UNDERLINE =
 =========================================================================================================================================
+COL USERNAME FOR A20
+COL ACCOUNT_STATUS FOR A20
+COL PROFILE FOR A20
+SELECT USERNAME,ACCOUNT_STATUS,PROFILE 
+FROM DBA_USERS 
+WHERE USERNAME IN ('NJOSEPH');
+=========================================================================================================================================
 -- PASSWORD CHANGE
 COL HOST_NAME FOR A30
 COL SYSTIMESTAMP FOR A40
@@ -65,8 +72,8 @@ FROM DBA_HIST_ACTIVE_SESS_HISTORY A, DBA_USERS C
 WHERE A.USER_ID=C.USER_ID
 AND A.SAMPLE_TIME >= TRUNC(SYSDATE) - 15
 AND A.SAMPLE_TIME <= TRUNC(SYSDATE)
---AND C.USERNAME IN (SELECT USERNAME FROM DBA_USERS WHERE ORACLE_MAINTAINED='N')
-AND C.USERNAME IN ('SSCOPE')
+AND C.USERNAME IN (SELECT USERNAME FROM DBA_USERS WHERE ORACLE_MAINTAINED='N')
+--AND C.USERNAME IN ('SSCOPE')
 ORDER BY A.SAMPLE_TIME DESC;
 =========================================================================================================================================
 --CHECK OBJECTS WITHIN OBJECTS:
@@ -126,7 +133,7 @@ COL LOCK_DATE HEADING 'LOCKED' FOR A20
 COL PROFILE FOR A25
 COL LAST_LOGIN FOR A40
 --SELECT USERNAME, ACCOUNT_STATUS, CREATED, EXPIRY_DATE, LOCK_DATE, PROFILE, LAST_LOGIN FROM DBA_USERS WHERE USERNAME LIKE UPPER('&USER');
-SELECT USERNAME, ACCOUNT_STATUS, CREATED, EXPIRY_DATE, LOCK_DATE, PROFILE FROM DBA_USERS WHERE USERNAME IN ('JVENUGO2');
+SELECT USERNAME, ACCOUNT_STATUS, CREATED, EXPIRY_DATE, LOCK_DATE, PROFILE FROM DBA_USERS WHERE USERNAME = UPPER('LHAMILTON');
 =========================================================================================================================================
 -- CHECK USERNAME LAST ACTIVITY:
 COL EXTENDED_TIMESTAMP FOR A60
@@ -135,8 +142,7 @@ COL OS_USER   FOR A20
 COL OS_HOST FOR A40
 SELECT MAX(EXTENDED_TIMESTAMP) LAST_ACTIVITY
 FROM GV$XML_AUDIT_TRAIL
---WHERE DB_USER in ('USER')
-WHERE EXTENDED_TIMESTAMP >= (SYSDATE-15)
+WHERE DB_USER = '&USER'
 ORDER BY EXTENDED_TIMESTAMP;
 =========================================================================================================================================
 --Check user last changed password:
@@ -280,7 +286,17 @@ WHERE TYPE='USER'
 GROUP BY INST_ID;
 
 =========================================================================================================================================
+-- CHECK SCHEMA SIZE BY OBJECT I
+select sum(bytes)/1024/1024/1024 as size_in_GB, segment_type
+from dba_segments
+where owner='CAIN2' and segment_name like '%_ARCHIVE'
+group by segment_type;
 =========================================================================================================================================
+-- CHECK SCHEMA SIZE BY OBJECT II
+select sum(bytes)/1024/1024/1024 as size_in_GB, segment_type
+from dba_segments
+where owner='CAIN2'
+group by segment_type;
 =========================================================================================================================================
 
 select c.username,a.SAMPLE_TIME, a.SQL_OPNAME, a.SQL_EXEC_START, a.program, a.module, a.machine,
