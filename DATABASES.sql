@@ -33,19 +33,14 @@ RMAN> DELETE BACKUP NOPROMPT;
 RMAN> UNREGISTER DATABASE;
 =========================================================================================================================================
 --ACCESS FED TMO DATABASES:
-sudo su - oracle -c /oracle/g01/admin/sysoper/bin/fedmenu.sh
-sudo -u oracle /orasw/static/oradba/sysoper/bin/sysopermenu.sh pratp
-$ORACLE_SID
+sudo -u oracle /orasw/static/oradba/sysoper/bin/sysopermenu.sh pratp11
 =========================================================================================================================================
 --ACCESS FED TMO DATABASES II:
 export ORACLE_HOME=/orasw/app/oracle/product/19/db
 export PATH=$PATH:$ORACLE_HOME/bin:/usr/local/bin
 . oraenv
-sqlplus /nolog
-conn ROLIVEI4/"8V!WB5TdgoKiV2#IuPhY58uBU98j8$" | "KgNMsXUh5jWH6V3JAPZdp#8C!9rxkR"
-conn ROLIVEI4/"JGDAcNb5wXK8B2#!SReWj6TLmhqdpg"
-
-conn ROLIVEI4/"reEHheGG_Gn55fb_HWasVPlnYNouMO"
+sqlplus ROLIVEI4/"JGDAcNb5wXK8B2#!SReWj6TLmhqdpg"
+sqlplus ROLIVEI4/"reEHheGG_Gn55fb_HWasVPlnYNouMO"
 =========================================================================================================================================
 --SEND EMAIL FROM AIX SERVER
 uuencode listener_pcdep.log listener_pcdep.log | mailx -s "listener_pcdep.log" rafael.oliveira@t-mobile.com
@@ -64,7 +59,7 @@ srvctl stop database -d pcdep
 srvctl start database -d psocrp
 
 srvctl stop instance -d pjpyp -i pjpyp1
-srvctl start instance -d psocrp -i psocrp2
+srvctl start instance -d ptesp -i ptesp2
 
 srvctl stop listener -l LISTENER_PJPYP -n ppolabpms00001
 srvctl start listener -l LISTENER_PSOCRP -n ppolabpms00001
@@ -96,6 +91,14 @@ stop_blackout_agent.sh
 
 -- PARAR
 /nfs/infra/oracle/scripts/maintenance/stop_blackout_agent_indefinite.sh
+
+=========================================================================================================================================
+--ENABLE/DISABLE NPE HUNGDB
+--DISABLE
+/nfs/infra/oracle/scripts/maintenance/disable_npe_hungdb.sh
+
+-- ENABLE
+/nfs/infra/oracle/scripts/maintenance/enable_npe_hungdb.sh
 =========================================================================================================================================
 . oraenv (+ASMx)
  
@@ -129,7 +132,8 @@ END;
 =========================================================================================================================================
 --CHECK DATABASE SIZE:
 SELECT "RESERVED_SPACE(GB)", "RESERVED_SPACE(GB)" - "FREE_SPACE(GB)" "USED_SPACE(GB)","FREE_SPACE(GB)"
-FROM(SELECT (SELECT SUM(BYTES/(1014*1024*1024)) FROM DBA_DATA_FILES) "RESERVED_SPACE(GB)", (SELECT SUM(BYTES/(1024*1024*1024)) FROM DBA_FREE_SPACE) "FREE_SPACE(GB)" FROM DUAL);
+FROM(SELECT (SELECT SUM(BYTES/(1014*1024*1024)) FROM DBA_DATA_FILES) "RESERVED_SPACE(GB)",
+ (SELECT SUM(BYTES/(1024*1024*1024)) FROM DBA_FREE_SPACE) "FREE_SPACE(GB)" FROM DUAL);
 =========================================================================================================================================
 --Growth of the database in a monthly basis , This data is from the control file :
 select to_char(creation_time, 'RRRR Month') "Month",
@@ -226,14 +230,60 @@ SELECT
 (SELECT SUM(BYTES/(1014*1024*1024)) FROM DBA_DATA_FILES) "RESERVED_SPACE(GB)",
 (SELECT SUM(BYTES/(1024*1024*1024)) FROM DBA_FREE_SPACE) "FREE_SPACE(GB)"
 FROM DUAL );
-SELECT
-"RESERVED_SPACE(GB)", "RESERVED_SPACE(GB)" - "FREE_SPACE(GB)" "USED_SPACE(GB)","FREE_SPACE(GB)"
-FROM(
-SELECT
-(SELECT SUM(BYTES/(1014*1024*1024)) FROM DBA_DATA_FILES) "RESERVED_SPACE(GB)",
-(SELECT SUM(BYTES/(1024*1024*1024)) FROM DBA_FREE_SPACE) "FREE_SPACE(GB)"
-FROM DUAL );
 =========================================================================================================================================
 --CHECK TABLE PARTITIONS:
 select owner,object_name,subobject_name,to_char(created,'DD.MM.YYYY HH24:MI:SS') from dba_objects where object_type='TABLE PARTITION' and trunc(created) = trunc(sysdate);
 select owner,object_name,subobject_name,to_char(created,'DD.MM.YYYY HH24:MI:SS') from dba_objects where object_type='TABLE PARTITION' and owner not in ('SYS', 'AUDSYS','OPS$ORACLE','SYSTEM');
+=========================================================================================================================================
+-- DB SPACE BY SCHEMAS
+clear columns
+ column file_name format a60
+ column tablespace format a30
+ column total_gb format 999,999,999.99
+ column used_gb format 999,999,999,999.99
+ column free_gb format 999,999,999.99
+ column pct_used format 999.99
+ column graph format a25 heading "GRAPH (X=5%)"
+ column status format a10
+ compute sum of total_gb on report
+ compute sum of used_gb on report
+ compute sum of free_gb on report
+ break on report 
+ set lines 200 pages 100
+ select /*+ parallel(ddf,16) parallel(dfs,16) */  total.ts tablespace,
+   DECODE(total.gb,null,'OFFLINE',dbat.status) status,
+  total.gb total_gb,
+  NVL(total.gb - free.gb,total.gb) used_gb,
+  NVL(free.gb,0) free_gb,
+   DECODE(total.gb,NULL,0,NVL(ROUND((total.gb - free.gb)/(total.gb)*100,2),100)) pct_used,
+  CASE WHEN (total.gb IS NULL) THEN '['||RPAD(LPAD('OFFLINE',13,'-'),20,'-')||']'
+  ELSE '['|| DECODE(free.gb,
+         null,'XXXXXXXXXXXXXXXXXXXX',
+         NVL(RPAD(LPAD('X',trunc((100-ROUND( (free.gb)/(total.gb) * 100, 2))/5),'X'),20,'-'),
+   '--------------------'))||']' 
+    END as GRAPH
+ from
+  (select tablespace_name ts, sum(bytes)/1024/1024/1024 gb from dba_data_files ddf group by tablespace_name) total,
+  (select tablespace_name ts, sum(bytes)/1024/1024/1024 gb from dba_free_space dfs group by tablespace_name) free,
+   dba_tablespaces dbat
+ where total.ts=free.ts(+) and
+    total.ts=dbat.tablespace_name
+    --and tablespace_name in ('NOR_DATA_SSD','NOR_DATA_SSD_02','NOR_INDX_SSD','NOR_DATA_SSD_TMP','APS_DATA','UNDOTBS1','UNDOTBS2','UNDOTBS3','UNDOTBS01','UNDOTBS02','UNDOTBS03','SDG_DATA')
+    --and tablespace_name in ('NOR_DATA_P03','NOR_DATA_P04','NOR_DATA_P10','NOR_DATA_P11','NOR_INDX_01','REGADM_DATA')
+    --and tablespace_name like ('OEMADM_DATA')
+ UNION ALL
+ select /*+ parallel(sh,16) */ sh.tablespace_name, 
+   'TEMP',
+  SUM(sh.bytes_used+sh.bytes_free)/1024/1024/1024 total_gb,
+  SUM(sh.bytes_used)/1024/1024/1024 used_gb,
+  SUM(sh.bytes_free)/1024/1024/1024 free_gb,
+   ROUND(SUM(sh.bytes_used)/SUM(sh.bytes_used+sh.bytes_free)*100,2) pct_used,
+   '['||DECODE(SUM(sh.bytes_free),0,'XXXXXXXXXXXXXXXXXXXX',
+      NVL(RPAD(LPAD('X',(TRUNC(ROUND((SUM(sh.bytes_used)/SUM(sh.bytes_used+sh.bytes_free))*100,2)/5)),'X'),20,'-'),
+     '--------------------'))||']'
+ FROM v$temp_space_header sh
+ GROUP BY tablespace_name
+ order by 7 
+ /
+ ttitle off
+ rem clear columns

@@ -4,14 +4,14 @@ SET LINES 280 PAGESIZE 1000 LONG 15000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPO
 =========================================================================================================================================
 --Create grant list for user:
 SELECT 'GRANT SELECT,INSERT,UPDATE,DELETE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO MSDP2_RW;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='MSDP2';
-SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO CDES1_RO_ROLE;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='CDES1';
+SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO PKUPPUS1;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='ADM';
 SELECT 'GRANT EXECUTE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO CDES1_EXECUTE_PROCEDURES;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('PROCEDURE') AND OWNER='CDES1';
 =========================================================================================================================================
 --Get grants from user to apply to another:
 SELECT * FROM (
 SELECT 'GRANT '||PRIVILEGE||' TO '||GRANTEE||';' FROM DBA_SYS_PRIVS WHERE GRANTEE IN UPPER('&&user')
 UNION ALL
-SELECT 'GRANT '||PRIVILEGE||' ON '||GRANTOR||'.'||TABLE_NAME||' TO '||GRANTEE||';' FROM DBA_TAB_PRIVS WHERE GRANTEE IN UPPER('&&user')
+SELECT 'GRANT '||PRIVILEGE||' ON  '||'"'||GRANTOR||'"'||'.'||'"'||TABLE_NAME||'"'|| ' TO '||GRANTEE||';' FROM DBA_TAB_PRIVS WHERE GRANTEE IN UPPER('&&user')
 UNION ALL
 SELECT 'GRANT '||GRANTED_ROLE||' TO '||GRANTEE||';' FROM DBA_ROLE_PRIVS WHERE GRANTEE IN UPPER('&&user')
 ORDER BY 1);
