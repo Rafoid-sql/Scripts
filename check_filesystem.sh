@@ -1,37 +1,41 @@
-#set -x
 #!/bin/sh
 
-#ADMIN='ro617589@digicelgroup.com sonneil.wellington@digicelgroup.com Cg001110@digicelgroup.com'
 #ADMIN='rafael.oliveira@digicelgroup.com'
-ADMIN='r0617589@digicelgroup.com'
+ADMIN='COE_DBA@DIGICELGROUP.COM'
 DEPLETED=100
 CRITICAL=90
-#WARNING=80
-WARNING=40
-EXCLUDE_LIST="/auto/ripper|loop"
+WARNING=70
+EXCLUDE_LIST="/auto/ripper|loop|tmpfs|cdrom"
+MAIN_DIR="/home/oracle/scripts"
+LOGFILE="$MAIN_DIR/disk_usage.log"
+HOST=`hostname | tr a-z A-Z`
+
+> "$LOGFILE"
 
 main_prog()
-        {
-                while read -r output;
-                do
-                        USED=$(echo "$output" | awk '{ print $1}' | cut -d'%' -f1)
-                        PART=$(echo "$output" | awk '{print $2}')
-                        if [[ $USED -eq $DEPLETED ]]
-                        then
-                                echo "partition \"$PART ($USED%)\" on server $(hostname), $(date)" | mail -s "FATAL: partition \"$PART ($USED%)\" on $(hostname) is depleted" "$ADMIN"
-                        elif [[ $USED -ge $CRITICAL && $USED -lt $DEPLETED ]]
-                        then
-                                echo "partition \"$PART ($USED%)\" on server $(hostname), $(date)" | mail -s "CRITICAL: partition \"$PART ($USED%)\" on $(hostname) is almost out of disk space" "$ADMIN"
-                        elif [[ $USED -ge $WARNING && $USED -lt $CRITICAL ]]
-                        then
-                                echo "partition \"$PART ($USED%)\" on server $(hostname), $(date)" | mail -s "WARNING: partition \"$PART ($USED%)\" on $(hostname) is filling up" "$ADMIN"
-                        fi
-                done
-        }
+{
+    while read -r output; do
+        USED=$(echo "$output" | awk '{ print $1 }' | cut -d'%' -f1)
+        PART=$(echo "$output" | awk '{ print $2 }')
+        TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
 
-if [[ "$EXCLUDE_LIST" != "" ]]
-then
-        df -H | grep -vE "^Filesystem|tmpfs|cdrom|${EXCLUDE_LIST}" | awk '{print $5 " " $6}' | main_prog
+        if [[ $USED -eq $DEPLETED ]]; then
+            echo "[$TIMESTAMP] Partition \"$PART\" ($USED%) is depleted." >> "$LOGFILE"
+        elif [[ $USED -ge $CRITICAL && $USED -lt $DEPLETED ]]; then
+            echo "[$TIMESTAMP] Partition \"$PART\" ($USED%) is almost full." >> "$LOGFILE"
+        elif [[ $USED -ge $WARNING && $USED -lt $CRITICAL ]]; then
+            echo "[$TIMESTAMP] Partition \"$PART\" ($USED%) is filling up." >> "$LOGFILE"
+        fi
+    done
+}
+
+if [[ "$EXCLUDE_LIST" != "" ]]; then
+    df -H | grep -vE "^Filesystem|${EXCLUDE_LIST}" | awk '{ print $5 " " $6 }' | main_prog
 else
-        df -H | grep -vE "^Filesystem|tmpfs|cdrom" | awk '{print $5 " " $6}' | main_prog
+    df -H | grep -vE "^Filesystem" | awk '{ print $5 " " $6 }' | main_prog
+fi
+
+if [[ -s "$LOGFILE" ]]; then
+    sort -n -r -k1,1 "$LOGFILE" -o "$LOGFILE"
+    mail -s "Disk Usage Alert on $HOST" "$ADMIN" < "$LOGFILE"
 fi

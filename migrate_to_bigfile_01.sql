@@ -1,0 +1,145 @@
+DECLARE
+    v_tablespace_name       VARCHAR2(50) := '&1'; -- First parameter: Tablespace name
+    v_total_space           NUMBER;
+    v_used_space            NUMBER;
+    v_free_space            NUMBER;
+    v_new_tablespace_name   VARCHAR2(50);
+    v_size_to_allocate      NUMBER;
+    v_size_with_extra       NUMBER;
+    v_empty_tablespace      NUMBER;
+    v_diskgroup_destination VARCHAR2(20) := '&2'; -- Second parameter: Diskgroup destination
+    v_available_space       NUMBER;
+BEGIN
+    -- Step 1: Get total, used, and free space of the tablespace
+    SELECT
+        tablespace_name,
+        total_space_mb,
+        used_space_mb,
+        free_space_mb
+    INTO
+        v_tablespace_name,
+        v_total_space,
+        v_used_space,
+        v_free_space
+    FROM (
+        SELECT
+            df.tablespace_name,
+            ROUND(SUM(df.bytes) / 1024 / 1024, 2) AS total_space_mb,
+            ROUND(SUM(df.bytes - NVL(fs.bytes, 0)) / 1024 / 1024, 2) AS used_space_mb,
+            ROUND(SUM(NVL(fs.bytes, 0)) / 1024 / 1024, 2) AS free_space_mb
+        FROM
+            dba_data_files df
+        LEFT JOIN (
+            SELECT
+                tablespace_name,
+                file_id,
+                SUM(bytes) AS bytes
+            FROM
+                dba_free_space
+            GROUP BY
+                tablespace_name, file_id
+        ) fs ON df.tablespace_name = fs.tablespace_name AND df.file_id = fs.file_id
+        GROUP BY
+            df.tablespace_name
+    ) WHERE tablespace_name = v_tablespace_name;
+
+    -- Step 2: Calculate the size to allocate + 5%
+    v_size_to_allocate := v_used_space * 1.2; -- Used space + 20%
+    v_size_with_extra := v_size_to_allocate * 1.05; -- Additional 5% of the size to allocate
+
+    -- Step 3: Check the available space in the diskgroup
+    SELECT ROUND(SUM(free_mb), 2)
+    INTO v_available_space
+    FROM v$asm_diskgroup
+    WHERE name = v_diskgroup_destination;
+
+    -- Step 4: Check if the available space is sufficient
+    IF v_available_space >= v_size_with_extra THEN
+        -- Step 5: Create a new bigfile tablespace
+        v_new_tablespace_name := v_tablespace_name || '_01';
+
+        EXECUTE IMMEDIATE 'CREATE BIGFILE TABLESPACE ' || v_new_tablespace_name ||
+                          ' DATAFILE ''+' || v_diskgroup_destination || ''' SIZE ' || v_size_to_allocate || 'M';
+
+        -- Step 6: Migrate all tables, views, and materialized views to the new tablespace
+        FOR rec IN (
+            SELECT owner, table_name
+            FROM dba_tables
+            WHERE tablespace_name = v_tablespace_name
+         ) LOOP
+            IF EXISTS (
+                SELECT 1 FROM dba_tab_partitions WHERE table_name = rec.table_name AND table_owner = rec.owner
+            ) THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE ' || rec.owner || '.' || rec.table_name ||
+                                  ' MOVE PARTITION STORE AS (TABLESPACE ' || v_new_tablespace_name || ')';
+            ELSE
+                EXECUTE IMMEDIATE 'ALTER TABLE ' || rec.owner || '.' || rec.table_name ||
+                                  ' MOVE TABLESPACE ' || v_new_tablespace_name;
+            END IF;
+        END LOOP;
+
+        FOR view_rec IN (
+            SELECT owner, view_name
+            FROM dba_views
+            WHERE tablespace_name = v_tablespace_name
+        ) LOOP
+            EXECUTE IMMEDIATE 'ALTER VIEW ' || view_rec.owner || '.' || view_rec.view_name ||
+                              ' MOVE TABLESPACE ' || v_new_tablespace_name;
+        END LOOP;
+
+        FOR mv_rec IN (
+            SELECT owner, mview_name
+            FROM dba_mviews
+            WHERE tablespace_name = v_tablespace_name
+        ) LOOP
+            EXECUTE IMMEDIATE 'ALTER MATERIALIZED VIEW ' || mv_rec.owner || '.' || mv_rec.mview_name ||
+                              ' MOVE TABLESPACE ' || v_new_tablespace_name;
+        END LOOP;
+
+        -- Step 7: Check and migrate other objects in the tablespace
+        FOR obj IN (
+            SELECT owner, object_name, object_type
+            FROM dba_objects
+            WHERE tablespace_name = v_tablespace_name
+        ) LOOP
+            IF obj.object_type = 'INDEX' THEN
+                EXECUTE IMMEDIATE 'ALTER INDEX ' || obj.owner || '.' || obj.object_name ||
+                                  ' REBUILD TABLESPACE ' || v_new_tablespace_name;
+            ELSIF obj.object_type = 'LOB' THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE ' || obj.owner || '.' || obj.object_name ||
+                                  ' MOVE LOB (' || obj.object_name || ') STORE AS (TABLESPACE ' || v_new_tablespace_name || ')';
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Object type ' || obj.object_type || ' migration not handled explicitly.');
+            END IF;
+        END LOOP;
+
+        -- Step 8: Rebuild indexes online
+        FOR idx IN (
+            SELECT owner, index_name
+            FROM dba_indexes
+            WHERE tablespace_name = v_tablespace_name
+        ) LOOP
+            EXECUTE IMMEDIATE 'ALTER INDEX ' || idx.owner || '.' || idx.index_name || ' REBUILD ONLINE TABLESPACE ' || v_new_tablespace_name;
+        END LOOP;
+
+        -- Step 9: Verify the old tablespace is empty
+        SELECT COUNT(*)
+        INTO v_empty_tablespace
+        FROM dba_segments
+        WHERE tablespace_name = v_tablespace_name;
+
+        IF v_empty_tablespace = 0 THEN
+            -- Step 10: Drop the old tablespace
+            EXECUTE IMMEDIATE 'DROP TABLESPACE ' || v_tablespace_name || ' INCLUDING CONTENTS AND DATAFILES';
+
+            -- Step 11: Rename the new tablespace
+            EXECUTE IMMEDIATE 'ALTER TABLESPACE ' || v_new_tablespace_name ||
+                              ' RENAME TO ' || v_tablespace_name;
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('Old tablespace is not empty. Migration failed.');
+        END IF;
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Not enough space in the diskgroup: ' || v_diskgroup_destination);
+    END IF;
+END;
+/

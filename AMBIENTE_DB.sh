@@ -1,6 +1,7 @@
 ## INSTANCIAS ##
 
 # Prompt Settings
+clear
 echo "*********************************"
 echo "Databases Running on This Server:"
 echo "*********************************"
@@ -77,6 +78,7 @@ alias or<sid>='export ORACLE_SID=<sid>'
 DGI SERVERS
 
 # Prompt Settings
+clear
 echo "*********************************"
 echo "Databases Running on This Server:"
 echo "*********************************"

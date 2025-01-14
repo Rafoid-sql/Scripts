@@ -65,11 +65,15 @@ CREATE OR REPLACE PROCEDURE UPDATE_RETENTION_DATES AS
 BEGIN
 	UPDATE DBADMIN.DT_ARCHIVE_RETENTION_RULES
 	SET INIT_DATE = CASE 
+						--WHEN PARTITION_FLAG = 'D' THEN TO_CHAR(ADD_MONTHS(SYSDATE-6, -RETENTION_MONTHS - 1), 'YYYYMMDD')
 						WHEN PARTITION_FLAG = 'D' THEN TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -RETENTION_MONTHS - 1), 'MM'), 'YYYYMMDD')
+						--WHEN PARTITION_FLAG = 'M' THEN TO_CHAR(ADD_MONTHS(SYSDATE-6, -RETENTION_MONTHS - 1), 'YYYYMM')
 						WHEN PARTITION_FLAG = 'M' THEN TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -RETENTION_MONTHS - 1), 'MM'), 'YYYYMM')
 					END,
 		 END_DATE = CASE 
+						--WHEN PARTITION_FLAG = 'D' THEN TO_CHAR(ADD_MONTHS(SYSDATE-7, -RETENTION_MONTHS), 'YYYYMMDD')
 						WHEN PARTITION_FLAG = 'D' THEN TO_CHAR(LAST_DAY(ADD_MONTHS(SYSDATE, -RETENTION_MONTHS-1)), 'YYYYMMDD')
+						--WHEN PARTITION_FLAG = 'M' THEN TO_CHAR(ADD_MONTHS(SYSDATE-7, -RETENTION_MONTHS), 'YYYYMM')
 						WHEN PARTITION_FLAG = 'M' THEN TO_CHAR(LAST_DAY(ADD_MONTHS(SYSDATE, -RETENTION_MONTHS-1)), 'YYYYMM')
 					END
 	WHERE PARTITION_FLAG IN ('D', 'M');
@@ -82,26 +86,17 @@ EXCEPTION
 END UPDATE_RETENTION_DATES;
 /
 =========================================================================================================================================
-EXECUTE UPDATE_RETENTION_DATES;
+EXECUTE UPDATE_RETENTION_DATES;  
 =========================================================================================================================================
 BEGIN
-	DBMS_SCHEDULER.create_job (
-		job_name         => 'UPDATE_RETENTION_DATES_JOB',
-		job_type         => 'PLSQL_BLOCK',
-		job_action       => 'BEGIN UPDATE_RETENTION_DATES; END;',
-		start_date       => TRUNC(SYSDATE, 'MM') + INTERVAL '1' DAY + INTERVAL '3' HOUR,
-		repeat_interval  => 'FREQ=MONTHLY; BYMONTHDAY=1; BYHOUR=5; BYMINUTE=0; BYSECOND=0;',
-		enabled          => TRUE,
-		comments         => 'Job to update retention days in DBADMIN.DT_ARCHIVE_RETENTION_RULES on the first day of each month at 3 AM'
-	);
-END;
-/
-=========================================================================================================================================
-BEGIN
-	DBMS_SCHEDULER.set_attribute (
-		name => 'UPDATE_RETENTION_DATES_JOB',
-		attribute => 'REPEAT_INTERVAL',
-		value     => 'FREQ=MONTHLY; BYMONTHDAY=1; BYHOUR=5; BYMINUTE=0; BYSECOND=0;'
-	);
+  DBMS_SCHEDULER.create_job (
+    job_name         => 'UPDATE_RETENTION_DATES_JOB',
+    job_type         => 'PLSQL_BLOCK',
+    job_action       => 'BEGIN UPDATE_RETENTION_DATES; END;',
+    start_date       => TRUNC(SYSDATE, 'MM') + INTERVAL '1' DAY + INTERVAL '3' HOUR,
+    repeat_interval  => 'FREQ=MONTHLY; BYMONTHDAY=1; BYHOUR=3; BYMINUTE=0; BYSECOND=0;',
+    enabled          => TRUE,
+    comments         => 'Job to update retention days in DBADMIN.DT_ARCHIVE_RETENTION_RULES on the first day of each month at 3 AM'
+  );
 END;
 /
