@@ -4,7 +4,7 @@ SET LINES 280 PAGESIZE 1000 LONG 15000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPO
 =========================================================================================================================================
 --Create grant list for user:
 SELECT 'GRANT SELECT,INSERT,UPDATE,DELETE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO MSDP2_RW;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='MSDP2';
-SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO CERTO2_EXTRACT_RO;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='CERTO2_EXTRACT';
+SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO ROLE_RO_DGIAUUOCS1B;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE','VIEW') AND OWNER='OPS$DGIAUUOCS1B';
 SELECT 'GRANT EXECUTE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO CDES1_EXECUTE_PROCEDURES;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('PROCEDURE') AND OWNER='CDES1';
 =========================================================================================================================================
 --Get grants from user to apply to another:
@@ -46,29 +46,6 @@ SELECT GRANTEE, PRIVILEGE,GRANTOR||'.'||TABLE_NAME "OBJECT" FROM DBA_TAB_PRIVS W
 UNION ALL
 SELECT GRANTEE, GRANTED_ROLE "PRIVILEGE", '--' "OBJECT" FROM DBA_ROLE_PRIVS WHERE GRANTEE IN (SELECT USERNAME FROM DBA_USERS WHERE PROFILE='APPUSER_PROFILE')
 ORDER BY 1,3,2);
-=========================================================================================================================================
---Get ROLE privileges
-COL ROLE FOR A20
-COL OWNER FOR A20
-COL TABLE_NAME FOR A40
-COL PRIVILEGE FOR A40
-SELECT * FROM (
-SELECT ROLE, '--' "OWNER", '--' "TABLE_NAME", GRANTED_ROLE "PRIVILEGE" FROM ROLE_ROLE_PRIVS WHERE ROLE IN UPPER('&&role')
-UNION ALL
-SELECT ROLE, '--' "OWNER", '--' "TABLE_NAME", PRIVILEGE FROM ROLE_SYS_PRIVS WHERE ROLE IN UPPER('&&role')
-UNION ALL
-SELECT ROLE, OWNER, TABLE_NAME, PRIVILEGE FROM ROLE_TAB_PRIVS WHERE ROLE IN UPPER('&&role')
-ORDER BY 1);
-=========================================================================================================================================
---Get ROLE privileges II
-COL GRANTEE FOR A40
-COL PRIVILEGE FOR A30
-COL QTY FOR 9999999
-SELECT GRANTEE, PRIVILEGE, COUNT(*) QTY
-FROM DBA_TAB_PRIVS 
-WHERE GRANTEE IN ('CERTO2_EXTRACT_ROLE_RO','CERTO2_EXTRACT_SELECT') 
-GROUP BY GRANTEE, PRIVILEGE 
-ORDER BY 1,2;
 =========================================================================================================================================
 --Get user privileges by object:
 COL USERNAME FOR A15
@@ -257,108 +234,3 @@ set echo off
 --HOST uuencode ${&1}_user_info.log ${&1}_user_info.log | mailx -s "user" rafael.oliveira@t-mobile.com
 
 UNDEFINE 1;
-
-=========================================================================================================================================
-PROMPT ##############################################################################################################
-prompt -- Version 20250304 ---List all privileges and permissions given to a user
-/*
-RUN THE FOLLOWING TO UPDATE IT
-
-host rm up.sql
-host vi up.sql
-
-rm /oracle/g01/admin/common/sqltoolkit/up.sql
-vi /oracle/g01/admin/common/sqltoolkit/up.sql
-
-host rm /oracle/g01/admin/common/sqltoolkit/up.sql.old
-host mv /oracle/g01/admin/common/sqltoolkit/up.sql /oracle/g01/admin/common/sqltoolkit/up.sql.old
-host vi /oracle/g01/admin/common/sqltoolkit/up.sql
-
-
-*/
-@afor
-
-ALTER SESSION SET NLS_DATE_FORMAT = 'DD-Mon-YYYY HH24:MI:SS';
-
-accept enter_username prompt 'Add the user name: '
-
-
-SET LINE 300 pages 500 verify off
-select
-  lpad(' ', 2*level) || granted_role "User, his roles and privileges"
-from
-  (
-  /* THE USERS */
-    select
-      null     grantee,
-      username granted_role
-    from
-      dba_users
-    where
-      username like upper('&enter_username')
-  /* THE ROLES TO ROLES RELATIONS */
-  union
-    select
-      grantee,
-      granted_role
-    from
-      dba_role_privs
-  /* THE ROLES TO PRIVILEGE RELATIONS */
-  union
-    select
-      grantee,
-      privilege
-    from
-      dba_sys_privs
-  )
-start with grantee is null
-connect by grantee = prior granted_role;
-
-
-
-
-prompt #############################################################################################################################################################################
-prompt #SYS PRIVS BY USER:
-
-col PRIVILEGE for a40
-
-SELECT * FROM dba_sys_privs WHERE GRANTEE like upper('&enter_username') ORDER BY GRANTEE, PRIVILEGE;
-
-
-prompt ############################################################################################################################################################################
-prompt #OBJECTS PRIVS BY USER:
-
-COL GRANTEE FOR A25
-COL OWNER  FOR A15
-COL GRANTOR  FOR A15
-COL TABLE_NAME FOR A30
-COL PRIVILEGE FOR A15
-SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE like upper('&enter_username') ORDER BY GRANTEE, OWNER,TABLE_NAME, PRIVILEGE;
-
-
-prompt #############################################################################################################################################################################
-prompt ###ROLE PRIVS BY USER:
-
-
-SELECT *
-FROM dba_role_privs where
-GRANTEE like upper('&enter_username') ORDER BY GRANTEE, GRANTED_ROLE;
-
-prompt -- Do you want to see the list of permissions on all objects? Press ENTER If YES
-set pause     on
-set pagesize  30
-set pause     'Press ENTER for more rows... '
-
-prompt ##############################################################################################################################################################################
-prompt #OBJECTS PRIVS BY ROLE:
-
-
-
-COL GRANTEE FOR A25
-COL OWNER  FOR A15
-COL GRANTOR  FOR A15
-COL TABLE_NAME FOR A30
-COL PRIVILEGE FOR A15
-SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE IN (SELECT GRANTED_ROLE
-FROM dba_role_privs where
-GRANTEE like upper('&enter_username')) ORDER BY GRANTEE, OWNER, TABLE_NAME, PRIVILEGE;

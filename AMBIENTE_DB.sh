@@ -95,3 +95,6 @@ bash
 echo ""
 echo "Use \". oraenv\" to setup the ORACLE environment."
 echo ""
+
+
+export PS1='[\u(${LOGNAME})@\h:\[\e[01;31m$ORACLE_SID\e[m\]:$PWD]
