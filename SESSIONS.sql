@@ -103,22 +103,47 @@ ORDER BY 1;
 SET HEADING ON
 =========================================================================================================================================
 --DISCONNECT SESSIONS
-SET HEADING OFF
 SELECT 'ALTER SYSTEM DISCONNECT SESSION '''||SID||','||SERIAL#||',@'||INST_ID||''' IMMEDIATE;'
 FROM GV$SESSION
 WHERE PROCESS NOT LIKE ('%BACKGROUND')
-AND USERNAME IN ('DBSNMP')
+--AND USERNAME IN ('DBSNMP')
 --AND OSUSER IN ('AWahla1')
 --AND OSUSER NOT IN ('ORACLE','SISTEMA')
 --AND MACHINE IN ('HOSPLACI\WEKNOW-TESTE')
 --AND MACHINE NOT IN ('HMRT\SERVER_DELL')
 --AND STATUS IN ('ACTIVE','KILLED')
---AND SID IN (1327)
+AND SID IN (608)
 --AND SERIAL# IN (3072)
 --AND STATUS IN ('INACTIVE')
---AND SQL_ID ='b3dxha9tuhbur'
+--AND SQL_ID ='5zank7smp0mdw'
 ORDER BY 1;
-SET HEADING ON
+=========================================================================================================================================
+COL INST FOR A4
+COL USERNAME FOR A20
+SELECT TO_CHAR(INST_ID) INST, SID, SERIAL#, USERNAME, STATUS, TO_CHAR(LOGON_TIME,'DD-MM-YY HH:MI:SS') "LOGON", FLOOR(LAST_CALL_ET/3600)||':'|| TO_CHAR(FLOOR(MOD(LAST_CALL_ET,3600)/60),'FM00')||':'|| TO_CHAR(MOD(MOD(LAST_CALL_ET,3600),60),'FM00') "IDLE", PROGRAM
+FROM GV$SESSION
+WHERE TYPE='USER'
+--AND USERNAME IN ('LLPTL','LL8SD')
+ORDER BY LAST_CALL_ET;
+==========================================================================================================
+-- COUNT SESSIONS AND PROCESSES:
+COL INST FOR A4
+COL RESOURCE FOR A15
+COL "CURRENT (LIMIT)" FOR A20
+COL PCT_USED FOR A10
+SELECT TO_CHAR(INST_ID) INST, RESOURCE_NAME "RESOURCE", TO_CHAR(CURRENT_UTILIZATION) ||' ('|| TO_CHAR(LTRIM(LIMIT_VALUE)) ||')' "CURRENT (LIMIT)" , ROUND(CURRENT_UTILIZATION/LIMIT_VALUE*100,2)||'%' PCT_USED
+FROM GV$RESOURCE_LIMIT
+WHERE RESOURCE_NAME IN ( 'sessions', 'processes')
+ORDER BY INST;
+==========================================================================================================
+SELECT TADDR, STATUS, SID, SERIAL#, LAST_CALL_ET FROM GV$SESSION
+WHERE TADDR IN ( SELECT TADDR FROM GV$SESSION WHERE STATUS='KILLED' )
+ORDER BY 1,2 DESC ,3;
+==========================================================================================================
+SELECT s.sid, s.serial#, p.spid
+FROM v$process p, v$session s
+WHERE p.addr = s.paddr
+AND s.username IN ('LLPTL','LL8SD');
 =========================================================================================================================================
 -- Kill sessions AWS
 BEGIN
@@ -131,11 +156,11 @@ END;
 =========================================================================================================================================
 -- Check Session Details
 COL NODE FOR 99
-COL FROM_WHERE FOR A35
+COL FROM_WHERE FOR A20
 COL SID_SER FOR A12
 COL PROGRAM FOR A35
-COL OSUSER FOR A12
-COL SQL_TEXT FOR A110
+COL OSUSER FOR A10
+COL SQL_TEXT FOR A60
 SELECT INST_ID NODE,SID||','||SERIAL# SID_SER,SQL_ID,STATUS,SCHEMANAME||'@'||SERVICE_NAME FROM_WHERE,
 OSUSER,PROGRAM,NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') "SQL_TEXT",
 BLOCKING_SESSION,TO_CHAR(LOGON_TIME) FROM_WHEN
@@ -145,8 +170,9 @@ WHERE TYPE IN ('USER')
 --AND PROGRAM NOT LIKE ('JDBC Thin Client')
 --AND SCHEMANAME LIKE ('%CHUB_CDES_USER%')
 --AND SQL_ID IN ('7tusdy1ryjdc1','3tzpp57r4349s')
---AND SID IN (726)
---AND "SQL_TEXT" LIKE 'CREATE_TABLE%'
+--AND SID IN (1419)
+--AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') NOT LIKE '%NOTHING GOING ON%'
+--AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') LIKE '%NOTHING GOING ON%'
 --AND SCHEMANAME = 'BPMS_APP'
 ORDER BY STATUS,OSUSER,PROGRAM;
 =========================================================================================================================================
@@ -155,12 +181,14 @@ COL NODE FOR 99
 COL FROM_WHERE FOR A35
 COL SID_SER FOR A12
 COL PROGRAM FOR A40
-COL OSUSER FOR A10
+COL OSUSER FOR A20
 SELECT INST_ID NODE,SID||','||SERIAL# SID_SER,SQL_ID,STATUS,SCHEMANAME||'@'||SERVICE_NAME FROM_WHERE,OSUSER,PROGRAM,BLOCKING_SESSION,TO_CHAR(LOGON_TIME) FROM_WHEN
 FROM GV$SESSION SES
 WHERE TYPE = 'USER'
 --AND SID IN (1)
 --AND SCHEMANAME = 'CDE_READ'
+--AND SQL_ID in ('5zank7smp0mdw')
+--AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') NOT LIKE '%NOTHING GOING ON%'
 ORDER BY STATUS,OSUSER,PROGRAM;
 =========================================================================================================================================
 -- GET USERS SESSION HISTORY
@@ -244,7 +272,7 @@ AND L.SID = S.SID
 --AND L.SQL_ID IN ('7tusdy1ryjdc1','3tzpp57r4349s')
 --AND L.SQL_ID IN ('3rygh6yzars7s')
 --AND L.SQL_ID IN ('4n1udt8zhbqzb','6r5pu2yrvd31q')
---AND L.SQL_ID ='7xbzd7fp3w3xn'
+AND L.SQL_ID ='06qfyvc40kv03'
 --AND S.SID IN (279,1094,349,385,387,392,442,828,829,877,880,911,912,935,970,977,1000,1050,1085,1089,302)
 AND SOFAR != TOTALWORK;
 =========================================================================================================================================
@@ -358,7 +386,7 @@ COL "WAITER" FOR A11
 COL "CLASS" FOR A20
 COL "WAIT" FOR 999999
 COL PROCESS FOR A10
-COL PROGRAM FOR A20
+COL PROGRAM FOR A40
 COL USERNAME FOR A20
 COL OSUSER FOR A20
 SELECT SID || ',' || SERIAL# "SID/SER", BLOCKING_SESSION as "HOLDER",BLOCKING_SESSION_STATUS "H_STATUS",SID || ',' || SERIAL# "WAITER",
@@ -395,7 +423,8 @@ GROUP BY USERNAME,MACHINE,STATUS
 ORDER BY MACHINE, STATUS;
 =========================================================================================================================================
 --Check ACTIVE Session Count from users:
-COL PROGRAM FOR A20
+COl USERNAME FOR A30
+COL PROGRAM FOR A40
 COL OSUSER FOR A15
 COL INST FOR A4
 COL SID FOR A5
@@ -404,7 +433,7 @@ COL MACHINE FOR A15
 SELECT USERNAME,TO_CHAR(INST_ID) INST,TO_CHAR(SID) SID,MACHINE,PROGRAM,LOGON_TIME,OSUSER,SQL_ID 
 FROM GV$SESSION 
 WHERE STATUS='ACTIVE' 
-AND USERNAME='CDE';
+AND USERNAME='DPOWNERA';
 =========================================================================================================================================
 --Currently active SQL:
 COL SQL_TEXT FOR A100
