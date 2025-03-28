@@ -88,7 +88,8 @@ ps -ef | grep pmon | grep -v grep | awk '{ print $8 }' | cut -d '_' -f3
 export ORACLE_SID=`ps -ef | grep ora_pmon | grep -v grep | awk '{ print $8 }' | cut -d '_' -f3`
 
 # Terminal Settings
-export PS1='[\u(${LOGNAME})@\h:\[\e[01;31m$ORACLE_SID\e[m\]:$PWD]\$ '
+export PS1='[\u(\[\e[33m\]${LOGNAME}\[\e[m\])@\h:\[\e[01;31m$ORACLE_SID\e[m\]:$PWD]
+$ '
 bash
 
 echo ""
