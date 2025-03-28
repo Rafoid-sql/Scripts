@@ -41,6 +41,15 @@ export PATH=$PATH:$ORACLE_HOME/bin:/usr/local/bin
 . oraenv
 sqlplus ROLIVEI4/"JGDAcNb5wXK8B2#!SReWj6TLmhqdpg"
 sqlplus ROLIVEI4/"reEHheGG_Gn55fb_HWasVPlnYNouMO"
+
+sqlplus ROLIVEI4/"pcN2daWR_Bk89kq_QQrgZGjcZKaeDW"
+=========================================================================================================================================
+--SET OEM AGENT HOME TO CHECK STATUS:
+--ORACLE_HOME=$AGENT_HOME
+export ORACLE_HOME=/db01/static/app/oracle/agent13c/agent_13.4.0.0.0/
+export ORACLE_HOME=/orasw/static/app/oracle/agent13c/agent_13.4.0.0.0/
+export PATH=$ORACLE_HOME/bin:$PATH
+emctl status agent
 =========================================================================================================================================
 --SEND EMAIL FROM AIX SERVER
 uuencode listener_pcdep.log listener_pcdep.log | mailx -s "listener_pcdep.log" rafael.oliveira@t-mobile.com
@@ -106,13 +115,6 @@ srvctl stop asm -f
 sudo crsctl stop has
  
 srvctl start asm -f
-=========================================================================================================================================
---SET OEM AGENT HOME TO CHECK STATUS:
---ORACLE_HOME=$AGENT_HOME
-export ORACLE_HOME=/db01/static/app/oracle/agent13c/agent_13.4.0.0.0/
-export ORACLE_HOME=/orasw/static/app/oracle/agent13c/agent_13.4.0.0.0/
-export PATH=$ORACLE_HOME/bin:$PATH
-emctl status agent
 =========================================================================================================================================
 --Find Alertlog:
 select value from v$diag_info where name like '%Trace%';
