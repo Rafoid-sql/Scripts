@@ -234,3 +234,108 @@ set echo off
 --HOST uuencode ${&1}_user_info.log ${&1}_user_info.log | mailx -s "user" rafael.oliveira@t-mobile.com
 
 UNDEFINE 1;
+
+=========================================================================================================================================
+PROMPT ##############################################################################################################
+prompt -- Version 20250304 ---List all privileges and permissions given to a user
+/*
+RUN THE FOLLOWING TO UPDATE IT
+
+host rm up.sql
+host vi up.sql
+
+rm /oracle/g01/admin/common/sqltoolkit/up.sql
+vi /oracle/g01/admin/common/sqltoolkit/up.sql
+
+host rm /oracle/g01/admin/common/sqltoolkit/up.sql.old
+host mv /oracle/g01/admin/common/sqltoolkit/up.sql /oracle/g01/admin/common/sqltoolkit/up.sql.old
+host vi /oracle/g01/admin/common/sqltoolkit/up.sql
+
+
+*/
+@afor
+
+alter session set nls_date_format = 'DD-Mon-YYYY HH24:MI:SS';
+
+accept enter_username prompt 'Add the user name: '
+
+
+SET LINE 300 pages 500 verify off
+select
+  lpad(' ', 2*level) || granted_role "User, his roles and privileges"
+from
+  (
+  /* THE USERS */
+    select
+      null     grantee,
+      username granted_role
+    from
+      dba_users
+    where
+      username like upper('&enter_username')
+  /* THE ROLES TO ROLES RELATIONS */
+  union
+    select
+      grantee,
+      granted_role
+    from
+      dba_role_privs
+  /* THE ROLES TO PRIVILEGE RELATIONS */
+  union
+    select
+      grantee,
+      privilege
+    from
+      dba_sys_privs
+  )
+start with grantee is null
+connect by grantee = prior granted_role;
+
+
+
+
+prompt #############################################################################################################################################################################
+prompt #SYS PRIVS BY USER:
+
+col PRIVILEGE for a40
+
+SELECT * FROM dba_sys_privs WHERE GRANTEE like upper('&enter_username') ORDER BY GRANTEE, PRIVILEGE;
+
+
+prompt ############################################################################################################################################################################
+prompt #OBJECTS PRIVS BY USER:
+
+COL GRANTEE FOR A25
+COL OWNER  FOR A15
+COL GRANTOR  FOR A15
+COL TABLE_NAME FOR A30
+COL PRIVILEGE FOR A15
+SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE like upper('&enter_username') ORDER BY GRANTEE, OWNER,TABLE_NAME, PRIVILEGE;
+
+
+prompt #############################################################################################################################################################################
+prompt ###ROLE PRIVS BY USER:
+
+
+SELECT *
+FROM dba_role_privs where
+GRANTEE like upper('&enter_username') ORDER BY GRANTEE, GRANTED_ROLE;
+
+prompt -- Do you want to see the list of permissions on all objects? Press ENTER If YES
+set pause     on
+set pagesize  30
+set pause     'Press ENTER for more rows... '
+
+prompt ##############################################################################################################################################################################
+prompt #OBJECTS PRIVS BY ROLE:
+
+
+
+COL GRANTEE FOR A25
+COL OWNER  FOR A15
+COL GRANTOR  FOR A15
+COL TABLE_NAME FOR A30
+COL PRIVILEGE FOR A15
+SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE IN (SELECT GRANTED_ROLE
+FROM dba_role_privs where
+GRANTEE like upper('&enter_username')) ORDER BY GRANTEE, OWNER, TABLE_NAME, PRIVILEGE;
