@@ -100,7 +100,6 @@ stop_blackout_agent.sh
 
 -- PARAR
 /nfs/infra/oracle/scripts/maintenance/stop_blackout_agent_indefinite.sh
-
 =========================================================================================================================================
 --ENABLE/DISABLE NPE HUNGDB
 --DISABLE
@@ -108,6 +107,9 @@ stop_blackout_agent.sh
 
 -- ENABLE
 /nfs/infra/oracle/scripts/maintenance/enable_npe_hungdb.sh
+=========================================================================================================================================
+--CHECK MRP STATUS
+SELECT STATUS FROM V$MANAGED_STANDBY WHERE PROCESS='MRP0';
 =========================================================================================================================================
 . oraenv (+ASMx)
  
