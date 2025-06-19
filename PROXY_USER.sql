@@ -22,14 +22,7 @@ USER is "ADM_QLAB01"
 SQL>
 
 
-
-
-
-
-
-
-
-
-
-
-
+sqlplus [SCMSA_ABC]/@qadp06_aws
+sqlplus [SCMSA_ABC]/@qids06_aws
+sqlplus [SCMSA_ABC]/@qsaa06_aws
+sqlplus [SCMSA_ABC]/@qsaaup06_aws

@@ -39,7 +39,7 @@ sudo -u oracle /orasw/static/oradba/sysoper/bin/sysopermenu.sh pratp11
 export ORACLE_HOME=/orasw/app/oracle/product/19/db
 export PATH=$PATH:$ORACLE_HOME/bin:/usr/local/bin
 . oraenv
-sqlplus ROLIVEI4/"JGDAcNb5wXK8B2#!SReWj6TLmhqdpg"
+sqlplus ROLIVEI4/"a97U5Yc38zTAHd_DQZ#p6!GxrLtkhB"
 sqlplus ROLIVEI4/"reEHheGG_Gn55fb_HWasVPlnYNouMO"
 
 sqlplus ROLIVEI4/"pcN2daWR_Bk89kq_QQrgZGjcZKaeDW"
