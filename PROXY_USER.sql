@@ -1,7 +1,7 @@
 qatpaadmx0003:qadmp3:/home/oracle>sqlplus / as sysdba
 
 alter user ADM_QLAB01 grant connect through OPS$ORACLE;
-alter user ADM grant connect through OPS$ORACLE;
+alter user ADM_QLAB02_VIEW grant connect through OPS$ORACLE;
 alter user ADM_ZLAB10 grant connect through OPS$ORACLE;
 alter user ADM_QLAB07 grant connect through OPS$ORACLE;
 
@@ -22,7 +22,7 @@ USER is "ADM_QLAB01"
 SQL>
 
 
-sqlplus [SCMSA_ABC]/@qadp06_aws
-sqlplus [SCMSA_ABC]/@qids06_aws
+sqlplus [VSTAPPO]/@qadp06_aws
+sqlplus [SPRINT_COMM]/@qids06_aws
 sqlplus [SCMSA_ABC]/@qsaa06_aws
 sqlplus [SCMSA_ABC]/@qsaaup06_aws

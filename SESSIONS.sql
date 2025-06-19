@@ -112,10 +112,10 @@ WHERE PROCESS NOT LIKE ('%BACKGROUND')
 --AND MACHINE IN ('HOSPLACI\WEKNOW-TESTE')
 --AND MACHINE NOT IN ('HMRT\SERVER_DELL')
 --AND STATUS IN ('ACTIVE','KILLED')
---AND SID IN (1917)
+AND SID IN (1269,1122)
 --AND SERIAL# IN (3072)
 --AND STATUS IN ('INACTIVE')
-AND SQL_ID ='988n7bnzhmqa7'
+--AND SQL_ID ='988n7bnzhmqa7'
 ORDER BY 1;
 =========================================================================================================================================
 -- Kill sessions AWS

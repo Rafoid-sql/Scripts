@@ -3,8 +3,8 @@ ALTER SESSION SET NLS_DATE_FORMAT='DD-MON-YYYY HH24:MI:SS';
 SET LINES 280 PAGESIZE 1000 LONG 15000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPOOL ON UNDERLINE =
 =========================================================================================================================================
 --Create grant list for user:
-SELECT 'GRANT SELECT,INSERT,UPDATE,DELETE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO MSDP2_RW;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='MSDP2';
-SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO ROLE_RO_DGIAUUOCS1B;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE','VIEW') AND OWNER='OPS$DGIAUUOCS1B';
+SELECT 'GRANT SELECT,INSERT,UPDATE,DELETE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO APUPPAL1;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='ADM';
+SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO ABALAJI1;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE','VIEW') AND OWNER='ADM';
 SELECT 'GRANT EXECUTE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO CDES1_EXECUTE_PROCEDURES;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('PROCEDURE') AND OWNER='CDES1';
 =========================================================================================================================================
 --Get grants from user to apply to another:
@@ -15,6 +15,15 @@ SELECT 'GRANT '||PRIVILEGE||' ON '||GRANTOR||'.'||TABLE_NAME||' TO '||GRANTEE||'
 UNION ALL
 SELECT 'GRANT '||GRANTED_ROLE||' TO '||GRANTEE||';' FROM DBA_ROLE_PRIVS WHERE GRANTEE IN UPPER('&&user')
 ORDER BY 1);
+
+UNDEFINE user;
+=========================================================================================================================================
+--Count user privileges
+SELECT PRIVILEGE,COUNT(PRIVILEGE) QTY FROM DBA_SYS_PRIVS WHERE GRANTEE='&&USER' GROUP BY PRIVILEGE
+UNION ALL
+SELECT PRIVILEGE,COUNT(PRIVILEGE) QTY FROM DBA_TAB_PRIVS WHERE GRANTEE='&&USER' GROUP BY PRIVILEGE
+UNION ALL
+SELECT GRANTED_ROLE as PRIVILEGE,COUNT(GRANTED_ROLE) QTY FROM DBA_ROLE_PRIVS WHERE GRANTEE='&&USER' GROUP BY GRANTED_ROLE;
 
 UNDEFINE user;
 =========================================================================================================================================
