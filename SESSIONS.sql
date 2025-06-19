@@ -108,14 +108,18 @@ FROM GV$SESSION
 WHERE PROCESS NOT LIKE ('%BACKGROUND')
 --AND USERNAME IN ('JETSPEED')
 --AND OSUSER IN ('WO614718')
---AND OSUSER NOT IN ('ORACLE','SISTEMA')
 --AND MACHINE IN ('HOSPLACI\WEKNOW-TESTE')
---AND MACHINE NOT IN ('HMRT\SERVER_DELL')
 --AND STATUS IN ('ACTIVE','KILLED')
+<<<<<<< Updated upstream
 AND SID IN (1269,1122)
 --AND SERIAL# IN (3072)
 --AND STATUS IN ('INACTIVE')
 --AND SQL_ID ='988n7bnzhmqa7'
+=======
+--AND SID IN (1269,1122)
+--AND SERIAL# IN (23578)
+AND SQL_ID ='cdn4mspna1f6p'
+>>>>>>> Stashed changes
 ORDER BY 1;
 =========================================================================================================================================
 -- Kill sessions AWS
@@ -143,8 +147,8 @@ WHERE TYPE IN ('USER')
 --AND PROGRAM NOT LIKE ('JDBC Thin Client')
 --AND SCHEMANAME LIKE ('%CHUB_CDES_USER%')
 --AND SQL_ID IN ('dgytuaxr0cdvc','bdpcpuysqd1ys','28fwjgz83nbyu')
-AND SID IN (2680,2109,1921,2300,1733,1527,1717,1337,582,2470)
---AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') LIKE '%T_CVM_SUB_INACTIVITY%'
+AND SID IN (1948)
+AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') NOT LIKE '%NOTHING GOING ON%'
 --AND SCHEMANAME = 'MONITOR'
 ORDER BY STATUS,OSUSER,PROGRAM;
 =========================================================================================================================================
@@ -157,7 +161,7 @@ COL OSUSER FOR A20
 SELECT INST_ID NODE,SID||','||SERIAL# SID_SER,SQL_ID,STATUS,SCHEMANAME||'@'||SERVICE_NAME FROM_WHERE,OSUSER,PROGRAM,BLOCKING_SESSION,TO_CHAR(LOGON_TIME) FROM_WHEN
 FROM GV$SESSION SES
 WHERE TYPE = 'USER'
-AND SID IN (2680,2109,1921,2300,1733,1527,1717,1337,582,2470)
+--AND SID IN (2680,2109,1921,2300,1733,1527,1717,1337,582,2470)
 --AND SCHEMANAME = 'RECON'
 ORDER BY STATUS,OSUSER,PROGRAM;
 =========================================================================================================================================
@@ -197,6 +201,17 @@ AND S.END_INTERVAL_TIME <= SYSDATE
 --AND S.SNAP_ID = RL.SNAP_ID AND RL.RESOURCE_NAME = 'processes'
 AND S.SNAP_ID = RL.SNAP_ID AND RL.RESOURCE_NAME = 'sessions'
 ORDER BY S.BEGIN_INTERVAL_TIME, RL.INSTANCE_NUMBER;
+=========================================================================================================================================
+-- Check CURRENT processes/sessions:
+COL INST FOR 9999
+COL "RESOURCE" FOR A15
+COL "CURRENT" FOR 99999
+COL "MAX" FOR 99999
+COL "LIMIT" FOR 99999
+SELECT INST_ID AS INST,RESOURCE_NAME AS "RESOURCE", CURRENT_UTILIZATION AS "CURRENT", MAX_UTILIZATION AS "MAX", TO_NUMBER(LIMIT_VALUE) AS "LIMIT"
+FROM GV$RESOURCE_LIMIT 
+WHERE RESOURCE_NAME IN ('sessions', 'processes')
+ORDER BY 2;
 =========================================================================================================================================
 --Check OPEN_CURSORS
 SELECT SUM(A.VALUE) TOTAL_CUR, AVG(A.VALUE) AVG_CUR, MAX(A.VALUE) MAX_CUR, S.USERNAME, S.MACHINE
@@ -385,12 +400,13 @@ AND L.SID=V.SESSION_ID
 ORDER BY CTIME ASC;
 =========================================================================================================================================
 --Find locked objects:
+COL INST_ID FOR 9999
 COL OWNER FOR A30
 COL OBJECT_NAME FOR A40
 COL ORACLE_USERNAME FOR A30
 COL OS_USER_NAME FOR A30
-SELECT B.OWNER,B.OBJECT_NAME,A.ORACLE_USERNAME,A.OS_USER_NAME 
-FROM V$LOCKED_OBJECT A, DBA_OBJECTS B
+SELECT A.INST_ID,B.OWNER,B.OBJECT_NAME,A.ORACLE_USERNAME,A.OS_USER_NAME 
+FROM GV$LOCKED_OBJECT A, DBA_OBJECTS B
 WHERE A.OBJECT_ID=B.OBJECT_ID;
 =========================================================================================================================================
 --Blocking sessions:
@@ -400,7 +416,7 @@ COL "WAITER" FOR A11
 COL "CLASS" FOR A20
 COL "WAIT" FOR 999999
 COL PROCESS FOR A10
-COL PROGRAM FOR A25
+COL PROGRAM FOR A35
 COL USERNAME FOR A20
 COL OSUSER FOR A20
 SELECT SID || ',' || SERIAL# "SID/SER", BLOCKING_SESSION as "HOLDER",BLOCKING_SESSION_STATUS "H_STATUS",SID || ',' || SERIAL# "WAITER",
@@ -487,9 +503,10 @@ COL UNITS FOR A6
 COL SQL_PLAN_OPTIONS FOR A15
 COL SQL_PLAN_OPERATION FOR A15
 SELECT ROUND(SOFAR/TOTALWORK*100,2) "%_COMP", ''||SID||','||SERIAL#||'' "SID/SER", OPNAME, TARGET,''||SOFAR||'/'||TOTALWORK||'' "SOFAR/TOTAL", TO_CHAR(START_TIME, 'dd/mm/yy HH24:MI:SS') "START", TO_CHAR(LAST_UPDATE_TIME, 'dd/mm/yy HH24:MI:SS') "LAST_UPD", ''||ELAPSED_SECONDS||'/'||TIME_REMAINING||'' "ELAP/REMAIN", MESSAGE, USERNAME, SQL_ID, SQL_PLAN_OPERATION, SQL_PLAN_OPTIONS
-FROM V$SESSION_LONGOPS
+FROM GV$SESSION_LONGOPS
 WHERE SOFAR <> TOTALWORK
-AND SID='857'
+--AND SID='1948'
+AND SQL_ID='4xbr7xgkc22ny'
 ORDER BY TARGET,SID;
 =========================================================================================================================================
 -- USERS SESSION HISTORY:

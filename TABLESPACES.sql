@@ -11,6 +11,10 @@ ROUND((TBM.TABLESPACE_SIZE-TBM.USED_SPACE) * TB.BLOCK_SIZE/(1024*1024*1024),2) "
 TBM.USED_PERCENT AS "%FULL"
 FROM DBA_TABLESPACE_USAGE_METRICS TBM
 JOIN DBA_TABLESPACES TB ON TB.TABLESPACE_NAME = TBM.TABLESPACE_NAME
+<<<<<<< Updated upstream
+=======
+WHERE TBM.TABLESPACE_NAME in ('UNDOTBS1','UNDOTBS2')
+>>>>>>> Stashed changes
 ORDER BY "%FULL" ASC;
 =========================================================================================================================================
 --UNDO SPACE USAGE
@@ -26,7 +30,7 @@ FROM V$SQL
 WHERE ROWS_PROCESSED > 10 AND UPPER(SQL_TEXT) NOT LIKE 'SELECT%' AND PARSING_USER_ID != 0 --IGNORE SYS AND COMMAND_TYPE != 47 --IGNORE PL/SQL
 ORDER BY ROWS_PROCESSED DESC;
 =========================================================================================================================================
---Check ALL tableapace size I
+--Check ALL tablespace size I
 COL TABLESPACE FOR A30
 COL TOTAL_MB FOR 999,999,999.99
 COL USED_MB FOR 999,999,999,999.99
@@ -54,7 +58,7 @@ FROM V$TEMP_SPACE_HEADER SH
 GROUP BY TABLESPACE_NAME
 ORDER BY 6;
 =========================================================================================================================================
---Check ALL tableapace size II
+--Check ALL tablespace size II
 COL TABLESPACE FOR A30
 COL STATUS FOR A10
 COL "BIGFILE?" FOR A10

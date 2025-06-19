@@ -35,3 +35,9 @@ AND P.OPERATION LIKE 'TABLE%'
 AND P.SQL_ID = S.SQL_ID 
 GROUP BY P.OBJECT_OWNER, P.OBJECT_NAME, P.OPERATION, P.OPTIONS 
 ORDER BY 1,2,3;````````````````````
+=========================================================================================================================================
+--Check Tables size:
+SELECT SEGMENT_NAME,SEGMENT_TYPE, SUM(BYTES/1024/1024/1024) GB
+FROM DBA_SEGMENTS
+WHERE SEGMENT_NAME='UNRECONCILED_DISTRIBUTION_FACT' 
+GROUP BY SEGMENT_NAME,SEGMENT_TYPE; 

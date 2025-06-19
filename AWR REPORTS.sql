@@ -29,13 +29,13 @@ set longchunksize 65536
 DECLARE
   l_sql_tune_task_id  VARCHAR2(100);
 BEGIN
-	l_sql_tune_task_id := DBMS_SQLTUNE.create_tuning_task (
+	l_sql_tune_task_id := DBMS_SQLTUNE.create_Tuning_task (
 						begin_snap	=> &&begin_snap,
 						end_snap	=> &&end_snap,
 						sql_id      => '&&sql_id',
 						scope       => DBMS_SQLTUNE.scope_comprehensive,
 						time_limit  => 6000,
-						task_name   => 'Tuning_&&sql_id',
+						task_name   => 'Tuning_2_&&sql_id',
 						description => 'Tuning task for statement &&sql_id .');
 	DBMS_OUTPUT.put_line('l_sql_tune_task_id: ' || l_sql_tune_task_id);
 END;
@@ -46,7 +46,7 @@ set lines 300
 set linesize 10000
 set long 65536
 set longchunksize 65536
-EXEC DBMS_SQLTUNE.execute_tuning_task(task_name => 'Tuning_&&sql_id');
+EXEC DBMS_SQLTUNE.execute_Tuning_task(task_name => 'Tuning_2_&&sql_id');
 /
 
 prompt --GENERATING THE REPORT:
@@ -54,7 +54,15 @@ set lines 300
 set linesize 10000
 set long 65536
 set longchunksize 65536
-select dbms_sqltune.report_tuning_task('Tuning_&&sql_id') from dual;
+SELECT DBMS_SQLTUNE.REPORT_Tuning_TASK('Tuning_2_&&sql_id') FROM DUAL;
 /
 
+prompt --DROPPING THE REPORT:
+set lines 300
+set linesize 10000
+set long 65536
+set longchunksize 65536
+EXEC DBMS_SQLTUNE.DROP_Tuning_TASK('Tuning_2_&&sql_id');
+
 spool off;
+
