@@ -40,8 +40,13 @@ SELECT C.USERNAME, A.SAMPLE_TIME, A.SQL_OPNAME, A.PROGRAM, A.MODULE, A.MACHINE, 
 FROM DBA_HIST_ACTIVE_SESS_HISTORY A, DBA_HIST_SQLTEXT B, DBA_USERS C
 WHERE A.SQL_ID = B.SQL_ID(+)
 AND A.USER_ID=C.USER_ID
+<<<<<<< Updated upstream
 AND C.USERNAME = ('&&user')
 AND A.SAMPLE_TIME = (SYSDATE - 15)
+=======
+--AND C.USERNAME = ('&&user')
+AND A.SAMPLE_TIME = (SYSDATE - 180)
+>>>>>>> Stashed changes
 ORDER BY A.SAMPLE_TIME ASC;
 
 SPOOL off;
@@ -70,11 +75,18 @@ COL MACHINE FOR A50
 SELECT C.USERNAME, A.SAMPLE_TIME, A.SQL_OPNAME, A.PROGRAM, A.MODULE, A.MACHINE
 FROM DBA_HIST_ACTIVE_SESS_HISTORY A, DBA_USERS C
 WHERE A.USER_ID=C.USER_ID
+<<<<<<< Updated upstream
 AND A.SAMPLE_TIME >= TRUNC(SYSDATE) - 1
 --AND A.SAMPLE_TIME >= TRUNC(SYSDATE) - 90
 AND A.SAMPLE_TIME <= TRUNC(SYSDATE)
 --AND C.USERNAME IN (SELECT USERNAME FROM DBA_USERS WHERE ORACLE_MAINTAINED='N')
 AND C.USERNAME IN ('UDMF_UI')
+=======
+AND A.SAMPLE_TIME >= TRUNC(SYSDATE) - 90
+AND A.SAMPLE_TIME <= TRUNC(SYSDATE)
+--AND C.USERNAME IN (SELECT USERNAME FROM DBA_USERS WHERE ORACLE_MAINTAINED='N')
+AND C.USERNAME IN ('BIMSOLN')
+>>>>>>> Stashed changes
 ORDER BY A.SAMPLE_TIME DESC;
 =========================================================================================================================================
 --CHECK OBJECTS WITHIN OBJECTS:
@@ -103,7 +115,11 @@ WHERE ACCOUNT_STATUS NOT IN ('OPEN', 'EXPIRED & LOCKED');
 COL "INST" FOR 99
 COL "SESSION" FOR 999999999
 COL DB_USER FOR A25
+<<<<<<< Updated upstream
 COL OS_USER FOR A20
+=======
+COL OS_USER FOR A15
+>>>>>>> Stashed changes
 COL OS_HOST FOR A35
 COL OS_PROCESS FOR 999999999
 COL EXTENDED_TIMESTAMP FOR A35
@@ -112,17 +128,24 @@ SELECT INST_ID AS "INST", SESSION_ID AS "SESSION", DB_USER, OS_USER, OS_HOST, OS
 FROM GV$XML_AUDIT_TRAIL
 WHERE RETURNCODE IN (1017,28000)
 AND  DB_USER='&&USER'
+<<<<<<< Updated upstream
 AND EXTENDED_TIMESTAMP > (SYSTIMESTAMP-1)
+=======
+AND EXTENDED_TIMESTAMP > (SYSTIMESTAMP-1/24)
+>>>>>>> Stashed changes
 --AND EXTENDED_TIMESTAMP > (SYSTIMESTAMP-15/1440)
 ORDER BY EXTENDED_TIMESTAMP ASC;
 
 UNDEFINE USER;
+<<<<<<< Updated upstream
 =========================================================================================================================================
 --Check Remaining LOCK time:
 COL USERNAME FOR A30
 SELECT username, account_status, lock_date, ROUND((SYSDATE - lock_date) * 1440, 2) AS minutes_locked, (SELECT limit * 1440 FROM dba_profiles WHERE profile = (SELECT profile FROM dba_users WHERE username = '&&USER') AND resource_name = 'PASSWORD_LOCK_TIME') - ROUND((SYSDATE - lock_date) * 1440, 2) AS minutes_remaining
 FROM dba_users
 WHERE username = '&&USER' AND account_status LIKE '%TIMED%';
+=======
+>>>>>>> Stashed changes
 =========================================================================================================================================
 --Check username II (11g-):
 COL USERNAME FOR A30

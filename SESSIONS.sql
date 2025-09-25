@@ -110,6 +110,7 @@ WHERE PROCESS NOT LIKE ('%BACKGROUND')
 --AND OSUSER IN ('WO614718')
 --AND MACHINE IN ('HOSPLACI\WEKNOW-TESTE')
 --AND STATUS IN ('ACTIVE','KILLED')
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 AND SID IN (887,31,752,1184)
 --AND SERIAL# IN (23578)
@@ -122,6 +123,11 @@ AND SID IN (32,56,187,529,762,895,919,1022,1042,1099,1128,1153,1204,1231,1252,13
 --AND SERIAL# IN (23578)
 --AND SQL_ID ='cdn4mspna1f6p'
 >>>>>>> cf9147faf9a479da9a2ee22206939e436b402eb1
+=======
+--AND SID IN (1269,1122)
+--AND SERIAL# IN (23578)
+AND SQL_ID ='cdn4mspna1f6p'
+>>>>>>> Stashed changes
 ORDER BY 1;
 =========================================================================================================================================
 -- Kill sessions AWS
@@ -148,6 +154,7 @@ WHERE TYPE IN ('USER')
 --AND OSUSER NOT IN ('weblogiccdes')
 --AND PROGRAM NOT LIKE ('JDBC Thin Client')
 --AND SCHEMANAME LIKE ('%CHUB_CDES_USER%')
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 --AND SQL_ID IN ('d3002tum8vkx5')
 AND SID IN (285)
@@ -157,6 +164,11 @@ AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID)
 AND SID IN (769,728)
 --AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') NOT LIKE '%NOTHING GOING ON%'
 >>>>>>> cf9147faf9a479da9a2ee22206939e436b402eb1
+=======
+--AND SQL_ID IN ('dgytuaxr0cdvc','bdpcpuysqd1ys','28fwjgz83nbyu')
+AND SID IN (1948)
+AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') NOT LIKE '%NOTHING GOING ON%'
+>>>>>>> Stashed changes
 --AND SCHEMANAME = 'MONITOR'
 ORDER BY STATUS,OSUSER,PROGRAM;
 =========================================================================================================================================
@@ -169,7 +181,11 @@ COL OSUSER FOR A20
 SELECT INST_ID NODE,SID||','||SERIAL# SID_SER,SQL_ID,STATUS,SCHEMANAME||'@'||SERVICE_NAME FROM_WHERE,OSUSER,PROGRAM,BLOCKING_SESSION,TO_CHAR(LOGON_TIME) FROM_WHEN
 FROM GV$SESSION SES
 WHERE TYPE = 'USER'
+<<<<<<< Updated upstream
 AND SID IN (769)
+=======
+--AND SID IN (2680,2109,1921,2300,1733,1527,1717,1337,582,2470)
+>>>>>>> Stashed changes
 --AND SCHEMANAME = 'RECON'
 ORDER BY STATUS,OSUSER,PROGRAM;
 =========================================================================================================================================
@@ -259,6 +275,7 @@ A.SQL_FULLTEXT, A.PARSING_SCHEMA_NAME "SCHEMA", A.MODULE CLIENT_TOOL, S.MACHINE
 FROM GV$SESSION_LONGOPS L, GV$SQLAREA A, GV$SESSION S
 WHERE TOTALWORK > 0 AND SOFAR != TOTALWORK AND L.SQL_ID = A.SQL_ID AND L.SQL_ID = S.SQL_ID AND L.SID = S.SID
 --AND A.USERS_EXECUTING > 0 
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 --AND L.SQL_ID IN '4xbr7xgkc22ny'
 --AND S.SID IN (810);
@@ -268,6 +285,10 @@ AND S.SQL_ID IN 'd3002tum8vkx5'
 --AND S.SID IN (769)
 ;
 >>>>>>> cf9147faf9a479da9a2ee22206939e436b402eb1
+=======
+AND L.SQL_ID IN '4xbr7xgkc22ny'
+--AND S.SID IN (810);
+>>>>>>> Stashed changes
 =========================================================================================================================================
 --Check time to finish II
 COL SID/SER  FOR A11
@@ -287,8 +308,13 @@ A.SQL_FULLTEXT, A.PARSING_SCHEMA_NAME "SCHEMA", A.MODULE CLIENT_TOOL, S.MACHINE
 FROM V$SESSION_LONGOPS L, V$SQLAREA A, V$SESSION S
 WHERE TOTALWORK > 0 AND SOFAR != TOTALWORK AND L.SQL_ID = A.SQL_ID AND L.SQL_ID = S.SQL_ID AND L.SID = S.SID
 --AND A.USERS_EXECUTING > 0 
+<<<<<<< Updated upstream
 --AND L.SQL_ID IN 'd3002tum8vkx5'
 AND S.SID IN (769);
+=======
+AND L.SQL_ID IN '4xbr7xgkc22ny'
+--AND S.SID IN (810);
+>>>>>>> Stashed changes
 =========================================================================================================================================
 --Check time to finish III
 SET LINES 280 PAGESIZE 1000
@@ -303,6 +329,7 @@ COL "%_COMP" FOR A6
 COL "T/S/R(min)" FOR A10
 SELECT S.INST_ID "INS", L.SID||','||L.SERIAL# "SID/SER", L.SQL_ID, UPPER(S.OSUSER)||':'||S.SCHEMANAME||'@'||S.SERVICE_NAME "SOURCE", SUBSTR(A.MODULE, 1, INSTR(A.MODULE || ' ', ' ') - 1) "CLIENT_TOOL", LAST_CALL_ET LAST_CALL, OPNAME "TARGET", TO_CHAR(S.LOGON_TIME,'MON-DD HH24:MI:SS') "LOGON_TIME", TO_CHAR(START_TIME,'MON-DD HH24:MI:SS') "START_TIME", TO_CHAR(ROUND((SOFAR/TOTALWORK),4)*100) "%_COMP", CEIL((ELAPSED_SECONDS+TIME_REMAINING)/60) || '/' || FLOOR(ELAPSED_SECONDS/60) || '/' || CEIL(TIME_REMAINING/60) "T/S/R(min)"
 FROM GV$SESSION S, GV$SESSION_LONGOPS L, GV$SQLAREA A
+<<<<<<< Updated upstream
 WHERE L.SQL_ID = A.SQL_ID AND L.SQL_ID = S.SQL_ID AND L.SID = S.SID AND TYPE = 'USER' AND TOTALWORK > 0 AND SOFAR != TOTALWORK
 --AND L.SQL_ID = 'd3002tum8vkx5'
 AND S.SQL_ID = 'd3002tum8vkx5'
@@ -329,6 +356,11 @@ JOIN GV$SQLAREA SA ON SL.SQL_ID = SA.SQL_ID
 WHERE TYPE = 'USER' AND SE.SID IN (769,728)
 )
 WHERE "%_COMP" <> 100
+=======
+WHERE L.SQL_ID = A.SQL_ID AND L.SQL_ID = S.SQL_ID AND L.SID = S.SID AND TYPE = 'USER' AND TOTALWORK > 0 AND AND SOFAR != TOTALWORK
+--AND L.SQL_ID = '4xbr7xgkc22ny'
+AND S.SID IN (1948)
+>>>>>>> Stashed changes
 ORDER BY STATUS, OSUSER, PROGRAM;
 =========================================================================================================================================
 COL SID/SER  FOR A11

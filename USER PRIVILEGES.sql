@@ -3,11 +3,17 @@ ALTER SESSION SET NLS_DATE_FORMAT='DD-MON-YYYY HH24:MI:SS';
 SET LINES 280 PAGESIZE 1000 LONG 15000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPOOL ON UNDERLINE =
 =========================================================================================================================================
 --Create grant list for user:
+<<<<<<< Updated upstream
 SELECT 'GRANT SELECT,INSERT,UPDATE,DELETE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO AKATIYA7;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='ADM_QLAB01';
 SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO ADM_RO;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE','VIEW') AND OWNER='ADM';
 SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO PBALASW1;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('VIEW') AND OWNER='ADM_QLAB01';
 SELECT 'GRANT EXECUTE,DEBUG ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO AKATIYA7;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('PROCEDURE') AND OWNER='ADM';
 SELECT 'GRANT EXECUTE,DEBUG ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO AKATIYA7;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('PROCEDURE','PACKAGE','PACKAGE BODY','FUNCTION') AND OWNER='ADM_QLAB01';
+=======
+SELECT 'GRANT SELECT,INSERT,UPDATE,DELETE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO APUPPAL1;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='ADM';
+SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO ADM_RO;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='ADM';
+SELECT 'GRANT EXECUTE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO CDES1_EXECUTE_PROCEDURES;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('PROCEDURE') AND OWNER='CDES1';
+>>>>>>> Stashed changes
 =========================================================================================================================================
 --Get grants from user to apply to another:
 SELECT * FROM (
