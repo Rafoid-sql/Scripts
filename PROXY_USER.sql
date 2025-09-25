@@ -7,8 +7,11 @@ alter user ADM_QLAB02_VIEW grant connect through OPS$ORACLE;
 alter user ADM_QLAB02_VIEW grant connect through OPS$ORACLE;
 alter user ADM_VIEW grant connect through OPS$ORACLE;
 >>>>>>> Stashed changes
-alter user ADM_ZLAB10 grant connect through OPS$ORACLE;
+alter user ADM_ZLAB10 grant connect through  
 alter user ADM_QLAB07 grant connect through OPS$ORACLE;
+
+
+ALTER USER ASHETTY13 REVOKE CONNECT THROUGH OPS$ORACLE;
 
 User altered.
 
@@ -29,8 +32,8 @@ SQL>
 
 
 <<<<<<< Updated upstream
-sqlplus [VSTAPPO]/@qadp06_aws
-sqlplus [SPRINT_COMM]/@qids06_aws
+sqlplus [SCMSA_ABC]/@qadp06_aws
+sqlplus [SCMSA_HIST]/@qids06_aws
 sqlplus [SCMSA_ABC]/@qsaa06_aws
 sqlplus [SCMSA_ABC]/@qsaaup06_aws
 =======
@@ -42,8 +45,8 @@ sqlplus [SCMSA_ABC]/@qsaaup06_aws
 
 
 
-sqlplus [SCMSA_LAND]/@qadp06_aws
-sqlplus [DCS_HIST]/@qids06_aws
+sqlplus [VSTAPPO]/@qadp06_aws
+sqlplus [SPRINT_COMM]/@qids06_aws
 sqlplus [SCMSA_ABC]/@qsaa06_aws
 sqlplus [SCMSA_ABC]/@qsaaup06_aws
 

@@ -3,13 +3,11 @@ ALTER SESSION SET NLS_DATE_FORMAT='DD-MON-YYYY HH24:MI:SS';
 SET LINES 280 PAGESIZE 1000 LONG 15000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPOOL ON UNDERLINE =
 =========================================================================================================================================
 --Create grant list for user:
-SELECT 'GRANT SELECT,INSERT,UPDATE,DELETE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO APUPPAL1;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='ADM';
-<<<<<<< Updated upstream
-SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO ABALAJI1;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE','VIEW') AND OWNER='ADM';
-=======
-SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO ADM_RO;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='ADM';
->>>>>>> Stashed changes
-SELECT 'GRANT EXECUTE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO CDES1_EXECUTE_PROCEDURES;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('PROCEDURE') AND OWNER='CDES1';
+SELECT 'GRANT SELECT,INSERT,UPDATE,DELETE ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO AKATIYA7;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE') AND OWNER='ADM_QLAB01';
+SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO ADM_RO;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('TABLE','VIEW') AND OWNER='ADM';
+SELECT 'GRANT SELECT ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO PBALASW1;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('VIEW') AND OWNER='ADM_QLAB01';
+SELECT 'GRANT EXECUTE,DEBUG ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO AKATIYA7;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('PROCEDURE') AND OWNER='ADM';
+SELECT 'GRANT EXECUTE,DEBUG ON '||'"'||OWNER||'"'||'.'||'"'||OBJECT_NAME||'"'|| ' TO AKATIYA7;' FROM DBA_OBJECTS WHERE OBJECT_TYPE IN ('PROCEDURE','PACKAGE','PACKAGE BODY','FUNCTION') AND OWNER='ADM_QLAB01';
 =========================================================================================================================================
 --Get grants from user to apply to another:
 SELECT * FROM (
@@ -35,7 +33,7 @@ UNDEFINE user;
 COL TABLE FOR A15
 COL PRIVILEGE FOR A30
 COL GRANTOR FOR A25
-COL OBJECT FOR A30
+COL OBJECT FOR A50
 COL GRANTEE FOR A30
 SELECT * FROM (
 SELECT 'SYS_PRIVS' AS "TABLE",PRIVILEGE,NULL "GRANTOR", NULL "OBJECT",GRANTEE FROM DBA_SYS_PRIVS WHERE GRANTEE IN UPPER('&&user')
@@ -43,7 +41,9 @@ UNION ALL
 SELECT 'TAB_PRIVS' AS "TABLE",PRIVILEGE,GRANTOR,TABLE_NAME "OBJECT",GRANTEE FROM DBA_TAB_PRIVS WHERE GRANTEE IN UPPER('&&user')
 UNION ALL
 SELECT 'ROLE_PRIVS' AS "TABLE",GRANTED_ROLE "PRIVILEGE",NULL "GRANTOR", NULL "OBJECT",GRANTEE FROM DBA_ROLE_PRIVS WHERE GRANTEE IN UPPER('&&user')
-ORDER BY 3,1);
+ORDER BY 3,1)
+WHERE OBJECT IN ('ORDER_HEADER_03')
+;
 
 UNDEFINE user;
 =========================================================================================================================================
@@ -59,6 +59,14 @@ SELECT GRANTEE, PRIVILEGE,GRANTOR||'.'||TABLE_NAME "OBJECT" FROM DBA_TAB_PRIVS W
 UNION ALL
 SELECT GRANTEE, GRANTED_ROLE "PRIVILEGE", '--' "OBJECT" FROM DBA_ROLE_PRIVS WHERE GRANTEE IN (SELECT USERNAME FROM DBA_USERS WHERE PROFILE='APPUSER_PROFILE')
 ORDER BY 1,3,2);
+=========================================================================================================================================
+SELECT * FROM DBA_TAB_PRIVS 
+WHERE TABLE_NAME='RECON_INTRANSIT_TRANS_ID_NEW' 
+AND GRANTEE IN (SELECT GRANTED_ROLE FROM DBA_ROLE_PRIVS WHERE GRANTEE='UDMF_UI');
+=========================================================================================================================================
+SELECT * FROM DBA_TAB_PRIVS 
+WHERE TABLE_NAME='RECON_INTRANSIT_TRANS_ID_NEW' 
+AND GRANTEE='UDMF_UI';
 =========================================================================================================================================
 --Get user privileges by object:
 COL USERNAME FOR A20

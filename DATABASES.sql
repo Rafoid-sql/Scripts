@@ -45,6 +45,8 @@ sqlplus ROLIVEI4/"reEHheGG_Gn55fb_HWasVPlnYNouMO"
 sqlplus ROLIVEI4/"pcN2daWR_Bk89kq_QQrgZGjcZKaeDW"
 
 sqlplus ROLIVEI4/"D6Ak2ehfS#HUFR_NJcBWuCZxwgm4YV"
+
+sqlplus ROLIVEI4/"qVXI#I291bq9QF47Gyz4sQi!cMHlah"
 =========================================================================================================================================
 --SET OEM AGENT HOME TO CHECK STATUS:
 --ORACLE_HOME=$AGENT_HOME
