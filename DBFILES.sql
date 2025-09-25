@@ -10,7 +10,11 @@ COL BLOCKS FORMAT 999999999
 COL BLOCK_SIZE FORMAT 99999
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 SELECT 'datafile' AS TYPE, NAME, ROUND(BYTES/1048576,2) AS MBYTES, BLOCKS, BLOCK_SIZE FROM V$DATAFILE where NAME like LOWER('%TSCS_DATA%') 
+=======
+SELECT 'datafile' AS TYPE, FILE#, NAME, ROUND(BYTES/1048576,2) AS MBYTES, BLOCKS, BLOCK_SIZE FROM V$DATAFILE where NAME like LOWER('%SYSAUX%') 
+>>>>>>> Stashed changes
 =======
 SELECT 'datafile' AS TYPE, FILE#, NAME, ROUND(BYTES/1048576,2) AS MBYTES, BLOCKS, BLOCK_SIZE FROM V$DATAFILE where NAME like LOWER('%SYSAUX%') 
 >>>>>>> Stashed changes

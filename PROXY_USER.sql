@@ -2,6 +2,7 @@ qatpaadmx0003:qadmp3:/home/oracle>sqlplus / as sysdba
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 alter user ADM_QLAB01 grant connect through OPS$ORACLE;
 alter user ADM_QLAB02_VIEW grant connect through OPS$ORACLE;
 =======
@@ -10,6 +11,8 @@ alter user ADM_VIEW grant connect through OPS$ORACLE;
 >>>>>>> Stashed changes
 alter user ADM_ZLAB10 grant connect through  
 =======
+=======
+>>>>>>> Stashed changes
 alter user ADM_QLAB02_VIEW grant connect through OPS$ORACLE;
 alter user ADM_VIEW grant connect through OPS$ORACLE;
 alter user ADM_ZLAB10 grant connect through OPS$ORACLE;
@@ -52,8 +55,13 @@ sqlplus [SCMSA_ABC]/@qsaaup06_aws
 
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 sqlplus [VSTAPPO]/@qadp06_aws
 sqlplus [SPRINT_COMM]/@qids06_aws
+=======
+sqlplus [SCMSA_LAND]/@qadp06_aws
+sqlplus [DCS_HIST]/@qids06_aws
+>>>>>>> Stashed changes
 =======
 sqlplus [SCMSA_LAND]/@qadp06_aws
 sqlplus [DCS_HIST]/@qids06_aws
@@ -83,6 +91,9 @@ LINE/COL ERROR
 2172/4   PL/SQL: SQL Statement ignored
 2179/14  PL/SQL: ORA-00942: table or view does not exist
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
