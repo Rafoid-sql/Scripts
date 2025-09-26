@@ -530,17 +530,31 @@ ORDER BY BLOCKING_SESSION;
 =========================================================================================================================================
 --Blocking sessions II:
 COL SESS FOR A30
-SELECT SUBSTR(DECODE(REQUEST,0,'Holder: ','Waiter: ')||SID,1,13) SESS,ID1,ID2,LMODE,REQUEST,TYPE,INST_ID
+SELECT SUBSTR(DECODE(REQUEST,0,'HOLDER: ','WAITER: ')||SID,1,13) SESS,ID1,ID2,LMODE,REQUEST,TYPE,INST_ID
 FROM GV$LOCK
 WHERE (ID1,ID2,TYPE) IN (SELECT ID1,ID2,TYPE FROM GV$LOCK WHERE REQUEST>0)
 ORDER BY ID1,REQUEST;
 =========================================================================================================================================
 --Blocking sessions III:
 COL SESS FOR A30
-SELECT SUBSTR(DECODE(REQUEST,0,'Holder: ','Waiter: ')||SID,1,13) SESS,ID1,ID2,LMODE,REQUEST,TYPE
+SELECT SUBSTR(DECODE(REQUEST,0,'HOLDER: ','WAITER: ')||SID,1,13) SESS,ID1,ID2,LMODE,REQUEST,TYPE
 FROM V$LOCK
 WHERE (ID1,ID2,TYPE) IN (SELECT ID1,ID2,TYPE FROM V$LOCK WHERE REQUEST>0)
 ORDER BY ID1,REQUEST;
+=========================================================================================================================================
+--Blocking sessions IV:
+SET TRIMSPOOL ON
+SET TERMOUT ON
+SET HEADING ON
+COL SESS FOR A25
+SELECT
+CASE WHEN REQUEST >= 0
+	THEN CHR(27)||'[31m' || SUBSTR(DECODE(REQUEST,0,'HOLDER: ','WAITER: ')||SID,1,13) || CHR(27)||'[0m'
+	ELSE CHR(27)||'[33m' || SUBSTR(DECODE(REQUEST,0,'HOLDER: ','WAITER: ')||SID,1,13) || CHR(27)||'[0m'
+END AS SESS
+FROM GV$LOCK
+WHERE REQUEST>0
+ORDER BY REQUEST;
 =========================================================================================================================================
 --Check Session Count from users:
 COL USERNAME FOR A20
