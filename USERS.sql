@@ -125,15 +125,7 @@ WHERE ACCOUNT_STATUS NOT IN ('OPEN', 'EXPIRED & LOCKED');
 COL "INST" FOR 99
 COL "SESSION" FOR 999999999
 COL DB_USER FOR A25
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 COL OS_USER FOR A20
-=======
-COL OS_USER FOR A15
->>>>>>> Stashed changes
-=======
-COL OS_USER FOR A15
->>>>>>> Stashed changes
 COL OS_HOST FOR A35
 COL OS_PROCESS FOR 999999999
 COL EXTENDED_TIMESTAMP FOR A35
@@ -142,31 +134,18 @@ SELECT INST_ID AS "INST", SESSION_ID AS "SESSION", DB_USER, OS_USER, OS_HOST, OS
 FROM GV$XML_AUDIT_TRAIL
 WHERE RETURNCODE IN (1017,28000)
 AND  DB_USER='&&USER'
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 AND EXTENDED_TIMESTAMP > (SYSTIMESTAMP-1)
-=======
 AND EXTENDED_TIMESTAMP > (SYSTIMESTAMP-1/24)
->>>>>>> Stashed changes
-=======
-AND EXTENDED_TIMESTAMP > (SYSTIMESTAMP-1/24)
->>>>>>> Stashed changes
 --AND EXTENDED_TIMESTAMP > (SYSTIMESTAMP-15/1440)
 ORDER BY EXTENDED_TIMESTAMP ASC;
 
 UNDEFINE USER;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 =========================================================================================================================================
 --Check Remaining LOCK time:
 COL USERNAME FOR A30
 SELECT username, account_status, lock_date, ROUND((SYSDATE - lock_date) * 1440, 2) AS minutes_locked, (SELECT limit * 1440 FROM dba_profiles WHERE profile = (SELECT profile FROM dba_users WHERE username = '&&USER') AND resource_name = 'PASSWORD_LOCK_TIME') - ROUND((SYSDATE - lock_date) * 1440, 2) AS minutes_remaining
 FROM dba_users
 WHERE username = '&&USER' AND account_status LIKE '%TIMED%';
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 =========================================================================================================================================
 --Check username II (11g-):
 COL USERNAME FOR A30
