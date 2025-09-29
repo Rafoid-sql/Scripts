@@ -110,9 +110,9 @@ WHERE PROCESS NOT LIKE ('%BACKGROUND')
 --AND OSUSER IN ('WO614718')
 --AND MACHINE IN ('HOSPLACI\WEKNOW-TESTE')
 --AND STATUS IN ('ACTIVE','KILLED')
---AND SID IN (1269,1122)
+AND SID IN (1023,409)
 --AND SERIAL# IN (23578)
-AND SQL_ID ='6q352kuy53kcd'
+--AND SQL_ID ='6q352kuy53kcd'
 ORDER BY 1;
 =========================================================================================================================================
 -- Kill sessions AWS
@@ -139,24 +139,9 @@ WHERE TYPE IN ('USER')
 --AND OSUSER NOT IN ('weblogiccdes')
 --AND PROGRAM NOT LIKE ('JDBC Thin Client')
 --AND SCHEMANAME LIKE ('%CHUB_CDES_USER%')
-<<<<<<< Updated upstream
-<<<<<<< HEAD
 --AND SQL_ID IN ('d3002tum8vkx5')
-AND SID IN (285)
+--AND SID IN (285)
 AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') NOT LIKE '%NOTHING GOING ON%'
-=======
---AND SQL_ID IN ('b8yu8k123kg4f')
-AND SID IN (769,728)
---AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') NOT LIKE '%NOTHING GOING ON%'
->>>>>>> cf9147faf9a479da9a2ee22206939e436b402eb1
-=======
---AND SQL_ID IN ('dgytuaxr0cdvc','bdpcpuysqd1ys','28fwjgz83nbyu')
-AND SID IN (1948)
-AND NVL((SELECT DISTINCT SQL_TEXT FROM GV$SQL SQL WHERE SQL.SQL_ID = SES.SQL_ID),'NOTHING GOING ON') NOT LIKE '%NOTHING GOING ON%'
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 --AND SCHEMANAME = 'MONITOR'
 ORDER BY STATUS,OSUSER,PROGRAM;
 =========================================================================================================================================
@@ -169,15 +154,7 @@ COL OSUSER FOR A20
 SELECT INST_ID NODE,SID||','||SERIAL# SID_SER,SQL_ID,STATUS,SCHEMANAME||'@'||SERVICE_NAME FROM_WHERE,OSUSER,PROGRAM,BLOCKING_SESSION,TO_CHAR(LOGON_TIME) FROM_WHEN
 FROM GV$SESSION SES
 WHERE TYPE = 'USER'
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-AND SID IN (769)
-=======
 --AND SID IN (2680,2109,1921,2300,1733,1527,1717,1337,582,2470)
->>>>>>> Stashed changes
-=======
---AND SID IN (2680,2109,1921,2300,1733,1527,1717,1337,582,2470)
->>>>>>> Stashed changes
 --AND SCHEMANAME = 'RECON'
 ORDER BY STATUS,OSUSER,PROGRAM;
 =========================================================================================================================================
@@ -343,7 +320,7 @@ ORDER BY STATUS, OSUSER, PROGRAM;
 --Check time to finish IV
 COL NODE FOR 99
 COL FROM_WHEN FOR A15
-COL FROM_WHERE FOR A15
+COL FROM_WHERE FOR A20
 COL START_TIME FOR A15
 COL SID FOR 99999
 COL SERIAL# FOR 99999
@@ -362,7 +339,7 @@ WHERE TYPE = 'USER'
 WHERE "%_COMP" <> 100
 --WHERE L.SQL_ID = A.SQL_ID AND L.SQL_ID = S.SQL_ID AND L.SID = S.SID AND TYPE = 'USER' AND TOTALWORK > 0 AND SOFAR != TOTALWORK
 --AND SQL_ID = '6q352kuy53kcd'
---AND SID IN (47)
+AND SID IN (886)
 ORDER BY STATUS, OSUSER, PROGRAM;
 =========================================================================================================================================
 COL SID/SER  FOR A11
@@ -470,7 +447,7 @@ AND L.ID1=O.OBJECT_ID
 AND L.SID=V.SESSION_ID 
 --AND OBJECT_NAME NOT LIKE '%TMP'
 --AND USERNAME='MONITOR'
-AND S.SID = 769
+--AND S.SID = 769
 ORDER BY CTIME ASC;
 =========================================================================================================================================
 --Find locked objects:
@@ -508,7 +485,7 @@ JOIN DBA_OBJECTS O ON L.OBJECT_ID = O.OBJECT_ID
 LEFT JOIN GV$SQLCOMMAND C ON S.COMMAND = C.COMMAND_TYPE
 WHERE S.USERNAME IS NOT NULL
 --AND O.OBJECT_NAME = 'T_DAILY_VARIANCE_INTRANSIT' 
-AND O.OWNER = 'UDMF_UI'
+--AND O.OWNER = 'UDMF_UI'
 ORDER BY "LOGON";
 =========================================================================================================================================
 --Blocking sessions:
