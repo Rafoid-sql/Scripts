@@ -11,15 +11,7 @@ ROUND((TBM.TABLESPACE_SIZE-TBM.USED_SPACE) * TB.BLOCK_SIZE/(1024*1024*1024),2) "
 TBM.USED_PERCENT AS "%FULL"
 FROM DBA_TABLESPACE_USAGE_METRICS TBM
 JOIN DBA_TABLESPACES TB ON TB.TABLESPACE_NAME = TBM.TABLESPACE_NAME
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 --WHERE TBM.TABLESPACE_NAME in ('UNDOTBS1','UNDOTBS2')
-=======
-WHERE TBM.TABLESPACE_NAME in ('UNDOTBS1','UNDOTBS2')
->>>>>>> Stashed changes
-=======
-WHERE TBM.TABLESPACE_NAME in ('UNDOTBS1','UNDOTBS2')
->>>>>>> Stashed changes
 ORDER BY "%FULL" ASC;
 =========================================================================================================================================
 --UNDO SPACE USAGE

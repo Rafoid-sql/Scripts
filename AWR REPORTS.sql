@@ -35,7 +35,7 @@ BEGIN
 						sql_id      => '&&sql_id',
 						scope       => DBMS_SQLTUNE.scope_comprehensive,
 						time_limit  => 6000,
-						task_name   => 'Tuning_2_&&sql_id',
+						task_name   => 'Tuning_3_&&sql_id',
 						description => 'Tuning task for statement &&sql_id .');
 	DBMS_OUTPUT.put_line('l_sql_tune_task_id: ' || l_sql_tune_task_id);
 END;
@@ -46,23 +46,35 @@ set lines 300
 set linesize 10000
 set long 65536
 set longchunksize 65536
-EXEC DBMS_SQLTUNE.execute_Tuning_task(task_name => 'Tuning_2_&&sql_id');
+EXEC DBMS_SQLTUNE.execute_Tuning_task(task_name => 'Tuning_3_&&sql_id');
 /
+
+prompt --FOLLOW THE REPORT CREATION:
+SELECT TASK_NAME,STATUS,PCT_COMPLETION_TIME,EXECUTION_START FROM DBA_ADVISOR_LOG WHERE TASK_NAME='Tuning_3_6cu1a684fuwuy';
+
+SELECT TASK_NAME,STATUS,PCT_COMPLETION_TIME,EXECUTION_START FROM DBA_ADVISOR_LOG WHERE EXECUTION_START >= TRUNC(SYSDATE) order by EXECUTION_START;
 
 prompt --GENERATING THE REPORT:
 set lines 300
 set linesize 10000
 set long 65536
 set longchunksize 65536
-SELECT DBMS_SQLTUNE.REPORT_Tuning_TASK('Tuning_2_&&sql_id') FROM DUAL;
+SELECT DBMS_SQLTUNE.REPORT_Tuning_TASK('Tuning_3_&&sql_id') FROM DUAL;
 /
+
+SELECT task_name, status, start_time, end_time, elapsed_time FROM dba_sqltune_tasks WHERE task_name = 'Tuning_3_6cu1a684fuwuy';
+
+
+SET LONG 2000000 PAGESIZE 0 FEEDBACK OFF
+SELECT DBMS_SQLTUNE.report_tuning_task(task_name => 'Tuning_3_6cu1a684fuwuy') FROM dual;
 
 prompt --DROPPING THE REPORT:
 set lines 300
 set linesize 10000
 set long 65536
 set longchunksize 65536
-EXEC DBMS_SQLTUNE.DROP_Tuning_TASK('Tuning_2_&&sql_id');
+EXEC DBMS_SQLTUNE.DROP_Tuning_TASK('Tuning_3_&&sql_id');
 
 spool off;
 
+6cu1a684fuwuy
