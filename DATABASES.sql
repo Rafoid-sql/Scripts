@@ -45,14 +45,8 @@ sqlplus ROLIVEI4/"reEHheGG_Gn55fb_HWasVPlnYNouMO"
 sqlplus ROLIVEI4/"pcN2daWR_Bk89kq_QQrgZGjcZKaeDW"
 
 sqlplus ROLIVEI4/"D6Ak2ehfS#HUFR_NJcBWuCZxwgm4YV"
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 
 sqlplus ROLIVEI4/"qVXI#I291bq9QF47Gyz4sQi!cMHlah"
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 =========================================================================================================================================
 --SET OEM AGENT HOME TO CHECK STATUS:
 --ORACLE_HOME=$AGENT_HOME
@@ -87,6 +81,13 @@ srvctl start listener -l LISTENER_PSOCRP -n ppolabpms00001
 sudo -u root /orasw/app/19/grid/bin/crsctl stop crs
 
 sudo -u oracle /orasw/app/19/grid/bin/srvctl stop database -d <db>
+=========================================================================================================================================
+--CHECK INSTANCE STATUS:
+ALTER SESSION SET NLS_DATE_FORMAT='DD-MON-YYYY HH24:MI:SS';
+SET LINES 280 PAGESIZE 1000 LONG 15000 ECHO ON TIME ON TIMING ON TRIM ON TRIMSPOOL ON UNDERLINE =
+COL INST FOR 9999
+COL HOST_NAME FOR A20
+SELECT INST_ID AS INST,INSTANCE_NAME,HOST_NAME,VERSION_FULL AS "VERSION",STARTUP_TIME,SYSDATE AS "CURRENT_DATE",STATUS,ARCHIVER,LOGINS,SHUTDOWN_PENDING,DATABASE_STATUS,INSTANCE_ROLE,ACTIVE_STATE,INSTANCE_MODE FROM GV$INSTANCE ORDER BY 1;
 =========================================================================================================================================
 --INICIAR/PARAR BLACKOUT I
 -- INICIAR
