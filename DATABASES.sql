@@ -26,6 +26,7 @@ connect rcvcat rcat_teq_122/Atlantic_cit8@prman
 
 export TNS_ADMIN=/db01/static/oradba/bin/rman/
 export TNS_ADMIN=/orasw/static/oradba/bin/rman/
+export TNS_ADMIN=/nfs/infra/oracle/rman_backup_scripts/non-prod/samson_npe
 connect rcvcat /@trmanp1
 RMAN> set dbid 1523174064
 RMAN> LIST BACKUP SUMMARY;
@@ -39,14 +40,12 @@ sudo -u oracle /orasw/static/oradba/sysoper/bin/sysopermenu.sh pratp11
 export ORACLE_HOME=/orasw/app/oracle/product/19/db
 export PATH=$PATH:$ORACLE_HOME/bin:/usr/local/bin
 . oraenv
-sqlplus ROLIVEI4/"a97U5Yc38zTAHd_DQZ#p6!GxrLtkhB"
 sqlplus ROLIVEI4/"reEHheGG_Gn55fb_HWasVPlnYNouMO"
-
 sqlplus ROLIVEI4/"pcN2daWR_Bk89kq_QQrgZGjcZKaeDW"
-
 sqlplus ROLIVEI4/"D6Ak2ehfS#HUFR_NJcBWuCZxwgm4YV"
 
 sqlplus ROLIVEI4/"qVXI#I291bq9QF47Gyz4sQi!cMHlah"
+sqlplus ROLIVEI4/"7j_2WZd_wURg33_#K#uSSaJ#_e2sD5"
 =========================================================================================================================================
 --SET OEM AGENT HOME TO CHECK STATUS:
 --ORACLE_HOME=$AGENT_HOME
