@@ -27,6 +27,9 @@ SELECT NAME, VALUE, DATUM_TIME,TIME_COMPUTED FROM V$DATAGUARD_STATS WHERE NAME L
 --CHECK APPLY LAG HISTOGRAM
 SELECT * FROM V$STANDBY_EVENT_HISTOGRAM WHERE NAME = 'apply lag' AND COUNT > 0;
 =========================================================================================================================================
+--CHECK APPLY LAG BY THREAD:
+SELECT THREAD#,SEQUENCE#,STATUS,BLOCK#,BLOCKS,PID FROM GV$MANAGED_STANDBY WHERE STATUS <> 'IDLE' AND STATUS <> 'CONNECTED' ORDER BY 1,2,3;
+=========================================================================================================================================
 --CHECK APPLIED ARCHIVES
 SELECT DISTINCT THREAD#, SEQUENCE#, COMPLETION_TIME, FIRST_TIME, NEXT_TIME, APPLIED 
 FROM GV$ARCHIVED_LOG 

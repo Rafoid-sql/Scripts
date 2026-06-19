@@ -19,11 +19,13 @@ TO_CHAR(CREATED,’MM/DD/YYYY HH24:MI:SS’) CRIACAO
 FROM DBA_DB_LINKS
 ORDER BY OWNER, DB_LINK;
 =========================================================================================================================================
+SET LINES 280 PAGESIZE 10000
 COL OWNER FOR A20
 COL USERNAME FOR A20
 COL DB_LINK FOR A40
 COL HOST FOR A70
-SELECT OWNER,DB_LINK,USERNAME,HOST FROM DBA_DB_LINKS;
+SELECT OWNER,DB_LINK,USERNAME,HOST FROM DBA_DB_LINKS
+WHERE HOST LIKE '%tadmp%';
 =========================================================================================================================================
 COL OWNER FOR A20
 COL SYNONYM_NAME FOR A40

@@ -45,11 +45,11 @@ sqlplus ROLIVEI4/"pcN2daWR_Bk89kq_QQrgZGjcZKaeDW"
 sqlplus ROLIVEI4/"D6Ak2ehfS#HUFR_NJcBWuCZxwgm4YV"
 
 sqlplus ROLIVEI4/"qVXI#I291bq9QF47Gyz4sQi!cMHlah"
-sqlplus ROLIVEI4/"7j_2WZd_wURg33_#K#uSSaJ#_e2sD5"
+sqlplus ROLIVEI4/"7j_2WZd3wURg33X#K#uSSaJ##e2sDS"
 =========================================================================================================================================
 --SET OEM AGENT HOME TO CHECK STATUS:
 --ORACLE_HOME=$AGENT_HOME
-export ORACLE_HOME=/db01/static/app/oracle/agent13c/agent_13.4.0.0.0/
+export ORACLE_HOME=/db01/static/app/oracle/agent13c/agent_13.5.0.0.0/
 export ORACLE_HOME=/orasw/static/app/oracle/agent13c/agent_13.5.0.0.0/
 export PATH=$ORACLE_HOME/bin:$PATH
 emctl status agent

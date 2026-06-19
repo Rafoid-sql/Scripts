@@ -12,7 +12,11 @@ du -sh ./*/
 find -type f -name '*.trc' -mtime +1 -print0 | xargs -0 rm -f 
 find -type f -name '*.trm' -mtime +1 -print0 | xargs -0 rm -f 
 
-find -type f -name '*.aud' -mtime +1 -print0 | xargs -0 rm -f 
+find -type f -name '*.xml' -mtime +1 -print0 | xargs -0 rm -f 
+
+
+
+find -type f -name '*.aud' -print0 | xargs -0 rm -f 
 
 ps aux | grep -i back
 
