@@ -8,6 +8,9 @@ du -ah | sort -rh | head -n 30
 # Find folder sizes
 du -sh ./*/
 
+##AIX
+du -sg ./*/
+
 # Quando o find não consegue remover devido a quantidade de arquivos:
 find -type f -name '*.trc' -mtime +1 -print0 | xargs -0 rm -f 
 find -type f -name '*.trm' -mtime +1 -print0 | xargs -0 rm -f 

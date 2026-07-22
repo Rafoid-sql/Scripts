@@ -11,8 +11,39 @@ ROUND((TBM.TABLESPACE_SIZE-TBM.USED_SPACE) * TB.BLOCK_SIZE/(1024*1024*1024),2) "
 TBM.USED_PERCENT AS "%FULL"
 FROM DBA_TABLESPACE_USAGE_METRICS TBM
 JOIN DBA_TABLESPACES TB ON TB.TABLESPACE_NAME = TBM.TABLESPACE_NAME
---WHERE TBM.TABLESPACE_NAME in ('DUE_DATE_DATA','DUEDATE_DATA2')
+--WHERE TBM.TABLESPACE_NAME in ('SYSAUX')
 ORDER BY "%FULL" ASC;
+=========================================================================================================================================
+clear columns
+column tablespace format a30
+column total_mb format 999,999,999.99
+column used_mb format 999,999,999,999.99
+column free_mb format 999,999,999.99
+column pct_used format 999.99
+column graph format a25 heading "GRAPH (X=5%)"
+column status format a10
+compute sum of total_mb on report
+compute sum of used_mb on report
+compute sum of free_mb on report
+break on report
+set lines 200 pages 100
+
+select  dbat.tablespace_name tablespace,
+        dbat.status status,
+        round(nvl(m.tablespace_size * dbat.block_size / 1024 / 1024, 0), 2) total_mb,
+        round(nvl(m.used_space * dbat.block_size / 1024 / 1024, 0), 2) used_mb,
+        round(nvl((m.tablespace_size - m.used_space) * dbat.block_size / 1024 / 1024, 0), 2) free_mb,
+        round(nvl(m.used_percent, 0), 2) pct_used,
+        case 
+            when dbat.status = 'OFFLINE' then '['||rpad(lpad('OFFLINE',13,'-'),20,'-')||']'
+            else '['|| nvl(rpad(lpad('X', trunc(nvl(m.used_percent, 0)/5), 'X'), 20, '-'), '--------------------') ||']'
+        end as graph
+from dba_tablespaces dbat
+left join dba_tablespace_usage_metrics m on dbat.tablespace_name = m.tablespace_name
+order by 6
+/
+ttitle off
+rem clear columns
 =========================================================================================================================================
 --UNDO SPACE USAGE
 COLUMN TABLESPACE FORMAT A20;

@@ -18,9 +18,9 @@ GitLab Token:	 | glpat-czigs1XHnkQsP8xjqcX2
 |ELIANE TAKAHAGI |HENRIQUE FARIA  |TUESDAY					|
 |HENRIQUE FARIA	 |FABIO RIBEIRO	  |MONDAY/WEDNESDAY/FRIDAY 	|
 |FABIO RIBEIRO	 |RENATA PEREIRA  |THURSDAY    				|
-|RENATA PEREIRA	 |DANIEL AUGUSTO  |THURSDAY  				|
+|RENATA PEREIRA	 |DANIEL AUGUSTO  |FRIDAY	  				|
 |DANIEL AUGUSTO	 |RAFAEL OLIVEIRA |WEDNESDAY 				|
-|RAFAEL OLIVEIRA |RICARDO SCHIVEL |FRIDAY					|
+|RAFAEL OLIVEIRA |RICARDO SCHIVEL |THURSDAY					|
 |RICARDO SCHIVEL |ANDERSON MELO	  |MONDAY    				|
 ==================================================================================================================================================
 IBM Account & Export
