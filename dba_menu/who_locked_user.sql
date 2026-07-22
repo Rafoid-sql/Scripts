@@ -1,0 +1,8 @@
+set lines 250 pages 999
+col EXTENDED_TIMESTAMP format A40
+col OS_HOST format A30
+select session_id,EXTENDED_TIMESTAMP,DB_USER,OS_USER,OS_HOST from v$XML_AUDIT_TRAIL
+where EXTENDED_TIMESTAMP > sysdate-8/24
+--and db_user='WSCOMUSR'
+and RETURNCODE='1017'
+order by EXTENDED_TIMESTAMP;

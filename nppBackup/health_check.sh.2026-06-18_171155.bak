@@ -1,0 +1,524 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Universal Database & OS Health Check Engine (v8.0 - The Ultimate Unabridged)
+# Read-Only Diagnostic Tool | 10g - 26ai | Linux, AIX, Solaris, HP-UX
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. CORE ENGINE SETUP & PRE-FLIGHT CHECKS
+# ------------------------------------------------------------------------------
+BASE_DIR=$(cd "$(dirname "$0")" && pwd)
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+REPORT_FILE="${BASE_DIR}/orhc_report_${TIMESTAMP}.txt"
+STATE_FILE="${BASE_DIR}/.orhc_state.dat"
+OS_TYPE=$(uname -s)
+CURRENT_USER=$(id -un)
+SUDO_PREFIX=""
+DB_MAJOR_VERSION=""
+
+if [ ! -w "$BASE_DIR" ]; then echo "[FATAL] Cannot write to execution directory ($BASE_DIR)."; exit 1; fi
+
+if [ "$CURRENT_USER" != "oracle" ] && [ "$CURRENT_USER" != "grid" ] && [ "$CURRENT_USER" != "root" ]; then
+    echo "[WARNING] Executing as non-standard user: $CURRENT_USER"
+    printf "Enter sudo password for OS root checks (Press Enter to skip): "
+    read -rs SUDO_PWD; echo ""
+    if [ -n "$SUDO_PWD" ] && echo "$SUDO_PWD" | sudo -S -v >/dev/null 2>&1; then SUDO_PREFIX="echo \"$SUDO_PWD\" | sudo -S "; fi
+    echo "WARNING: Diagnostics executed under non-standard user context: $CURRENT_USER" > "$REPORT_FILE"
+elif [ "$CURRENT_USER" = "oracle" ] || [ "$CURRENT_USER" = "grid" ]; then
+    printf "Deep OS checks require root. Enter sudo password (Press Enter to skip): "
+    read -rs SUDO_PWD; echo ""
+    if [ -n "$SUDO_PWD" ] && echo "$SUDO_PWD" | sudo -S -v >/dev/null 2>&1; then SUDO_PREFIX="echo \"$SUDO_PWD\" | sudo -S "; fi
+fi
+
+# ------------------------------------------------------------------------------
+# 2. THE SPOOLER
+# ------------------------------------------------------------------------------
+append_to_report() {
+    local comp="$1" check="$2" status="$3" findings="$4" explanation="$5"
+    local term_findings=""
+    local file_findings=""
+        if [ "$status" != "OK" ] && [ -n "$findings" ]; then
+        # Align multiline findings seamlessly (Terminal = 14 spaces, File = 10 spaces)
+        term_findings=$(echo "$findings" | sed '2,$s/^/              /')
+        file_findings=$(echo "$findings" | sed '2,$s/^/          /'); fi
+    if [ "$status" = "OK" ]; then printf "[  \033[32mOK\033[0m  ] %s: %s\n" "$comp" "$check"
+    elif [ "$status" = "WARNING" ]; then printf "[\033[33mWARNING\033[0m] %s: %s\n           -> %s\n" "$comp" "$check" "$term_findings"
+    else printf "[\033[31mCRITICAL\033[0m] %s: %s\n           -> %s\n" "$comp" "$check" "$term_findings"; fi
+    {
+        echo "========================================================================"
+        echo "COMPONENT: $comp | CHECK: $check"
+        echo "STATUS: [ $status ]"
+        [ "$status" != "OK" ] && echo "FINDINGS: $file_findings"
+        echo "------------------------------------------------------------------------"
+        echo "EXPLANATION: $explanation"
+        echo "========================================================================"
+        echo ""
+    } >> "$REPORT_FILE"
+}
+
+# ------------------------------------------------------------------------------
+# 3. ORACLE ENVIRONMENT & DYNAMIC SQL ENGINE
+# ------------------------------------------------------------------------------
+load_oracle_env() {
+    if [ -z "$ORACLE_HOME" ] || [ -z "$ORACLE_SID" ]; then
+        local oratab_path=""
+        [ -f /etc/oratab ] && oratab_path="/etc/oratab"
+        [ -f /var/opt/oracle/oratab ] && oratab_path="/var/opt/oracle/oratab"
+        if [ -n "$oratab_path" ]; then
+            FIRST_SID=$(grep -E '^[a-zA-Z]' "$oratab_path" | grep -v '^+ASM' | cut -d: -f1 | head -n 1)
+            if [ -n "$FIRST_SID" ]; then export ORACLE_SID=$FIRST_SID; export ORAENV_ASK=NO; . oraenv >/dev/null 2>&1; fi
+        fi
+    fi
+}
+run_dynamic_sql() {
+    load_oracle_env
+    sqlplus -s / as sysdba <<EOF
+set pagesize 0 linesize 320 trimspool on feedback off heading off verify off
+$1
+exit;
+EOF
+}
+get_db_version() {
+    local ver_str=$(run_dynamic_sql "SELECT version FROM v\$instance;" | tr -d ' ')
+    DB_MAJOR_VERSION=$(echo "$ver_str" | awk -F. '{print $1}')
+}
+load_and_compare_state() {
+    echo "================================================================="
+    echo "  [ SYSTEM HEADER & HISTORICAL HINTS ]"
+    echo "================================================================="
+    echo "OS Type: $OS_TYPE | User: $CURRENT_USER"
+    echo "Log: $REPORT_FILE"
+    local curr_swap=0
+    case "$OS_TYPE" in
+        Linux) curr_swap=$(free -m 2>/dev/null | awk '/Swap/ {if ($2 > 0) print int(($3/$2)*100); else print 0}') ;;
+        AIX) curr_swap=$(lsps -s 2>/dev/null | tail -1 | awk '{print int($2)}') ;;
+    esac
+    if [ -f "$STATE_FILE" ]; then
+        . "$STATE_FILE"
+        if [ -n "$curr_swap" ] && [ -n "$HIST_SWAP" ]; then
+            local diff=$((curr_swap - HIST_SWAP))
+            [ "$diff" -ge 10 ] && echo "[!] SWAP util increased by ${diff}% since last run."
+        fi
+    fi
+    echo "================================================================="
+}
+save_state() {
+    local curr_swap=0
+    case "$OS_TYPE" in
+        Linux) curr_swap=$(free -m 2>/dev/null | awk '/Swap/ {if ($2 > 0) print int(($3/$2)*100); else print 0}') ;;
+        AIX) curr_swap=$(lsps -s 2>/dev/null | tail -1 | awk '{print int($2)}') ;;
+    esac
+    echo "HIST_SWAP=$curr_swap" > "$STATE_FILE"
+    echo "LAST_RUN=$TIMESTAMP" >> "$STATE_FILE"
+}
+
+# ==============================================================================
+# 4. ATOMIC OS CHECKS (UNABRIDGED & CROSS-PLATFORM)
+# ==============================================================================
+# --- OS CPU & PROCESSES ---
+check_os_cpu_load() {
+    local load=$(uptime | awk -F'load average:' '{ print $2 }' | cut -d, -f1 | tr -d ' ')
+    local cores=1
+    case "$OS_TYPE" in
+        Linux) cores=$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null) ;;
+        AIX) cores=$(lsdev -C -c processor -S Available | wc -l) ;;
+        SunOS) cores=$(psrinfo | wc -l) ;;
+        HP-UX) cores=$(ioscan -fkC processor | grep processor | wc -l) ;;
+    esac
+    local alert=$(awk -v l="$load" -v c="$cores" 'BEGIN { if(l > c) print "1"; else print "0" }')
+    if [ "$alert" -eq 1 ]; then append_to_report "OS_CPU" "Load Average" "WARNING" "Load ($load) > Cores ($cores)." "CPU scheduling delays possible."; else append_to_report "OS_CPU" "Load Average" "OK" "" "Load within capacity ($load / $cores)."; fi
+}
+check_os_cpu_iowait() {
+    if [ "$OS_TYPE" = "Linux" ] && command -v vmstat >/dev/null; then
+        local iowait=$(vmstat 1 2 | tail -1 | awk '{print $16}')
+        if [ -n "$iowait" ] && [ "$iowait" -gt 15 ]; then append_to_report "OS_CPU" "I/O Wait" "WARNING" "I/O Wait is ${iowait}%" "High I/O wait indicates storage bottleneck."; else append_to_report "OS_CPU" "I/O Wait" "OK" "" "I/O Wait healthy (${iowait}%)."; fi
+    fi
+}
+check_os_cpu_steal() {
+    if [ "$OS_TYPE" = "Linux" ] && command -v vmstat >/dev/null; then
+        local steal=$(vmstat 1 2 | tail -1 | awk '{print $17}')
+        if [ -n "$steal" ] && [ "$steal" -gt 5 ]; then append_to_report "OS_CPU" "Steal Time" "WARNING" "Steal time is ${steal}%" "Hypervisor is restricting CPU resources."; else append_to_report "OS_CPU" "Steal Time" "OK" "" "No significant hypervisor CPU steal."; fi
+    fi
+}
+check_os_zombies() {
+    local zombies=$(ps -el | awk '{print $2}' | grep -w Z | wc -l)
+    if [ "$zombies" -gt 10 ]; then append_to_report "OS_CPU" "Zombie Processes" "WARNING" "$zombies zombie processes." "Process table may become exhausted."; else append_to_report "OS_CPU" "Zombie Processes" "OK" "" "Zombie processes negligible."; fi
+}
+check_os_top_consumers() {
+    if [ "$OS_TYPE" = "Linux" ]; then
+        local top_procs=$(ps -eo pid,user,%mem,%cpu,comm --sort=-%cpu | head -4 | tail -3 | paste -sd ", " -)
+        append_to_report "OS_CPU" "Top CPU Consumers" "OK" "" "Top processes: $top_procs"
+    fi
+}
+run_full_os_cpu() { check_os_cpu_load; check_os_cpu_iowait; check_os_cpu_steal; check_os_zombies; check_os_top_consumers; }
+
+# --- OS MEMORY & KERNEL LIMITS ---
+check_os_swap_usage() {
+    local used_pct=0
+    case "$OS_TYPE" in
+        Linux) used_pct=$(free -m | awk '/Swap/ {if ($2 > 0) print int(($3/$2)*100); else print 0}') ;;
+        AIX) used_pct=$(lsps -s | tail -1 | awk '{print int($2)}') ;;
+        SunOS) used_pct=$(swap -s | awk '{print int($11/($9+$11)*100)}') ;;
+        HP-UX) used_pct=$(swapinfo -ta | tail -1 | awk '{print int($5)}') ;;
+    esac
+    if [ -n "$used_pct" ] && [ "$used_pct" -ge 80 ]; then append_to_report "OS_MEM" "Swap" "CRITICAL" "Swap ${used_pct}%." "Severe memory starvation."; elif [ -n "$used_pct" ] && [ "$used_pct" -ge 50 ]; then append_to_report "OS_MEM" "Swap" "WARNING" "Swap ${used_pct}%." "Moderate swapping detected."; else append_to_report "OS_MEM" "Swap" "OK" "" "Swap healthy."; fi
+}
+check_os_paging() {
+    if [ "$OS_TYPE" = "Linux" ] && command -v vmstat >/dev/null; then
+        local pg_out=$(vmstat 1 2 | tail -1 | awk '{print $8}')
+        if [ -n "$pg_out" ] && [ "$pg_out" -gt 100 ]; then append_to_report "OS_MEM" "Active Paging" "WARNING" "Swap out: $pg_out blocks/sec" "Active paging confirms memory starvation."; else append_to_report "OS_MEM" "Active Paging" "OK" "" "No active swapping."; fi
+    fi
+}
+check_os_hugepages() {
+    if [ "$OS_TYPE" = "Linux" ]; then
+        local hp_total=$(grep HugePages_Total /proc/meminfo 2>/dev/null | awk '{print $2}')
+        if [ -z "$hp_total" ] || [ "$hp_total" -eq 0 ]; then append_to_report "OS_MEM" "HugePages Config" "WARNING" "Total=0" "HugePages reduce OS CPU overhead for large SGAs."; else append_to_report "OS_MEM" "HugePages Config" "OK" "" "HugePages configured."; fi
+    fi
+}
+check_os_limits() {
+    local open_files=$(ulimit -n)
+    if [ "$open_files" -lt 65536 ]; then append_to_report "OS_MEM" "Kernel Limits (nofile)" "WARNING" "nofile=$open_files" "Oracle requires at least 65536 file descriptors."; else append_to_report "OS_MEM" "Kernel Limits (nofile)" "OK" "" "File limits adequate."; fi
+}
+check_os_sysctl() {
+    if [ "$OS_TYPE" = "Linux" ] && command -v sysctl >/dev/null; then
+        local shmall=$(sysctl -n kernel.shmall 2>/dev/null)
+        if [ -n "$shmall" ]; then append_to_report "OS_MEM" "Kernel Sysctl" "OK" "" "SHMALL: $shmall"; fi
+    fi
+}
+run_full_os_memory() { check_os_swap_usage; check_os_paging; check_os_hugepages; check_os_limits; check_os_sysctl; }
+
+# --- OS DISK & I/O FABRIC ---
+check_os_disk_usage() {
+    local full_disks=$(df -k | awk '0+$5 >= 85 {print $6"("$5")"}' | paste -sd "," -)
+    if [ -n "$full_disks" ]; then append_to_report "OS_DISK" "Filesystem Space" "CRITICAL" "High usage: $full_disks" "Filesystems >85% can crash instance."; else append_to_report "OS_DISK" "Filesystem Space" "OK" "" "All filesystems <85%."; fi
+}
+check_os_inode_usage() {
+    if [ "$OS_TYPE" = "Linux" ] || [ "$OS_TYPE" = "SunOS" ] || [ "$OS_TYPE" = "HP-UX" ]; then
+        local full_inodes=$(df -k -i 2>/dev/null | awk '0+$5 >= 90 {print $6"("$5")"}' | paste -sd "," -)
+        if [ -n "$full_inodes" ]; then append_to_report "OS_DISK" "Inode Exhaustion" "CRITICAL" "High inode usage: $full_inodes" "Zero inodes prevents any new file creation."; else append_to_report "OS_DISK" "Inode Exhaustion" "OK" "" "Inodes healthy."; fi
+    fi
+}
+check_os_iostat() {
+    if [ "$OS_TYPE" = "Linux" ] && command -v iostat >/dev/null; then
+        local high_io=$(iostat -x 1 2 | awk 'NR>3 && $NF ~ /^[0-9]/ && $NF > 80 {print $1"("$NF"%)"}' | paste -sd "," -)
+        if [ -n "$high_io" ]; then append_to_report "OS_DISK" "I/O Saturation" "WARNING" "High util: $high_io" "Disks operating at >80% capacity."; else append_to_report "OS_DISK" "I/O Saturation" "OK" "" "Disk I/O latency within limits."; fi
+    fi
+}
+check_os_multipath() {
+    if [ "$OS_TYPE" = "Linux" ] && command -v multipath >/dev/null; then
+        local failed_paths=$(eval $SUDO_PREFIX multipath -ll 2>/dev/null | grep -iE 'fail|offline')
+        if [ -n "$failed_paths" ]; then append_to_report "OS_DISK" "Multipath Fabric" "CRITICAL" "Failed SAN paths detected." "Storage redundancy lost."; else append_to_report "OS_DISK" "Multipath Fabric" "OK" "" "All paths active."; fi
+    fi
+}
+run_full_os_disk() { check_os_disk_usage; check_os_inode_usage; check_os_iostat; check_os_multipath; }
+
+# --- OS NETWORK & CONNECTIVITY ---
+check_os_network_drops() {
+    if [ "$OS_TYPE" = "Linux" ]; then
+        local drops=$(netstat -s | grep -i "packet receive errors" | awk '{print $1}')
+        if [ -n "$drops" ] && [ "$drops" -gt 1000 ]; then append_to_report "OS_NET" "TCP/IP Drops" "WARNING" "$drops receive errors." "Packet drops cause RAC node evictions and interconnect latency."; else append_to_report "OS_NET" "TCP/IP Drops" "OK" "" "Network interface rx/tx stable."; fi
+    fi
+}
+check_os_ephemeral_ports() {
+    if [ "$OS_TYPE" = "Linux" ]; then
+        local ports=$(cat /proc/sys/net/ipv4/ip_local_port_range 2>/dev/null)
+        if [ -n "$ports" ]; then append_to_report "OS_NET" "Ephemeral Ports" "OK" "" "Port range: $ports"; fi
+    fi
+}
+check_os_tcp_states() {
+    if [ "$OS_TYPE" = "Linux" ]; then
+        local tw=$(netstat -ant 2>/dev/null | grep TIME_WAIT | wc -l)
+        if [ "$tw" -gt 5000 ]; then append_to_report "OS_NET" "TCP Sockets" "WARNING" "$tw TIME_WAIT sockets." "Socket exhaustion risk."; else append_to_report "OS_NET" "TCP Sockets" "OK" "" "TIME_WAIT count: $tw"; fi
+    fi
+}
+check_os_gateway() {
+    if [ "$OS_TYPE" = "Linux" ] && command -v ip >/dev/null; then
+        local gw=$(ip route | grep default | awk '{print $3}' | head -1)
+        if [ -n "$gw" ]; then
+            if ping -c 1 -W 1 "$gw" >/dev/null 2>&1; then append_to_report "OS_NET" "Gateway Reachability" "OK" "" "Ping to default gateway ($gw) successful."; else append_to_report "OS_NET" "Gateway Reachability" "WARNING" "Gateway $gw unreachable." "Network isolation possible."; fi
+        fi
+    fi
+}
+check_os_dns() {
+    if [ -f /etc/resolv.conf ]; then
+        local nameservers=$(grep nameserver /etc/resolv.conf | awk '{print $2}' | paste -sd "," -)
+        append_to_report "OS_NET" "DNS Config" "OK" "" "Nameservers configured: $nameservers"
+    fi
+}
+run_full_os_network() { check_os_network_drops; check_os_ephemeral_ports; check_os_tcp_states; check_os_gateway; check_os_dns; }
+
+# --- OS SYSTEM LOGS & SECURITY ENV ---
+check_os_dmesg_oom() {
+    if [ "$OS_TYPE" = "Linux" ]; then
+        local oom=$(eval $SUDO_PREFIX dmesg -T 2>/dev/null | grep -i 'out of memory' | tail -1)
+        if [ -n "$oom" ]; then append_to_report "OS_SYS" "Kernel OOM Kills" "CRITICAL" "$oom" "OOM Killer invoked. System out of physical RAM and Swap."; else append_to_report "OS_SYS" "Kernel OOM Kills" "OK" "" "No Out-Of-Memory kills in ring buffer."; fi
+    fi
+}
+check_os_firewall() {
+    if [ "$OS_TYPE" = "Linux" ] && command -v systemctl >/dev/null; then
+        local fw=$(systemctl is-active firewalld 2>/dev/null)
+        if [ "$fw" = "active" ]; then append_to_report "OS_SYS" "Local Firewall" "WARNING" "Firewalld is active." "Ensure Oracle ports (1521, etc) are whitelisted."; else append_to_report "OS_SYS" "Local Firewall" "OK" "" "Firewalld inactive."; fi
+    fi
+}
+check_os_selinux() {
+    if [ "$OS_TYPE" = "Linux" ] && command -v sestatus >/dev/null; then
+        local se=$(sestatus | grep "SELinux status:" | awk '{print $3}')
+        if [ "$se" = "enabled" ]; then append_to_report "OS_SYS" "SELinux" "WARNING" "SELinux is Enabled." "Can block Oracle execution if not properly labeled."; else append_to_report "OS_SYS" "SELinux" "OK" "" "SELinux disabled."; fi
+    fi
+}
+check_os_oracle_perms() {
+    if [ -n "$ORACLE_HOME" ] && [ -f "$ORACLE_HOME/bin/oracle" ]; then
+        local perms=$(ls -l "$ORACLE_HOME/bin/oracle" | awk '{print $1}')
+        if [[ "$perms" != *s* ]]; then append_to_report "OS_SYS" "Oracle Binary Perms" "CRITICAL" "Permissions: $perms" "Missing setuid (s) bit on oracle binary. Connects will fail."; else append_to_report "OS_SYS" "Oracle Binary Perms" "OK" "" "setuid bit configured correctly."; fi
+    fi
+}
+check_os_ldd_deps() {
+    if [ "$OS_TYPE" = "Linux" ] && [ -n "$ORACLE_HOME" ] && [ -f "$ORACLE_HOME/bin/oracle" ]; then
+        local missing=$(ldd "$ORACLE_HOME/bin/oracle" 2>/dev/null | grep "not found")
+        if [ -n "$missing" ]; then append_to_report "OS_SYS" "Library Dependencies" "CRITICAL" "$missing" "Missing shared libraries required by Oracle engine."; else append_to_report "OS_SYS" "Library Dependencies" "OK" "" "All shared libraries resolved."; fi
+    fi
+}
+run_full_os_sys() { check_os_dmesg_oom; check_os_firewall; check_os_selinux; check_os_oracle_perms; check_os_ldd_deps; }
+
+run_full_os() { run_full_os_cpu; run_full_os_memory; run_full_os_disk; run_full_os_network; run_full_os_sys; }
+
+# ==============================================================================
+# 5. ATOMIC DB CHECKS (10g - 26ai COMPATIBLE)
+# ==============================================================================
+# --- DB INSTANCE, LOGS & DICTIONARY ---
+check_db_alert_log() {
+    local diag_dest=$(run_dynamic_sql "SELECT value FROM v\$parameter WHERE name = 'background_dump_dest';")
+    if [ -n "$diag_dest" ] && [ -f "$diag_dest/alert_$ORACLE_SID.log" ]; then
+        local oras=$(tail -1000 "$diag_dest/alert_$ORACLE_SID.log" | grep -iE 'ORA-|Deadlock' | tail -1)
+        if [ -n "$oras" ]; then append_to_report "DB_INST" "Alert Log Scanning" "WARNING" "Recent error: $oras" "Review alert log for instance anomalies."; else append_to_report "DB_INST" "Alert Log Scanning" "OK" "" "No ORA- errors in last 1000 lines."; fi
+    fi
+}
+check_db_invalid_objects() {
+    local sql="SELECT owner || '.' || object_type || ':' || COUNT(*) FROM dba_objects WHERE status = 'INVALID' GROUP BY owner, object_type;"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"no rows"* ]; then append_to_report "DB_DICT" "Invalid Objects" "WARNING" "$res" "Indicates failed patching or drops."; else append_to_report "DB_DICT" "Invalid Objects" "OK" "" "0 Invalid objects."; fi
+}
+check_db_unusable_indexes() {
+    local sql="SELECT owner || '.' || index_name FROM dba_indexes WHERE status = 'UNUSABLE';"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"no rows"* ]; then append_to_report "DB_DICT" "Unusable Indexes" "WARNING" "$res" "Unusable indexes force full table scans."; else append_to_report "DB_DICT" "Unusable Indexes" "OK" "" "All indexes usable."; fi
+}
+check_db_disabled_constraints() {
+    local sql="SELECT owner || '.' || table_name || '.' || constraint_name FROM dba_constraints WHERE status = 'DISABLED' AND validated = 'NOT VALIDATED' AND constraint_type IN ('P','R');"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"no rows"* ]; then append_to_report "DB_DICT" "Disabled Constraints" "WARNING" "Found disabled primary/foreign keys." "Data integrity risk."; else append_to_report "DB_DICT" "Disabled Constraints" "OK" "" "No disabled P/R constraints."; fi
+}
+check_db_hidden_params() {
+    local sql="SELECT a.ksppinm || '=' || b.ksppstvl FROM x\$ksppi a, x\$ksppcv b WHERE a.indx = b.indx AND a.ksppinm LIKE '\_%' ESCAPE '\' AND b.ksppstdf = 'FALSE';"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"no rows"* ] && [ "$res" != *"ORA-"* ]; then append_to_report "DB_INST" "Modified Hidden Params" "WARNING" "$res" "Non-default hidden parameters found."; else append_to_report "DB_INST" "Hidden Params" "OK" "" "Default state."; fi
+}
+check_db_sequences() {
+    local sql="SELECT sequence_owner || '.' || sequence_name || ':' || ROUND((last_number/max_value)*100,2) || '%' FROM dba_sequences WHERE max_value > 0 AND (last_number/max_value)*100 > 85;"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"no rows"* ]; then append_to_report "DB_DICT" "Sequence Exhaustion" "CRITICAL" "$res" "Sequences nearing MAXVALUE will halt inserts."; else append_to_report "DB_DICT" "Sequences" "OK" "" "All sequences <85% max."; fi
+}
+run_full_db_instance() { check_db_alert_log; check_db_invalid_objects; check_db_unusable_indexes; check_db_disabled_constraints; check_db_hidden_params; check_db_sequences; }
+
+# --- DB SECURITY ---
+check_db_expiring_passwords() {
+    local sql="SELECT username || ':' || expiry_date FROM dba_users WHERE expiry_date < SYSDATE + 7 AND account_status = 'OPEN';"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"no rows"* ]; then append_to_report "DB_SEC" "Expiring Passwords" "WARNING" "$res" "Accounts will lock in < 7 days."; else append_to_report "DB_SEC" "Expiring Passwords" "OK" "" "No imminent expirations."; fi
+}
+check_db_default_passwords() {
+    local sql="SELECT username FROM dba_users_with_defpwd;"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && ! echo "$res" | grep -q "no rows" && ! echo "$res" | grep -q "ORA-"; then append_to_report "DB_SEC" "Default Passwords" "CRITICAL" "$res" "Accounts using default Oracle passwords."; else append_to_report "DB_SEC" "Default Passwords" "OK" "" "No default passwords."; fi
+}
+check_db_audit_bloat() {
+    local sql="SELECT ROUND(SUM(bytes)/1024/1024) FROM dba_segments WHERE segment_name IN ('AUD\$','FGA_LOG\$');"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" -gt 1024 ] 2>/dev/null; then append_to_report "DB_SEC" "Audit Trail Bloat" "WARNING" "Audit tables: ${res}MB" "Large audit trails degrade SYSTEM tablespace performance."; else append_to_report "DB_SEC" "Audit Trail Bloat" "OK" "" "Audit tables size normal."; fi
+}
+run_full_db_security() { check_db_expiring_passwords; check_db_default_passwords; check_db_audit_bloat; }
+
+# --- DB STORAGE, CORRUPTION & REDO ---
+check_db_tablespaces() {
+    get_db_version
+    local sql=""
+    if [ "$DB_MAJOR_VERSION" -ge 12 ]; then 
+        sql="SELECT con_id || ':' || tablespace_name || ':' || ROUND(used_percent,2) FROM cdb_tablespace_usage_metrics WHERE used_percent > 85;"
+    else 
+        sql="SELECT df.tablespace_name || ':' || ROUND(((df.total_bytes - NVL(fs.free_bytes, 0)) / df.max_bytes) * 100, 2) FROM (SELECT tablespace_name, SUM(bytes) total_bytes, SUM(DECODE(maxbytes, 0, bytes, maxbytes)) max_bytes FROM dba_data_files GROUP BY tablespace_name) df, (SELECT tablespace_name, SUM(bytes) free_bytes FROM dba_free_space GROUP BY tablespace_name) fs WHERE df.tablespace_name = fs.tablespace_name(+) AND ((df.total_bytes - NVL(fs.free_bytes, 0)) / df.max_bytes) * 100 > 85;"
+    fi
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"ORA-"* ] && [ "$res" != *"no rows"* ]; then append_to_report "DB_STOR" "TBS Limits" "CRITICAL" "$res" "Tablespaces >85% of MAXSIZE."; else append_to_report "DB_STOR" "TBS Limits" "OK" "" "All TBS <85%."; fi
+}
+check_db_corruption() {
+    local sql="SELECT file# || '.' || block# || ':' || corruption_type FROM v\$database_block_corruption;"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"no rows"* ] && [ "$res" != *"ORA-"* ]; then append_to_report "DB_STOR" "Block Corruption" "CRITICAL" "$res" "Physical block corruption detected by RMAN/DBWn."; else append_to_report "DB_STOR" "Block Corruption" "OK" "" "No logical or physical block corruption logged."; fi
+}
+check_db_undo() {
+    local sql="SELECT tablespace_name || ':' || status || ':' || ROUND(SUM(bytes)/1024/1024) || 'MB' FROM dba_undo_extents GROUP BY tablespace_name, status;"
+    local res=$(run_dynamic_sql "$sql")
+    append_to_report "DB_STOR" "Undo State" "OK" "" "Undo Extent Summary: $res"
+}
+check_db_temp() {
+    local sql="SELECT tablespace_name || ':' || ROUND((SUM(blocks)*8192)/1024/1024) || 'MB' FROM dba_temp_files GROUP BY tablespace_name;"
+    local res=$(run_dynamic_sql "$sql")
+    append_to_report "DB_STOR" "Temp Usage" "OK" "" "Tempfiles configured: $res"
+}
+check_db_redo_switches() {
+    local sql="SELECT COUNT(*) FROM v\$log_history WHERE first_time > SYSDATE - 1/24;"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" -gt 4 ]; then append_to_report "DB_STOR" "Redo Switch Rate" "WARNING" "$res switches in 1 hour." "Frequent switches (>4/hr) indicate undersized redo logs."; else append_to_report "DB_STOR" "Redo Switch Rate" "OK" "" "$res switches in last hour."; fi
+}
+run_full_db_storage() { check_db_tablespaces; check_db_corruption; check_db_undo; check_db_temp; check_db_redo_switches; }
+
+# --- DB PERFORMANCE & WAITS ---
+check_db_top_waits() {
+    local sql="SELECT * FROM (SELECT event || ':' || total_waits FROM v\$system_event WHERE wait_class != 'Idle' ORDER BY time_waited_micro DESC) WHERE ROWNUM <= 5;"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"no rows"* ]; then append_to_report "DB_PERF" "Top System Waits" "WARNING" "$res" "Top 5 non-idle wait events since instance startup."; else append_to_report "DB_PERF" "Top System Waits" "OK" "" "No significant waits recorded."; fi
+}
+check_db_active_sessions() {
+    local sql="SELECT 'ActiveSessions:' || COUNT(*) FROM v\$session WHERE status = 'ACTIVE' AND type != 'BACKGROUND' UNION ALL SELECT 'MaxProcesses:' || value FROM v\$parameter WHERE name = 'processes';"
+    local res=$(run_dynamic_sql "$sql")
+    local active=$(echo "$res" | grep 'ActiveSessions' | cut -d: -f2)
+    local max=$(echo "$res" | grep 'MaxProcesses' | cut -d: -f2)
+    local pct=$(( active * 100 / max ))
+    if [ "$pct" -ge 80 ]; then append_to_report "DB_PERF" "Session Limits" "CRITICAL" "Active: $active, Max: $max ($pct%)" "Approaching ORA-00020 (max processes exceeded)."; else append_to_report "DB_PERF" "Session Limits" "OK" "" "Active: $active / Max: $max"; fi
+}
+check_db_longops() {
+    local sql="SELECT sid || ':' || opname || ':' || ROUND(sofar/totalwork*100,2) || '%' FROM v\$session_longops WHERE time_remaining > 0 AND totalwork > 0;"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"no rows"* ]; then append_to_report "DB_PERF" "Longops" "WARNING" "$res" "Active long-running operations (RMAN, Full Scans, Hash Joins)."; else append_to_report "DB_PERF" "Longops" "OK" "" "No active longops."; fi
+}
+check_db_cache_hits() {
+    local sql="SELECT 'BufferHit:' || ROUND((1-(phy.value/(cur.value+con.value)))*100,2) || '%' FROM v\$sysstat cur, v\$sysstat con, v\$sysstat phy WHERE cur.name='db block gets' AND con.name='consistent gets' AND phy.name='physical reads';"
+    local res=$(run_dynamic_sql "$sql")
+    append_to_report "DB_PERF" "Buffer Cache Hit" "OK" "" "$res"
+}
+run_full_db_perf() { check_db_top_waits; check_db_active_sessions; check_db_longops; check_db_cache_hits; }
+
+# --- DB LOCKS & ENQUEUES ---
+check_db_blocking_sessions() {
+    local sql="SELECT 'Blocker_SID:' || s1.sid || ' is blocking Waiter_SID:' || s2.sid FROM v\$lock l1, v\$session s1, v\$lock l2, v\$session s2 WHERE s1.sid=l1.sid AND s2.sid=l2.sid AND l1.BLOCK=1 AND l2.request > 0 AND l1.id1 = l2.id1 AND l2.id2 = l2.id2;"
+    local res=$(run_dynamic_sql "$sql")
+    if [ -n "$res" ] && [ "$res" != *"no rows"* ]; then append_to_report "DB_LOCKS" "Blocking Sessions" "CRITICAL" "$res" "Active TX/TM enqueue blockages detected. Application may be hanging."; else append_to_report "DB_LOCKS" "Blocking Sessions" "OK" "" "No blocking sessions detected."; fi
+}
+check_db_deadlocks() {
+    local res=$(run_dynamic_sql "SELECT value FROM v\$sysstat WHERE name = 'enqueue deadlocks';")
+    if [ -n "$res" ] && [ "$res" -gt 0 ]; then append_to_report "DB_LOCKS" "Deadlocks (Historical)" "WARNING" "$res deadlocks recorded." "ORA-00060 deadlocks have occurred since instance startup."; else append_to_report "DB_LOCKS" "Deadlocks" "OK" "" "0 deadlocks recorded."; fi
+}
+run_full_db_locks() { check_db_blocking_sessions; check_db_deadlocks; }
+
+# --- DB HA & GOLDENGATE ---
+check_db_dataguard() {
+    local role=$(run_dynamic_sql "SELECT database_role FROM v\$database;")
+    if [ "$role" = "PHYSICAL STANDBY" ]; then
+        local lag=$(run_dynamic_sql "SELECT name || ':' || value FROM v\$dataguard_stats WHERE name IN ('apply lag');")
+        append_to_report "DB_HA" "Data Guard" "WARNING" "Standby lag: $lag" "Standby database checks apply lag."
+    else append_to_report "DB_HA" "Data Guard" "OK" "" "Primary Database."; fi
+}
+check_db_goldengate() {
+    local os_gg=$(ps -ef | grep -iE 'mgr|extract|replicat' | grep -v grep | awk '{print $8}' | sort -u | paste -sd "," -)
+    local db_gg=$(run_dynamic_sql "SELECT COUNT(*) FROM dba_users WHERE username LIKE '%OGG%' OR username LIKE '%GGATE%';")
+    
+    if [ -n "$os_gg" ]; then append_to_report "DB_HA" "GoldenGate (OS)" "WARNING" "GG Processes found: $os_gg" "GoldenGate is running on this host. Further lag checks required via GGSCI."
+    elif [ -n "$db_gg" ] && [ "$db_gg" -gt 0 ] 2>/dev/null; then append_to_report "DB_HA" "GoldenGate (DB)" "WARNING" "GG Schemas found but no OS processes." "GoldenGate objects exist in dictionary."
+    else append_to_report "DB_HA" "GoldenGate" "OK" "" "No GoldenGate footprint detected."; fi
+}
+run_full_db_ha() { check_db_dataguard; check_db_goldengate; }
+
+run_full_db() { run_full_db_instance; run_full_db_security; run_full_db_storage; run_full_db_perf; run_full_db_locks; run_full_db_ha; }
+
+# ==============================================================================
+# 7. MENU TOPOLOGY (POSIX COMPLIANT & FULLY CASCADING)
+# ==============================================================================
+# --- OS MENUS ---
+menu_os_cpu() {
+    while true; do clear; echo "--- [ OS CPU ] ---"; echo "1. Load Average"; echo "2. I/O Wait"; echo "3. Steal Time (Virtualization)"; echo "4. Zombie Processes"; echo "5. Top CPU Consumers"; echo "8. FULL CPU CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_os_cpu_load; printf "Enter..."; read x ;; 2) check_os_cpu_iowait; printf "Enter..."; read x ;; 3) check_os_cpu_steal; printf "Enter..."; read x ;; 4) check_os_zombies; printf "Enter..."; read x ;; 5) check_os_top_consumers; printf "Enter..."; read x ;; 8) run_full_os_cpu; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_os_memory() {
+    while true; do clear; echo "--- [ OS MEMORY ] ---"; echo "1. Swap Usage"; echo "2. Active Paging"; echo "3. HugePages"; echo "4. Limits (nofile)"; echo "5. Kernel Sysctl (SHM)"; echo "8. FULL MEMORY CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_os_swap_usage; printf "Enter..."; read x ;; 2) check_os_paging; printf "Enter..."; read x ;; 3) check_os_hugepages; printf "Enter..."; read x ;; 4) check_os_limits; printf "Enter..."; read x ;; 5) check_os_sysctl; printf "Enter..."; read x ;; 8) run_full_os_memory; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_os_disk() {
+    while true; do clear; echo "--- [ OS DISK & FABRIC ] ---"; echo "1. Space Usage"; echo "2. Inode Exhaustion"; echo "3. I/O Latency/Saturation"; echo "4. Multipath SAN Status"; echo "8. FULL DISK CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_os_disk_usage; printf "Enter..."; read x ;; 2) check_os_inode_usage; printf "Enter..."; read x ;; 3) check_os_iostat; printf "Enter..."; read x ;; 4) check_os_multipath; printf "Enter..."; read x ;; 8) run_full_os_disk; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_os_net() {
+    while true; do clear; echo "--- [ OS NETWORK ] ---"; echo "1. TCP/IP Drops"; echo "2. Ephemeral Ports"; echo "3. TCP Socket Saturation (TIME_WAIT)"; echo "4. Default Gateway Ping"; echo "5. DNS Resolution Conf"; echo "8. FULL NET CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_os_network_drops; printf "Enter..."; read x ;; 2) check_os_ephemeral_ports; printf "Enter..."; read x ;; 3) check_os_tcp_states; printf "Enter..."; read x ;; 4) check_os_gateway; printf "Enter..."; read x ;; 5) check_os_dns; printf "Enter..."; read x ;; 8) run_full_os_network; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_os_sys() {
+    while true; do clear; echo "--- [ OS SYSTEM LOGS & ENV ] ---"; echo "1. Kernel dmesg (OOM Scanner)"; echo "2. Local Firewall Status"; echo "3. SELinux Status"; echo "4. Oracle Binary Permissions (setuid)"; echo "5. Missing Shared Libraries (ldd)"; echo "8. FULL SYSTEM CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_os_dmesg_oom; printf "Enter..."; read x ;; 2) check_os_firewall; printf "Enter..."; read x ;; 3) check_os_selinux; printf "Enter..."; read x ;; 4) check_os_oracle_perms; printf "Enter..."; read x ;; 5) check_os_ldd_deps; printf "Enter..."; read x ;; 8) run_full_os_sys; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_os() {
+    while true; do clear; echo "--- [ OS EXHAUSTIVE ] ---"; echo "1. CPU Subsystem"; echo "2. Memory Subsystem"; echo "3. Disk & Fabric"; echo "4. Network Routing"; echo "5. System Logs & Env"; echo "8. FULL OS CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) menu_os_cpu ;; 2) menu_os_memory ;; 3) menu_os_disk ;; 4) menu_os_net ;; 5) menu_os_sys ;; 8) run_full_os; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+
+# --- DB MENUS ---
+menu_db_inst() {
+    while true; do clear; echo "--- [ DB INSTANCE ] ---"; echo "1. Alert Log ORA- Scan"; echo "2. Invalid Objects"; echo "3. Unusable Indexes"; echo "4. Disabled Constraints"; echo "5. Hidden Params"; echo "6. Sequence Exhaustion"; echo "8. FULL INSTANCE CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_db_alert_log; printf "Enter..."; read x ;; 2) check_db_invalid_objects; printf "Enter..."; read x ;; 3) check_db_unusable_indexes; printf "Enter..."; read x ;; 4) check_db_disabled_constraints; printf "Enter..."; read x ;; 5) check_db_hidden_params; printf "Enter..."; read x ;; 6) check_db_sequences; printf "Enter..."; read x ;; 8) run_full_db_instance; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_db_sec() {
+    while true; do clear; echo "--- [ DB SECURITY ] ---"; echo "1. Expiring Passwords"; echo "2. Default Passwords"; echo "3. Audit Bloat"; echo "8. FULL SECURITY CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_db_expiring_passwords; printf "Enter..."; read x ;; 2) check_db_default_passwords; printf "Enter..."; read x ;; 3) check_db_audit_bloat; printf "Enter..."; read x ;; 8) run_full_db_security; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_db_stor() {
+    while true; do clear; echo "--- [ DB STORAGE ] ---"; echo "1. Tablespaces"; echo "2. Block Corruption Scanner"; echo "3. Undo State"; echo "4. Temp Usage"; echo "5. Redo Switch Rate"; echo "8. FULL STORAGE CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_db_tablespaces; printf "Enter..."; read x ;; 2) check_db_corruption; printf "Enter..."; read x ;; 3) check_db_undo; printf "Enter..."; read x ;; 4) check_db_temp; printf "Enter..."; read x ;; 5) check_db_redo_switches; printf "Enter..."; read x ;; 8) run_full_db_storage; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_db_perf() {
+    while true; do clear; echo "--- [ DB PERFORMANCE & WAITS ] ---"; echo "1. Top Wait Events"; echo "2. Active Sessions vs Limits"; echo "3. Long-Running Ops"; echo "4. Cache Hits"; echo "8. FULL PERF CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_db_top_waits; printf "Enter..."; read x ;; 2) check_db_active_sessions; printf "Enter..."; read x ;; 3) check_db_longops; printf "Enter..."; read x ;; 4) check_db_cache_hits; printf "Enter..."; read x ;; 8) run_full_db_perf; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_db_locks() {
+    while true; do clear; echo "--- [ DB LOCKS & ENQUEUES ] ---"; echo "1. Blocking Sessions Tree"; echo "2. Enqueue Deadlocks"; echo "8. FULL LOCK CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_db_blocking_sessions; printf "Enter..."; read x ;; 2) check_db_deadlocks; printf "Enter..."; read x ;; 8) run_full_db_locks; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_db_ha_gg() {
+    while true; do clear; echo "--- [ DB HA & GOLDENGATE ] ---"; echo "1. Data Guard Status"; echo "2. GoldenGate Footprint Scan"; echo "8. FULL HA CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) check_db_dataguard; printf "Enter..."; read x ;; 2) check_db_goldengate; printf "Enter..."; read x ;; 8) run_full_db_ha; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+menu_db() {
+    while true; do clear; echo "--- [ DB EXHAUSTIVE ] ---"; echo "1. Instance, Logs & Dict"; echo "2. Security"; echo "3. Storage & Corruption"; echo "4. Performance & Waits"; echo "5. Locks & Sessions"; echo "6. HA & GoldenGate"; echo "8. FULL DB CHECK"; echo "9. Back"; printf "Select: "; read o
+        case $o in 1) menu_db_inst ;; 2) menu_db_sec ;; 3) menu_db_stor ;; 4) menu_db_perf ;; 5) menu_db_locks ;; 6) menu_db_ha_gg ;; 8) run_full_db; printf "Enter..."; read x ;; 9) break ;; esac
+    done
+}
+
+run_quick_os_check() { echo "Running Quick OS..."; run_full_os; echo "Done. Report: $REPORT_FILE"; printf "Enter..."; read x ; }
+run_quick_db_check() { echo "Running Quick DB..."; run_full_db; echo "Done. Report: $REPORT_FILE"; printf "Enter..."; read x ; }
+run_quick_env_check() { echo "Running Quick ENV (OS + DB)..."; run_full_os; run_full_db; echo "Done. Report: $REPORT_FILE"; printf "Enter..."; read x ; }
+
+menu_main() {
+    while true; do
+        clear
+        load_and_compare_state
+        echo "1. Exhaustive OS Diagnostics"
+        echo "2. Exhaustive DB Diagnostics"
+        echo "3. Quick OS Health Check"
+        echo "4. Quick DB Health Check"
+        echo "5. Quick ENV Health Check"
+        echo "Q. Quit"
+        printf "Select: "; read o
+        case $o in 1) menu_os ;; 2) menu_db ;; 3) run_quick_os_check ;; 4) run_quick_db_check ;; 5) run_quick_env_check ;; [Qq]*) save_state; exit 0 ;; esac
+    done
+}
+
+menu_main
