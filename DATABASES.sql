@@ -54,8 +54,8 @@ export ORACLE_HOME=/orasw/static/app/oracle/agent13c/agent_13.5.0.0.0/
 export PATH=$ORACLE_HOME/bin:$PATH
 emctl status agent
 =========================================================================================================================================
---SEND EMAIL FROM AIX SERVER
-uuencode listener_pcdep.log listener_pcdep.log | mailx -s "listener_pcdep.log" rafael.oliveira@t-mobile.com
+--CHECK SYS PASSWORD
+sqlplus sys/\"x(A{G|CAJV9a]W5PfKxH}VrKa]2WUp\"@cpmntap as sysdba "
 =========================================================================================================================================
 -- GOLDENGATE
 --set gg env

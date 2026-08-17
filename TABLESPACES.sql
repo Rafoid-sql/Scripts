@@ -14,36 +14,29 @@ JOIN DBA_TABLESPACES TB ON TB.TABLESPACE_NAME = TBM.TABLESPACE_NAME
 --WHERE TBM.TABLESPACE_NAME in ('SYSAUX')
 ORDER BY "%FULL" ASC;
 =========================================================================================================================================
-clear columns
-column tablespace format a30
-column total_mb format 999,999,999.99
-column used_mb format 999,999,999,999.99
-column free_mb format 999,999,999.99
-column pct_used format 999.99
-column graph format a25 heading "GRAPH (X=5%)"
-column status format a10
-compute sum of total_mb on report
-compute sum of used_mb on report
-compute sum of free_mb on report
-break on report
-set lines 200 pages 100
-
-select  dbat.tablespace_name tablespace,
-        dbat.status status,
-        round(nvl(m.tablespace_size * dbat.block_size / 1024 / 1024, 0), 2) total_mb,
-        round(nvl(m.used_space * dbat.block_size / 1024 / 1024, 0), 2) used_mb,
-        round(nvl((m.tablespace_size - m.used_space) * dbat.block_size / 1024 / 1024, 0), 2) free_mb,
-        round(nvl(m.used_percent, 0), 2) pct_used,
-        case 
-            when dbat.status = 'OFFLINE' then '['||rpad(lpad('OFFLINE',13,'-'),20,'-')||']'
-            else '['|| nvl(rpad(lpad('X', trunc(nvl(m.used_percent, 0)/5), 'X'), 20, '-'), '--------------------') ||']'
-        end as graph
-from dba_tablespaces dbat
-left join dba_tablespace_usage_metrics m on dbat.tablespace_name = m.tablespace_name
-order by 6
+CLEAR COLUMNS
+SET LINES 200 PAGES 100
+COL TABLESPACE FOR A30
+COL TOTAL_MB FOR 999,999,999.99
+COL USED_MB FOR 999,999,999,999.99
+COL FREE_MB FOR 999,999,999.99
+COL PCT_USED FOR 999.99
+COL GRAPH FOR A25 HEADING "GRAPH (X=5%)"
+COL STATUS FOR A10
+COMPUTE SUM OF TOTAL_MB ON REPORT
+COMPUTE SUM OF USED_MB ON REPORT
+COMPUTE SUM OF FREE_MB ON REPORT
+BREAK ON REPORT
+SELECT  DBAT.TABLESPACE_NAME TABLESPACE, DBAT.STATUS STATUS, ROUND(NVL(M.TABLESPACE_SIZE * DBAT.BLOCK_SIZE / 1024 / 1024, 0), 2) TOTAL_MB, 
+ROUND(NVL(M.USED_SPACE * DBAT.BLOCK_SIZE / 1024 / 1024, 0), 2) USED_MB, ROUND(NVL((M.TABLESPACE_SIZE - M.USED_SPACE) * DBAT.BLOCK_SIZE / 1024 / 1024, 0), 2) FREE_MB, 
+ROUND(NVL(M.USED_PERCENT, 0), 2) PCT_USED, CASE WHEN DBAT.STATUS = 'OFFLINE' THEN '['||RPAD(LPAD('OFFLINE',13,'-'),20,'-')||']' 
+ELSE '['|| NVL(RPAD(LPAD('X', TRUNC(NVL(M.USED_PERCENT, 0)/5), 'X'), 20, '-'), '--------------------') ||']' END AS GRAPH
+FROM DBA_TABLESPACES DBAT
+LEFT JOIN DBA_TABLESPACE_USAGE_METRICS M ON DBAT.TABLESPACE_NAME = M.TABLESPACE_NAME
+ORDER BY 6;
 /
-ttitle off
-rem clear columns
+TTITLE OFF
+REM CLEAR COLUMNS
 =========================================================================================================================================
 --UNDO SPACE USAGE
 COLUMN TABLESPACE FORMAT A20;

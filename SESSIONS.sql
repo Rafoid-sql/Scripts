@@ -127,8 +127,8 @@ WHERE PROCESS NOT LIKE ('%BACKGROUND')
 --AND OSUSER IN ('RChadal1')
 --AND MACHINE IN ('HOSPLACI\WEKNOW-TESTE')
 --AND STATUS IN ('INACTIVE')
-AND SID IN (1571,1290,1468)
-AND SERIAL# IN (3847,50659,64068)
+AND SID IN (166)
+AND SERIAL# IN (41991)
 --AND SQL_ID ='6q352kuy53kcd'
 ORDER BY 1;
 =========================================================================================================================================
